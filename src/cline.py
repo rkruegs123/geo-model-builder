@@ -10,6 +10,8 @@ class Cline(ABC):
     def pointsOn(self):
         pass
 
+
+
 class Circle(Cline):
     def pointsOn(self):
         if self.pred == "coa":
@@ -22,6 +24,9 @@ class Circle(Cline):
             return self.points
         else:
             raise RuntimeError("[Circle.pointsOn] Invalid circle pred")
+
+    def __str__(self):
+        return f"(circle {self.pred} {self.points})"
 
 class Line(Cline):
     def pointsOn(self):

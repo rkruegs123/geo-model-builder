@@ -25,7 +25,6 @@ class Compute:
             computation_str=comp_str
         )
 
-
 class Sample:
     def __init__(self, points, sampler):
         self.points = points

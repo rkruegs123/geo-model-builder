@@ -23,6 +23,7 @@ class CompileState:
             self.computeCircumcenter
             , self.computeOrthocenter
             , self.computeMidp
+            , self.computeFromMidp
             , self.computeFoot
             , self.computeIncenter
             , self.computeMixIncenter
@@ -103,6 +104,18 @@ class CompileState:
                 return True
         return False
 
+    def computeFromMidp(self, p, cs):
+        midpCs = [c for c in cs if c.pred == "midp"]
+        for c in midpCs:
+            m, a, b = c.points
+            if m != p:
+                x = a
+                if a == p:
+                    x = b
+                self.solve_instructions.append(Compute(p, ("midpFrom", [m, x])))
+                self.cs.remove(c)
+                return True
+        return False
 
     def computeFoot(self, p, cs):
         footCs = [c for c in cs if c.pred == "foot"]
@@ -159,7 +172,7 @@ class CompileState:
             cs1, l = lines[0]
             cs2, circ = circles[0]
 
-            root, rcs = determine_root(p, l, circ, cs)
+            root, rcs = self.determine_root(p, l, circ, cs)
             if root is None:
                 return False
             self.solve_instructions.append(Compute(p, ("interLC", l, circ, root)))
@@ -170,7 +183,7 @@ class CompileState:
             cs1, c1 = circles[0]
             cs2, c2 = circles[1]
 
-            root, rcs = determine_root(p, c1, c2, cs)
+            root, rcs = self.determine_root(p, c1, c2, cs)
             if root is None:
                 return False
             self.solve_instructions.append(Compute(p, ("interCC", c1, c2, root)))
@@ -270,7 +283,30 @@ class CompileState:
             ps = c.points
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                lines.append(([c], Circle("c3", other_ps)))
+                circles.append(([c], Circle("c3", other_ps)))
+            elif pred == "onC":
+                p1, o, x = ps
+                if p == p1:
+                    circles.append(([c], Circle("coa", [o, x])))
+            elif pred == "cong":
+                if ps.count(p) == 1:
+                    (x, (y, z)) = group_pairs(p, ps)
+                    if x == y:
+                        circles.append(([c], Circle("coa", [x, z])))
+                    elif x == z:
+                        circles.append(([c], Circle("coa", [x, y])))
+                    else:
+                        circles.append(([c], Circle("cong", [b, c, d])))
+            elif pred == "perp":
+                w, x, y, z = ps
+                if p == w and p == y:
+                    circles.append(([c], Circle("diam", [x, z])))
+                elif p == w and p == z:
+                    circles.append(([c], Circle("diam", [x, y])))
+                elif p == x and p == y:
+                    circles.append(([c], Circle("diam", [w, z])))
+                elif p == x and p == z:
+                    circles.append(([c], Circle("diam", [w, y])))
         return circles
 
     # Returns (root, constraints to get root)
@@ -280,7 +316,7 @@ class CompileState:
         # FIXME: Should key be sorted?
 
         k = (cl1, cl1) # key
-        shared_points = list(set(cl1.pointsOn()).intersect(cl2.pointsOn()))
+        shared_points = list(set(cl1.pointsOn()).intersection(cl2.pointsOn()))
         oppCs = [c for c in cs if c.pred == "oppSides"]
         sameCs = [c for c in cs if c.pred == "sameSides"]
 
@@ -288,8 +324,8 @@ class CompileState:
             root = Root("neq", [self.open_roots[k]]) # FIXME: Check that self.open_roots[k] is a point, not a list
             del self.open_roots[k]
             return (root, list())
-        elif shared_lc_points: # rsNeq
-            root = Root("neq", [shared_lc_points[0]])
+        elif shared_points: # rsNeq
+            root = Root("neq", [shared_points[0]])
             return (root, list())
         elif oppCs and (oppCs[0].points[0] == p or oppCs[0].points[1] == p):
             a, b, c, d = oppCs[0].points[0], oppCs[0].points[1], oppCs[0].points[2], oppCs[0].points[3]
