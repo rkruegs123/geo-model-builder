@@ -8,7 +8,14 @@ class Parameterize:
         self.parameterization = parameterization
 
     def __str__(self):
-        return f"parameterize {self.point} {self.parameterization}"
+        if isinstance(self.parameterization, collections.abc.Iterable):
+            param_str = ' '.join(str(x) for x in self.parameterization)
+        else:
+            param_str = str(self.parameterization)
+        return "parameterize {p} {p_str}".format(
+            p=self.point,
+            p_str=param_str
+        )
 
 class Compute:
     def __init__(self, points, computation):

@@ -78,6 +78,7 @@ class Problem:
         if not samplers:
             return sample_instructions
         elif len(samplers) > 1:
+            pdb.set_trace()
             raise RuntimeException("Unexpected sampling")
 
         sampler = samplers[0]
@@ -96,7 +97,7 @@ class Problem:
             elif len(sample_cs) == 1 and acute:
                 sample_instructions.append(Sample(tri_points, "acuteTri"))
             elif len(sample_cs) == 1 and iso_points:
-                sample_instructions.append(Sample(tri_points, ("isoTri", iso_point[0])))
+                sample_instructions.append(Sample(tri_points, ("isoTri", iso_points[0])))
             elif len(sample_cs) == 2 and acute and iso_points:
                 sample_instructions.append(Sample(tri_points, ("acuteIsoTri", iso_points[0])))
             elif len(sample_cs) == 2 and len(iso_points) == 2:

@@ -33,8 +33,10 @@ class CompileState:
 
         self.param_tricks = [
             self.paramOnSeg
+            , self.paramOnRay
             , self.paramOnLine
             , self.paramOnCirc
+            , self.paramInPoly
             , self.paramCoords
         ]
 
@@ -201,7 +203,27 @@ class CompileState:
         onSegCs = [c for c in cs if c.pred == "onSeg"]
         for c in onSegCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Parameterize(p, ("onSeg", c.points[1:3], c.points[3:])))
+                _, a, b = c.points
+                self.solve_instructions.append(Parameterize(p, ("onSeg", [a, b])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def paramOnRay(self, p, cs):
+        onRayCs = [c for c in cs if c.pred == "onRay"]
+        for c in onRayCs:
+            if c.points[0] == p:
+                _, a, b = c.points
+                self.solve_instructions.append(Parameterize(p, ("onRay", [a, b])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def paramInPoly(self, p, cs):
+        inPolyCs = [c for c in cs if c.pred == "insidePolygon"]
+        for c in inPolyCs:
+            if c.points[0] == p:
+                self.solve_instructions.append(Parameterize(p, ("inPoly", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -225,6 +247,7 @@ class CompileState:
                 self.cs.remove(c)
             return True
         return False
+
 
 
     def paramCoords(self, p, cs):
