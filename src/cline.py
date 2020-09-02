@@ -41,3 +41,6 @@ class Line(Cline):
             return [self.points[0]]
         else:
             raise RuntimeError("[Line.pointsOn] Invalid line pred")
+
+    def __str__(self):
+        return f"(line {self.pred} {self.points})"

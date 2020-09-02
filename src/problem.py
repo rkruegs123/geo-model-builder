@@ -57,7 +57,7 @@ class Problem:
         cs_with_sampled_points = [c for c in self.constraints if set(c.points).issubset(set(sample_points))]
         self.sample_bucket = Bucket(points=sample_points, assertions=cs_with_sampled_points)
 
-        solve_points = list(set(self.points) - set(sample_points))
+        solve_points = [p for p in self.points if p not in sample_points] # maintain order
         cs_to_solve = [c for c in self.constraints if not set(c.points).issubset(set(sample_points)) and not c.negate]
         self.solve_bucket = Bucket(points=solve_points, assertions=cs_to_solve)
 

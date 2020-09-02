@@ -1,6 +1,6 @@
 import collections
 
-# TODO: Have one for each IR type? No "Instruction" base class?
+# TODO: Instruction base class?
 
 class Parameterize:
     def __init__(self, point, parameterization):

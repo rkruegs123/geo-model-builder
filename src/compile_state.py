@@ -1,6 +1,9 @@
+import pdb
+
 from cline import Line, Circle
 from instruction import Compute, Parameterize, Assert
 from util import *
+
 
 
 class CompileState:
@@ -20,6 +23,7 @@ class CompileState:
             self.computeCircumcenter
             , self.computeOrthocenter
             , self.computeMidp
+            , self.computeFoot
             , self.computeIncenter
             , self.computeMixIncenter
             , self.computeInterLL
@@ -103,6 +107,16 @@ class CompileState:
                 return True
         return False
 
+
+    def computeFoot(self, p, cs):
+        footCs = [c for c in cs if c.pred == "foot"]
+        for c in footCs:
+            p1, x, a, b = c.points
+            if p1 == p:
+                self.solve_instructions.append(Compute(p, ("interLL", Line("perpAt", [x, a, b]), Line("connecting", [a, b]))))
+                self.cs.remove(c)
+                return True
+        return False
 
     def computeIncenter(self, p, cs):
         incenterCs = [c for c in cs if c.pred == "incenter"]
@@ -223,6 +237,10 @@ class CompileState:
             if pred == "coll":
                 other_ps = [p1 for p1 in ps if p1 != p]
                 lines.append((c, Line("connecting", other_ps)))
+            elif pred == "para":
+                (b, (c, d)) = groupPairs(p, ps)
+                if b is not None:
+                    lines.append((c, Line("paraAt", [b, c, d])))
         return lines
 
     def circlesFor(self, p, cs):
