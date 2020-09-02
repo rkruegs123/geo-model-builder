@@ -59,10 +59,6 @@ class CompileState:
         else:
             for c in self.cs:
                 self.solve_instructions.append(Assert(c))
-                for ndg in c.ndgs():
-                    self.solve_instructions.append(AssertNDG(ndg))
-                for ordC in c.orders():
-                    self.solve_instructions.append(Assert(ordC))
 
     def process_point(self, p):
 

@@ -4,15 +4,14 @@ class Constraint:
         self.points = points
         self.negate = negate
 
-
     def ndgs(self):
-        if self.pred == "ibisector" or self.pred == "ebisector":
-            return [Constraint("coll", self.points, False)]
+        if (self.pred == "ibisector" or self.pred == "ebisector") and not self.negate:
+            return [Constraint("coll", self.points[1:], False)]
         else:
             return list()
 
     def orders(self):
-        if self.pred == "ibisector":
+        if self.pred == "ibisector" and not self.negate:
             x, b, a, c = self.points[0], self.points[1], self.points[2], self.points[3]
             c1 = Constraint("sameSide", [x, b, a, c], False)
             c2 = Constraint("sameSide", [x, c, a, b], False)

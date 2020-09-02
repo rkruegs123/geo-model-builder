@@ -62,7 +62,7 @@ class Problem:
         cs_to_solve = [c for c in self.constraints if not set(c.points).issubset(set(sample_points)) and not c.negate]
         self.solve_bucket = Bucket(points=solve_points, assertions=cs_to_solve)
 
-        self.ndgs = [c for c in self.constraints if c.negate]
+        self.ndgs = [Constraint(c.pred, c.points, False) for c in self.constraints if c.negate]
 
 
     def sample_bucket_2_instructions(self):
@@ -148,6 +148,15 @@ class Problem:
         self.instructions += solve_instructions
 
         self.instructions += [AssertNDG(c) for c in self.ndgs]
+
+        # Note how we handle this here (at the end) rather than at the end of solve
+        # We could do this in preprocessing if we wanted to reason about the extra constraints
+        for c in self.constraints:
+            for ordC in c.orders():
+                self.instructions.append(Assert(ordC))
+            for ndg in c.ndgs():
+                self.instructions.append(AssertNDG(ndg))
+
         self.instructions += [Confirm(c) for c in self.goals]
 
     def __str__(self):

@@ -16,7 +16,15 @@ class Compute:
         self.computation = computation
 
     def __str__(self):
-        return f"compute {self.points} {self.computation}"
+        if isinstance(self.computation, collections.abc.Iterable):
+            comp_str = ' '.join(str(x) for x in self.computation)
+        else:
+            comp_str = str(self.computation)
+        return "compute {ps} ({computation_str})".format(
+            ps=self.points,
+            computation_str=comp_str
+        )
+
 
 class Sample:
     def __init__(self, points, sampler):
