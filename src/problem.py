@@ -47,6 +47,8 @@ class Problem:
                         self.constraints.append(Constraint(pred=pred, points=args, negate=negate))
                     elif cmd == "prove":
                         self.goals.append(Constraint(pred=pred, points=args, negate=negate))
+                    elif cmd == "watch":
+                        print("TODO: Add support for watch cmd")
                     else:
                         raise RuntimeError("Unrecognized command")
 
@@ -89,26 +91,26 @@ class Problem:
 
             # FIXME: Handle all triangle cases
             if not sample_cs:
-                sample_instructions.append(Sample(tri_points, ["triangle"]))
+                sample_instructions.append(Sample(tri_points, "triangle"))
             elif len(sample_cs) == 1 and acute:
-                sample_instructions.append(Sample(tri_points, ["acuteTri"]))
+                sample_instructions.append(Sample(tri_points, "acuteTri"))
             elif len(sample_cs) == 1 and iso_points:
-                sample_instructions.append(Sample(tri_points, ["isoTri", iso_point[0]]))
+                sample_instructions.append(Sample(tri_points, ("isoTri", iso_point[0])))
             elif len(sample_cs) == 2 and acute and iso_points:
-                sample_instructions.append(Sample(tri_points, ["acuteIsoTri", iso_points[0]]))
+                sample_instructions.append(Sample(tri_points, ("acuteIsoTri", iso_points[0])))
             elif len(sample_cs) == 2 and len(iso_points) == 2:
-                sample_instructions.append(Sample(tri_points, ["equiTri"]))
+                sample_instructions.append(Sample(tri_points, "equiTri"))
             elif len(sample_cs) == 1 and lenright_points:
-                sample_instructions.append(Sample(tri_points, ["rightTri", right_points[0]]))
+                sample_instructions.append(Sample(tri_points, ("rightTri", right_points[0])))
             else:
                 raise RuntimeException("Unhandled triangle sampling")
         elif samplers[0].pred == "polygon":
             poly_points = set(sampler.points)
 
             if not sample_cs:
-                sample_instructions.append(Sample(poly_points, ["polygon"]))
+                sample_instructions.append(Sample(poly_points, "polygon"))
             else:
-                sample_instructions.append(Sample(poly_points, ["polygon"]))
+                sample_instructions.append(Sample(poly_points, "polygon"))
                 sample_instructions += [Assert(c) for c in sample_cs]
         else:
             raise RuntimeError("Mishandled sampling")

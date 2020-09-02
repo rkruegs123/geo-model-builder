@@ -22,10 +22,11 @@ class Constraint:
 
 
     def __str__(self):
+        c_str = ' '.join([self.pred] + self.points)
         if self.negate:
-            return ("not (" + ' '.join([self.pred] + self.points) + ")")
+            return (f"not ({c_str})")
         else:
-            return ' '.join([self.pred] + self.points)
+            return c_str
 
 def constraint_ndgs(c):
     if c.pred == "ibisector" or c.pred == "ebisector":

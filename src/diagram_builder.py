@@ -17,4 +17,8 @@ if __name__ == "__main__":
     print(problem)
 
     problem.gen_instructions()
-    print(problem.instructions)
+    instructions_str = "\nINSTRUCTIONS:\n{header}\n{i_strs}".format(
+        header="-" * 13,
+        i_strs = '\n'.join([str(i) for i in problem.instructions])
+    )
+    print(instructions_str)

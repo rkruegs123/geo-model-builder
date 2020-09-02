@@ -1,5 +1,5 @@
 from cline import Line, Circle
-from instruction import Compute, Parameterize
+from instruction import Compute, Parameterize, Assert
 from util import *
 
 
@@ -55,9 +55,9 @@ class CompileState:
         else:
             for c in self.cs:
                 self.solve_instructions.append(Assert(c))
-                for ndg in c.ndgs:
+                for ndg in c.ndgs():
                     self.solve_instructions.append(AssertNDG(ndg))
-                for ordC in c.orders:
+                for ordC in c.orders():
                     self.solve_instructions.append(Assert(ordC))
 
     def process_point(self, p):
@@ -79,7 +79,7 @@ class CompileState:
         ccCs = [c for c in cs if c.pred == "circumcenter"]
         for c in ccCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ["circumcenter", c.points[1:]]))
+                self.solve_instructions.append(Compute(p, ("circumcenter", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -88,7 +88,7 @@ class CompileState:
         orthocenterCs = [c for c in cs if c.pred == "orthocenter"]
         for c in orthocenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ["orthocenter", c.points[1:]]))
+                self.solve_instructions.append(Compute(p, ("orthocenter", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -98,7 +98,7 @@ class CompileState:
         midpCs = [c for c in cs if c.pred == "midp"]
         for c in midpCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ["midp", c.points[1:]]))
+                self.solve_instructions.append(Compute(p, ("midp", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -108,7 +108,7 @@ class CompileState:
         incenterCs = [c for c in cs if c.pred == "incenter"]
         for c in incenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ["incenter", c.points[1:]]))
+                self.solve_instructions.append(Compute(p, ("incenter", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -117,7 +117,7 @@ class CompileState:
         mixIncenterCs = [c for c in cs if c.pred == "mixtilinearIncenter"]
         for c in mixIncenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ["mixtilinearIncenter", c.points[1:]]))
+                self.solve_instructions.append(Compute(p, ("mixtilinearIncenter", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -129,7 +129,7 @@ class CompileState:
                 a, b, c, d = c.points[1:]
                 l1 = Line("connecting", [a, b])
                 l2 = Line("connecting", [c, d])
-                self.solve_instructions.append(Compute(p, ["interLL", l1, l2]))
+                self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
                 self.cs.remove(c)
                 return True
         return False
@@ -141,7 +141,7 @@ class CompileState:
         if len(lines) >= 2:
             cs1, l1 = lines[0]
             cs2, l2 = lines[1]
-            self.solve_instructions.append(Compute(p, ["interLL", l1, l2]))
+            self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
             for c in cs1 + cs2:
                 self.cs.remove(c)
             return True
@@ -152,7 +152,7 @@ class CompileState:
             root, rcs = determine_root(p, l, circ, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, ["interLC", l, circ, root]))
+            self.solve_instructions.append(Compute(p, ("interLC", l, circ, root)))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             return True
@@ -163,7 +163,7 @@ class CompileState:
             root, rcs = determine_root(p, c1, c2, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, ["interCC", c1, c2, root]))
+            self.solve_instructions.append(Compute(p, ("interCC", c1, c2, root)))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             return True
@@ -178,7 +178,7 @@ class CompileState:
         onSegCs = [c for c in cs if c.pred == "onSeg"]
         for c in onSegCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Parameterize(p, ["onSeg", c.points[1:3], c.points[3:]]))
+                self.solve_instructions.append(Parameterize(p, ("onSeg", c.points[1:3], c.points[3:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -187,7 +187,7 @@ class CompileState:
         lines = self.linesFor(p, cs)
         if lines:
             lcs, l = lines[0]
-            self.solve_instructions.append(Parameterize(p, ["onLine", l]))
+            self.solve_instructions.append(Parameterize(p, ("onLine", l)))
             for c in lcs:
                 self.cs.remove(c)
             return True
@@ -197,7 +197,7 @@ class CompileState:
         circles = self.circlesFor(p, cs)
         if circles:
             ccs, circ = circles[0]
-            self.solve_instructions.append(Parameterize(p, ["onCirc", circ]))
+            self.solve_instructions.append(Parameterize(p, ("onCirc", circ)))
             for c in ccs:
                 self.cs.remove(c)
             return True
@@ -206,7 +206,7 @@ class CompileState:
 
     def paramCoords(self, p, cs):
         print(f"WARNING: point is parameterized by its coordinates: {p}")
-        self.solve_instructions.append(Parameterize(p, ["coords"]))
+        self.solve_instructions.append(Parameterize(p, "coords"))
         return True
 
 
