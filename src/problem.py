@@ -1,4 +1,5 @@
 import sexpdata
+import pdb
 
 from constraint import Constraint
 from util import *
@@ -54,7 +55,7 @@ class Problem:
 
     def preprocess(self):
         sample_points = [p for c in self.constraints for p in c.points if is_sample_pred(c.pred)]
-        cs_with_sampled_points = [c for c in self.constraints if set(c.points).issubset(set(sample_points))]
+        cs_with_sampled_points = [c for c in self.constraints if not c.negate and set(c.points).issubset(set(sample_points))]
         self.sample_bucket = Bucket(points=sample_points, assertions=cs_with_sampled_points)
 
         solve_points = [p for p in self.points if p not in sample_points] # maintain order
@@ -103,7 +104,8 @@ class Problem:
             elif len(sample_cs) == 1 and lenright_points:
                 sample_instructions.append(Sample(tri_points, ("rightTri", right_points[0])))
             else:
-                raise RuntimeException("Unhandled triangle sampling")
+                pdb.set_trace()
+                raise RuntimeError("Unhandled triangle sampling")
         elif samplers[0].pred == "polygon":
             poly_points = set(sampler.points)
 
@@ -139,17 +141,14 @@ class Problem:
     def gen_instructions(self):
         self.instructions = list()
 
-        # FIXME: Need instruction type?
-        self.instructions += [AssertNDG(c) for c in self.ndgs]
-        self.instructions += [Confirm(c) for c in self.goals]
-
         sample_instructions = self.sample_bucket_2_instructions()
         self.instructions += sample_instructions
 
-        # TODO: Solve instructions
         solve_instructions = self.solve_bucket_2_instructions()
         self.instructions += solve_instructions
 
+        self.instructions += [AssertNDG(c) for c in self.ndgs]
+        self.instructions += [Confirm(c) for c in self.goals]
 
     def __str__(self):
         return '\nPROBLEM: {f}\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(

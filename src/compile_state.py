@@ -1,7 +1,7 @@
 import pdb
 
 from cline import Line, Circle
-from instruction import Compute, Parameterize, Assert
+from instruction import Compute, Parameterize, Assert, AssertNDG
 from util import *
 
 
@@ -236,11 +236,34 @@ class CompileState:
             ps = c.points
             if pred == "coll":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                lines.append((c, Line("connecting", other_ps)))
+                lines.append(([c], Line("connecting", other_ps)))
             elif pred == "para":
-                (b, (c, d)) = groupPairs(p, ps)
-                if b is not None:
-                    lines.append((c, Line("paraAt", [b, c, d])))
+                (x, (y, z)) = group_pairs(p, ps)
+                if x is not None:
+                    lines.append(([c], Line("paraAt", [x, y, z])))
+            elif pred == "perp":
+                (x, (y, z)) = group_pairs(p, ps)
+                if x is not None:
+                    lines.append(([c], Line("perpAt", [x, y, z])))
+            elif pred == "cong":
+                w, x, y, z = c.points
+                if p == w and p == y:
+                    lines.append(([c], Line("mediator", [x, z])))
+                elif p == w and p == z:
+                    lines.append(([c], Line("mediator", [x, y])))
+                elif p == x and p == y:
+                    lines.append(([c], Line("mediator", [w, z])))
+                elif p == x and p == z:
+                    lines.append(([c], Line("mediator", [w, y])))
+            elif pred == "ibisector":
+                # FIXME: Missing extra sameside constraints (the ndgs)
+                p1, x, y, z = c.points
+                if p == p1:
+                    lines.append(([c], Line("ibisector", [x, y, z])))
+            elif pred == "ebisector":
+                p1, x, y, z = c.points
+                if p == p1:
+                    lines.append(([c], Line("ebisector", [x, y, z])))
         return lines
 
     def circlesFor(self, p, cs):
@@ -251,7 +274,7 @@ class CompileState:
             ps = c.points
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                lines.append((c, Circle("c3", other_ps)))
+                lines.append(([c], Circle("c3", other_ps)))
         return circles
 
     # Returns (root, constraints to get root)

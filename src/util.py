@@ -9,7 +9,7 @@ def is_sample_pred(pred):
 def group_pairs(p, ps):
     if len(ps) != 4:
         raise RuntimeError("[group_pairs] Wrong number of points passed to group_pairs")
-    a, b, c, d = group_pairs
+    a, b, c, d = ps
     if p == a and p not in [b, c, d]:
         return (b, (c, d))
     elif p == b and p not in [a, c, d]:
