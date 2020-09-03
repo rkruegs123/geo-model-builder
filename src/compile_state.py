@@ -1,4 +1,5 @@
 import pdb
+import copy
 
 from cline import Line, Circle
 from instruction import Compute, Parameterize, Assert, AssertNDG
@@ -11,10 +12,10 @@ class CompileState:
         self.sample_bucket = sample_bucket
         self.solve_bucket = solve_bucket
 
-        self.visited = sample_bucket.points
+        self.visited = copy.deepcopy(sample_bucket.points)
         self.solve_instructions = list()
-        self.ps = solve_bucket.points
-        self.cs = solve_bucket.assertions
+        self.ps = copy.deepcopy(solve_bucket.points)
+        self.cs = copy.deepcopy(solve_bucket.assertions)
         self.open_roots = dict()
         self.root_blacklist = list()
 
@@ -61,13 +62,12 @@ class CompileState:
                 self.root_blacklist.append(root)
             if self.root_blacklist:
                 print(f"[WARNING] root blacklist: {self.root_blacklist}")
-
-                self.visited = self.sample_bucket.points
+                self.visited = copy.deepcopy(self.sample_bucket.points)
                 self.solve_instructions = list()
-                self.ps = solve_bucket.points
-                self.cs = solve_bucket.assertions
+                self.ps = copy.deepcopy(self.solve_bucket.points)
+                self.cs = copy.deepcopy(self.solve_bucket.assertions)
                 self.open_roots = dict()
-                return self.solve()
+                self.solve()
         else:
             for c in self.cs:
                 self.solve_instructions.append(Assert(c))
@@ -274,9 +274,9 @@ class CompileState:
         interllCs = [c for c in cs if c.pred == "interLL"]
         for c in interllCs:
             if c.points[0] == p:
-                a, b, c, d = c.points[1:]
-                l1 = Line("connecting", [a, b])
-                l2 = Line("connecting", [c, d])
+                w, x, y, z = c.points[1:]
+                l1 = Line("connecting", [w, x])
+                l2 = Line("connecting", [y, z])
                 self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
                 self.cs.remove(c)
                 return True
@@ -357,20 +357,22 @@ class CompileState:
     def paramOnLine(self, p, cs):
         lines = self.linesFor(p, cs)
         if lines:
-            lcs, l = lines[0]
+            lcs, l, extra_cs = lines[0]
             self.solve_instructions.append(Parameterize(p, ("onLine", l)))
             for c in lcs:
                 self.cs.remove(c)
+            self.cs += extra_cs
             return True
         return False
 
     def paramOnCirc(self, p, cs):
         circles = self.circlesFor(p, cs)
         if circles:
-            ccs, circ = circles[0]
+            ccs, circ, extra_cs = circles[0]
             self.solve_instructions.append(Parameterize(p, ("onCirc", circ)))
             for c in ccs:
                 self.cs.remove(c)
+            self.cs += extra_cs
             return True
         return False
 
@@ -515,7 +517,7 @@ class CompileState:
         else:
             # rsArbitrary
             if p not in self.root_blacklist:
-                self.open_roots[key] = p
+                self.open_roots[k] = p
                 root = Root("arbitrary", list())
                 return (root, list())
             else:
