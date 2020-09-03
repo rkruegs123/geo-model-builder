@@ -20,12 +20,22 @@ class CompileState:
 
         self.compute_tricks = [
             self.computeCircumcenter
-            , self.computeOrthocenter
             , self.computeMidp
             , self.computeFromMidp
             , self.computeFoot
+            , self.computeReflectPL
             , self.computeIncenter
             , self.computeMixIncenter
+            , self.computeExcenter
+            , self.computeOrthocenter
+            , self.computeCentroid
+            , self.computeIsogonal
+            , self.computeIsotomic
+            , self.computeArcMidpOpp
+            , self.computeArcMidpSame
+            , self.computeInverse
+            , self.computeHarmonicLConj
+            , self.computeHarmonicCConj
             , self.computeInterLL
             , self.computeInter
         ]
@@ -100,6 +110,93 @@ class CompileState:
                 return True
         return False
 
+    def computeCentroid(self, p, cs):
+        centroidCs = [c for c in cs if c.pred == "centroid"]
+        for c in centroidCs:
+            if c.points[0] == p:
+                self.solve_instructions.append(Compute(p, ("centroid", c.points[1:])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeIsogonal(self, p, cs):
+        isogonalCs = [c for c in cs if c.pred == "isogonal"]
+        for c in isogonalCs:
+            x, y, a, b, c = c.points
+            if x == p:
+                self.solve_instructions.append(Compute(p, ("isogonal", [y, a, b, c])))
+                self.cs.remove(c)
+                return True
+            elif y == p:
+                self.solve_instructions.append(Compute(p, ("isogonal", [x, a, b, c])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeIsotomic(self, p, cs):
+        isotomicCs = [c for c in cs if c.pred == "isotomic"]
+        for c in isotomicCs:
+            x, y, a, b, c = c.points
+            if x == p:
+                self.solve_instructions.append(Compute(p, ("isotomic", [y, a, b, c])))
+                self.cs.remove(c)
+                return True
+            elif y == p:
+                self.solve_instructions.append(Compute(p, ("isotomic", [x, a, b, c])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeArcMidpOpp(self, p, cs):
+        aMidpOppCs = [c for c in cs if c.pred == "arcMidpOpp"]
+        for c in aMidpOppCs:
+            if c.points[0] == p:
+                self.solve_instructions.append(Compute(p, ("arcMidpOpp", c.points[1:])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeArcMidpSame(self, p, cs):
+        aMidpSameCs = [c for c in cs if c.pred == "arcMidpSame"]
+        for c in aMidpSameCs:
+            if c.points[0] == p:
+                self.solve_instructions.append(Compute(p, ("arcMidpSame", c.points[1:])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeInverse(self, p, cs):
+        # TODO: allow newer point to come second
+        inverseCs = [c for c in cs if c.pred == "inverse"]
+        for c in inverseCs:
+            match_success, match = match_in_first_2(p, c.points)
+            if match_success:
+                y, o, a = match
+                self.solve_instructions.append(Compute(p, ("inverse", [y, o, a])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeHarmonicLConj(self, p, cs):
+        harmonicLCs = [c for c in cs if c.pred == "harmonicL"]
+        for c in harmonicLCs:
+            (y, (a, b)) = group_pairs(p, ps)
+            if y is not None:
+                self.solve_instructions.append(Compute(p, ("harmonicLConj", [y, a, b])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeHarmonicCConj(self, p, cs):
+        harmonicCCs = [c for c in cs if c.pred == "harmonicC"]
+        for c in harmonicCCs:
+            (y, (a, b)) = group_pairs(p, ps)
+            if y is not None:
+                self.solve_instructions.append(Compute(p, ("harmonicCConj", [y, a, b])))
+                self.cs.remove(c)
+                return True
+        return False
+
 
     def computeMidp(self, p, cs):
         midpCs = [c for c in cs if c.pred == "midp"]
@@ -119,6 +216,19 @@ class CompileState:
                 if a == p:
                     x = b
                 self.solve_instructions.append(Compute(p, ("midpFrom", [m, x])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeReflectPL(self, p, cs):
+        reflectPLCs = [c for c in cs if c.pred == "reflectPL"]
+        for c in reflectPLCs:
+            match_success, match = match_in_first_2(p, c.points)
+            if match_success:
+                x, a, b = match
+                self.solve_instructions.append(
+                    Compute(p, ("interLC", Line("perpAt", [x, a, b]), Circle("coa", [a, x]), Root("neq", [x])))
+                )
                 self.cs.remove(c)
                 return True
         return False
@@ -147,6 +257,15 @@ class CompileState:
         for c in mixIncenterCs:
             if c.points[0] == p:
                 self.solve_instructions.append(Compute(p, ("mixtilinearIncenter", c.points[1:])))
+                self.cs.remove(c)
+                return True
+        return False
+
+    def computeExcenter(self, p, cs):
+        excenterCs = [c for c in cs if c.pred == "excenter"]
+        for c in excenterCs:
+            if c.points[0] == p:
+                self.solve_instructions.append(Compute(p, ("excenter", c.points[1:])))
                 self.cs.remove(c)
                 return True
         return False

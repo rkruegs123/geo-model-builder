@@ -19,3 +19,13 @@ def group_pairs(p, ps):
     elif p == d and p not in [a, b, c]:
         return (c, (a, b))
     return (None, None)
+
+def match_in_first_2(p, ps):
+    if len(ps) != 4:
+        raise RuntimeError("[match_in_first_2] Wrong number of points passed to match_in_first_2")
+    x, y, a, b = ps
+    if p == x and p not in [y, a, b]:
+        return True, (y, a, b)
+    if p == y and p not in [x, a, b]:
+        return True, (x, a, b)
+    return (False, None)
