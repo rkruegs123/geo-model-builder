@@ -68,53 +68,50 @@ class Problem:
     def sample_bucket_2_instructions(self):
         # Get sample instructions
         sample_instructions = list()
-        # FIXME: Bad naming -- right, samplers is the thing driving the sampling, while sample_cs are like constraints around that sampling
-        samplers = [c for c in self.sample_bucket.assertions if is_sample_pred(c.pred)]
-        sample_cs = list(set(self.sample_bucket.assertions) - set(samplers))
+        sample_cs = [c for c in self.sample_bucket.assertions if is_sample_pred(c.pred)]
+        aux_cs = [c for c in self.sample_bucket.assertions if not is_sample_pred(c.pred)]
 
-        if sample_cs and not samplers:
+        if aux_cs and not sample_cs:
             raise RuntimeException("Mishandled sampling constraints")
 
-        if not samplers:
+        if not sample_cs:
             return sample_instructions
-        elif len(samplers) > 1:
+        elif len(sample_cs) > 1:
             pdb.set_trace()
             raise RuntimeException("Unexpected sampling")
 
-        sampler = samplers[0]
+        sampler = sample_cs[0]
 
-        if sampler.pred == "triangle":  # We know len(samplers) == 1
-            tri_points = set(sampler.points)
+        if sampler.pred == "triangle":  # We know len(sample_cs) == 1
 
-            iso_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in sample_cs if c.pred == "cong"]))
-            acute = any(c.pred == "acutes" and set(c.points) == tri_points for c in sample_cs)
-            right_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in sample_cs if c.pred == "perp"]))
-            tri_points = list(tri_points)
+            tri_points = sampler.points
+            acute = any(c.pred == "acutes" and set(c.points) == set(tri_points) for c in aux_cs)
+            iso_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in aux_cs if c.pred == "cong"]))
+            right_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in aux_cs if c.pred == "perp"]))
 
-            # FIXME: Handle all triangle cases
-            if not sample_cs:
+            if not aux_cs:
                 sample_instructions.append(Sample(tri_points, "triangle"))
-            elif len(sample_cs) == 1 and acute:
+            elif len(aux_cs) == 1 and acute:
                 sample_instructions.append(Sample(tri_points, "acuteTri"))
-            elif len(sample_cs) == 1 and iso_points:
+            elif len(aux_cs) == 1 and iso_points:
                 sample_instructions.append(Sample(tri_points, ("isoTri", iso_points[0])))
-            elif len(sample_cs) == 2 and acute and iso_points:
+            elif len(aux_cs) == 2 and acute and iso_points:
                 sample_instructions.append(Sample(tri_points, ("acuteIsoTri", iso_points[0])))
-            elif len(sample_cs) == 2 and len(iso_points) == 2:
+            elif len(aux_cs) == 2 and len(iso_points) == 2:
                 sample_instructions.append(Sample(tri_points, "equiTri"))
-            elif len(sample_cs) == 1 and lenright_points:
+            elif len(aux_cs) == 1 and lenright_points:
                 sample_instructions.append(Sample(tri_points, ("rightTri", right_points[0])))
             else:
                 pdb.set_trace()
                 raise RuntimeError("Unhandled triangle sampling")
-        elif samplers[0].pred == "polygon":
+        elif sampler.pred == "polygon":
             poly_points = set(sampler.points)
 
-            if not sample_cs:
+            if not aux_cs:
                 sample_instructions.append(Sample(poly_points, "polygon"))
             else:
                 sample_instructions.append(Sample(poly_points, "polygon"))
-                sample_instructions += [Assert(c) for c in sample_cs]
+                sample_instructions += [Assert(c) for c in aux_cs]
         else:
             raise RuntimeError("Mishandled sampling")
 
@@ -149,15 +146,6 @@ class Problem:
         self.instructions += solve_instructions
 
         self.instructions += [AssertNDG(c) for c in self.ndgs]
-
-        # Note how we handle this here (at the end) rather than at the end of solve
-        # We could do this in preprocessing if we wanted to reason about the extra constraints
-        for c in self.constraints:
-            for ordC in c.orders():
-                self.instructions.append(Assert(ordC))
-            for ndg in c.ndgs():
-                self.instructions.append(AssertNDG(ndg))
-
         self.instructions += [Confirm(c) for c in self.goals]
 
     def __str__(self):

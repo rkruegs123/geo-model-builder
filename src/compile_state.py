@@ -3,8 +3,7 @@ import pdb
 from cline import Line, Circle
 from instruction import Compute, Parameterize, Assert, AssertNDG
 from util import *
-
-
+from constraint import Constraint
 
 class CompileState:
     def __init__(self, sample_bucket, solve_bucket):
@@ -62,6 +61,11 @@ class CompileState:
         else:
             for c in self.cs:
                 self.solve_instructions.append(Assert(c))
+                for ordC in c.orders():
+                    self.solve_instructions.append(Assert(ordC))
+                for ndg in c.ndgs():
+                    self.solve_instructions.append(AssertNDG(ndg))
+
 
     def process_point(self, p):
 
@@ -164,15 +168,16 @@ class CompileState:
         circles = self.circlesFor(p, cs)
 
         if len(lines) >= 2:
-            cs1, l1 = lines[0]
-            cs2, l2 = lines[1]
+            cs1, l1, extra_cs1 = lines[0]
+            cs2, l2, extra_cs2 = lines[1]
             self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
             for c in cs1 + cs2:
                 self.cs.remove(c)
+            self.cs += extra_cs1 + extra_cs2
             return True
         elif len(lines) == 1 and circles:
-            cs1, l = lines[0]
-            cs2, circ = circles[0]
+            cs1, l, extra_cs_l = lines[0]
+            cs2, circ, extra_cs_c = circles[0]
 
             root, rcs = self.determine_root(p, l, circ, cs)
             if root is None:
@@ -180,10 +185,11 @@ class CompileState:
             self.solve_instructions.append(Compute(p, ("interLC", l, circ, root)))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
+            self.cs += extra_cs_l + extra_cs_c
             return True
         elif len(circles) >= 2:
-            cs1, c1 = circles[0]
-            cs2, c2 = circles[1]
+            cs1, c1, extra_cs1 = circles[0]
+            cs2, c2, extra_cs2 = circles[1]
 
             root, rcs = self.determine_root(p, c1, c2, cs)
             if root is None:
@@ -191,6 +197,7 @@ class CompileState:
             self.solve_instructions.append(Compute(p, ("interCC", c1, c2, root)))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
+            self.cs += extra_cs1 + extra_cs2
             return True
         return False
 
@@ -268,34 +275,56 @@ class CompileState:
             ps = c.points
             if pred == "coll":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                lines.append(([c], Line("connecting", other_ps)))
+                lines.append(([c], Line("connecting", other_ps), list()))
             elif pred == "para":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line("paraAt", [x, y, z])))
+                    lines.append(([c], Line("paraAt", [x, y, z]), list()))
             elif pred == "perp":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line("perpAt", [x, y, z])))
+                    lines.append(([c], Line("perpAt", [x, y, z]), list()))
             elif pred == "cong":
                 w, x, y, z = c.points
                 if p == w and p == y:
-                    lines.append(([c], Line("mediator", [x, z])))
+                    lines.append(([c], Line("mediator", [x, z]), list()))
                 elif p == w and p == z:
-                    lines.append(([c], Line("mediator", [x, y])))
+                    lines.append(([c], Line("mediator", [x, y]), list()))
                 elif p == x and p == y:
-                    lines.append(([c], Line("mediator", [w, z])))
+                    lines.append(([c], Line("mediator", [w, z]), list()))
                 elif p == x and p == z:
-                    lines.append(([c], Line("mediator", [w, y])))
+                    lines.append(([c], Line("mediator", [w, y]), list()))
             elif pred == "ibisector":
                 # FIXME: Missing extra sameside constraints (the ndgs)
                 p1, x, y, z = c.points
                 if p == p1:
-                    lines.append(([c], Line("ibisector", [x, y, z])))
+                    extra_c1 = Constraint("sameSide", [p1, x, y, z], False)
+                    extra_c2 = Constraint("sameSide", [p1, z, y, x], False)
+                    lines.append(([c], Line("ibisector", [x, y, z]), [extra_c1, extra_c2]))
             elif pred == "ebisector":
                 p1, x, y, z = c.points
                 if p == p1:
-                    lines.append(([c], Line("ebisector", [x, y, z])))
+                    lines.append(([c], Line("ebisector", [x, y, z]), list()))
+            elif pred == "eqOAngle":
+                u, v, w, x, y, z = c.points
+                if u == p and p not in [v, w, x, y, z]:
+                    lines.append(([c], Line("eqOAngle", [v, w, x, y, z]), list()))
+                elif w == p and p not in [u, v, x, y, z]:
+                    lines.append(([c], Line("eqOAngle", [u, v, x, y, z]), list()))
+                elif x == p and p not in [u, v, w, y, z]:
+                    lines.append(([c], Line("eqOAngle", [u, v, w, y, z]), list()))
+                elif z == p and p not in [u, v, w, x, y]:
+                    lines.append(([c], Line("eqOAngle", [u, v, w, x, y]), list()))
+            elif pred == "onSeg":
+                x, y, z = c.points
+                extra_c = Constraint("between", [x, y, z], False)
+                if p == x:
+                    lines.append(([c], Line("connecting", [y, z]), [extra_c]))
+                elif p == y:
+                    lines.append(([c], Line("connecting", [x, z]), [extra_c]))
+                elif p == z:
+                    lines.append(([c], Line("connecting", [x, y]), [extra_c]))
+
         return lines
 
     def circlesFor(self, p, cs):
@@ -306,30 +335,30 @@ class CompileState:
             ps = c.points
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                circles.append(([c], Circle("c3", other_ps)))
+                circles.append(([c], Circle("c3", other_ps), list()))
             elif pred == "onC":
                 p1, o, x = ps
                 if p == p1:
-                    circles.append(([c], Circle("coa", [o, x])))
+                    circles.append(([c], Circle("coa", [o, x]), list()))
             elif pred == "cong":
                 if ps.count(p) == 1:
                     (x, (y, z)) = group_pairs(p, ps)
                     if x == y:
-                        circles.append(([c], Circle("coa", [x, z])))
+                        circles.append(([c], Circle("coa", [x, z]), list()))
                     elif x == z:
-                        circles.append(([c], Circle("coa", [x, y])))
+                        circles.append(([c], Circle("coa", [x, y]), list()))
                     else:
-                        circles.append(([c], Circle("cong", [b, c, d])))
+                        circles.append(([c], Circle("cong", [b, c, d]), list()))
             elif pred == "perp":
                 w, x, y, z = ps
                 if p == w and p == y:
-                    circles.append(([c], Circle("diam", [x, z])))
+                    circles.append(([c], Circle("diam", [x, z]), list()))
                 elif p == w and p == z:
-                    circles.append(([c], Circle("diam", [x, y])))
+                    circles.append(([c], Circle("diam", [x, y]), list()))
                 elif p == x and p == y:
-                    circles.append(([c], Circle("diam", [w, z])))
+                    circles.append(([c], Circle("diam", [w, z]), list()))
                 elif p == x and p == z:
-                    circles.append(([c], Circle("diam", [w, y])))
+                    circles.append(([c], Circle("diam", [w, y]), list()))
         return circles
 
     # Returns (root, constraints to get root)

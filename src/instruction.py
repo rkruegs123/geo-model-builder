@@ -8,7 +8,7 @@ class Parameterize:
         self.parameterization = parameterization
 
     def __str__(self):
-        if isinstance(self.parameterization, collections.abc.Iterable):
+        if isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
             param_str = ' '.join(str(x) for x in self.parameterization)
         else:
             param_str = str(self.parameterization)
@@ -23,7 +23,7 @@ class Compute:
         self.computation = computation
 
     def __str__(self):
-        if isinstance(self.computation, collections.abc.Iterable):
+        if isinstance(self.computation, collections.abc.Iterable) and type(self.computation) != str:
             comp_str = ' '.join(str(x) for x in self.computation)
         else:
             comp_str = str(self.computation)
