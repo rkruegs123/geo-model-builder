@@ -1,4 +1,5 @@
 import collections
+from util import *
 
 # TODO: Instruction base class?
 
@@ -8,18 +9,20 @@ class Parameterize:
         self.parameterization = parameterization
 
     def __str__(self):
+
         if isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
             param_str = ' '.join(str(x) for x in self.parameterization)
         else:
             param_str = str(self.parameterization)
+
         return "parameterize {p} {p_str}".format(
             p=self.point,
             p_str=param_str
         )
 
 class Compute:
-    def __init__(self, points, computation):
-        self.points = points
+    def __init__(self, point, computation):
+        self.point = point
         self.computation = computation
 
     def __str__(self):
@@ -27,8 +30,8 @@ class Compute:
             comp_str = ' '.join(str(x) for x in self.computation)
         else:
             comp_str = str(self.computation)
-        return "compute {ps} ({computation_str})".format(
-            ps=self.points,
+        return "compute {p} ({computation_str})".format(
+            p=self.point,
             computation_str=comp_str
         )
 

@@ -32,7 +32,10 @@ class Problem:
                         raise RuntimeError("Mal-formed declare-point")
                     if not isinstance(line_info[1], sexpdata.Symbol):
                         raise RuntimeError("Unrecognized load type from sexpdata")
-                    self.points.append(line_info[1]._val)
+                    p = line_info[1]._val
+                    if p in self.points:
+                        raise RuntimeError(f"Duplicate point encountered: {p}")
+                    self.points.append(p)
                 else:
                     # FIXME: This check won't handle negations
                     # if not all(isinstance(x, sexpdata.Symbol) for x in line_info[1]):
