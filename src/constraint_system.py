@@ -44,14 +44,14 @@ self.params should store Inits --
 
 '''
 
-Loss = collections.namedtuple("Loss", ["expr", "weight", "hard"])
+Loss = collections.namedtuple("Loss", ["name", "expr", "weight", "hard"])
 
-# Used to represent for variables in a constraint system
+# Used to represent variables in a constraint system
 Init = collections.namedtuple("Init", ["name", "initialization", "args"])
 
 # Used as references to variables in a constraint system
-Var = collections.namedtuple("Var", ["name"])
-
+def var(name):
+    return Expr("var", [name])
 
 #####################
 ## Constraint System
@@ -93,7 +93,7 @@ class ConstraintSystem:
         [p] = ps
         xvar, yvar = f"{p}x", f"{p}y"
         self.params.extend([Init(xvar, "uniform", [lo, hi]), Init(yvar, "uniform", [lo, hi])])
-        P = Point(x=Var(xvar), y=Var(yvar))
+        P = Point(x=var(xvar), y=var(yvar))
         self.name2pt[p] = P
 
 
@@ -104,16 +104,16 @@ class ConstraintSystem:
         angle_zs = [Init(f"polygon_angle_z{i}", "uniform", [-1.0, 1.0]) for i in range(len(ps))]
         self.params.extend(angle_zs)
         angles = list()
-        multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
+        multiplicand = const(((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3))
         for az in angle_zs:
-            ang = Expr("mul", [multiplicand, Expr("tanh", Expr("mul", [0.2, az]))])
+            ang = multiplicand * Expr("tanh", const(0.2) * var(az.name))
             angles.append(ang)
 
         scale_zs = [Init(f"polygon_scale_z{i}", "uniform", [-1.0, 1.0]) for i in range(len(ps))]
         self.params.extend(scale_zs)
         scales = list()
         for sz in scale_zs:
-            scale = Expr("mul", [0.5, Expr("tanh", Expr("mul", [0.2, sz]))])
+            scale = const(0.5) * Expr("tanh", [const(0.2) * var(sz.name)])
             scales.append(scale)
 
         Ps = [Point(x=const(-2.0), y=const(0.0)), Point(x=const(2.0), y=const(0.0))]
@@ -125,9 +125,20 @@ class ConstraintSystem:
             P    = B + (X - B).smul(s * (1 + scales[i-1]) / dist(X, B))
             Ps.append(P)
 
-        # FIXME: Register losses
+        # Record losses
+        polygon_angle_sum_loss = Expr("sum", angles) - const(math.pi * (len(ps) - 2))
+        self.losses.append(Loss("polygon-angle-sum", polygon_angle_sum_loss, 1e-1, True))
 
-        # FIXME: Register points
+        polygon_first_eq_last = dist(Ps[0], Ps[len(ps)])
+        self.losses.append(Loss("polygon-first-eq-last", polygon_first_eq_last, 1e-2, True))
+
+        polygon_first_angle_eq_sampled = angles[0] - angle(Ps[-1], Ps[0], Ps[1])
+        self.losses.append(Loss("polygon-first-angle-eq-sampled", polygon_first_angle_eq_sampled, 1e-2, True))
+
+        # Register points
+        for p, P in zip(ps, Ps[:-1]):
+            self.name2pt[p] = P
+
 
 
     def sample_triangle(self, ps, iso=None, right=None, acute=False, equi=False):
@@ -135,7 +146,7 @@ class ConstraintSystem:
             return self.sample_polygon(ps)
 
         [nA, nB, nC] = ps
-        B = Point(x=const(-2.0), y=const(0.0)
+        B = Point(x=const(-2.0), y=const(0.0))
         C = Point(x=const(2.0), y=const(0.0))
 
         if iso is not None or equi:
@@ -143,15 +154,16 @@ class ConstraintSystem:
         else:
             Ax = Init("tri_x", "uniform", [-1.2, 1.2])
 
+
         if right is not None:
-            Ay = Expr("sqrt", [Expr("sub", [4, Expr("pow", [Ax, 2.0])])])
+            Ay = Expr("sqrt", [const(4) - (Ax ** 2)])
         elif equi:
-            Ay = Expr("mul", [2, Expr("sqrt", [const(3.0)])])
+            Ay = const(2) * Expr("sqrt", [const(3)])
         else:
             aylo = 1.1 if acute else 0.4
             z = Init("tri", "uniform", [-1.0, 1.0])
             self.params.append(z)
-            Ay = Expr("add", [onst(aylo), Expr("mul", [const(3.0), Expr("sigmoid", [Var("tri")])])])
+            Ay = const(aylo) + const(3.0) * Expr("sigmoid", [var("tri")])
 
         A = Point(x=Ax, y=Ay)
 
@@ -193,8 +205,6 @@ class ConstraintSystem:
     # def sample_uniform(self, ps, lo=-1.0, hi=1.0):
     def parameterize_coords(self, p):
         self.sample_uniform([p])
-
-
 
 
     #####################
