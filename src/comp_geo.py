@@ -62,10 +62,10 @@ def rotate_counterclockwise(theta, pt):
     return matrix_mul(rotation_matrix(theta), pt)
 
 def rotate_clockwise_90(pt):
-    return matrix_mul((Point(x=Expr("const", [0.0]), y=Expr("const", [1.0])), Point(x=Expr("const", [-1.0]),y=Expr("const", [0.0]))), pt)
+    return matrix_mul((Point(x=const(0.0), y=const(1.0)), Point(x=const(-1.0), y=const(0.0))), pt)
 
 def rotate_counterclockwise_90(pt):
-    return matrix_mul((Point(x=Expr("const", [0.0]), y=Expr("const", [-1.0])), Point(x=Expr("const", [1.0]),y=Expr("const", [0.0]))), pt)
+    return matrix_mul((Point(x=const(0.0), y=const(-1.0)), Point(x=const(1.0), y=const(0.0))), pt)
 
 
 def midp(self, A, B):
