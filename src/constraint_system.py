@@ -1,5 +1,8 @@
 import collections
+import math
+
 from instruction import *
+from comp_geo import *
 
 '''
 PCoords a
@@ -33,25 +36,22 @@ api will look something like:
 scipy_solve(constraint_system, n_models)
 tf_solve(constraint_system, n_models)
 
+
+
+
+self.params should store Inits --
+
+
 '''
 
 Loss = collections.namedtuple("Loss", ["expr", "weight", "hard"])
 
-Init = collections.namedtuple("Init", ["initialization"])
-Expr = collections.namedtuple("Expr", ["op", "args"])
+# Used to represent for variables in a constraint system
+Init = collections.namedtuple("Init", ["name", "initialization", "args"])
 
-class Point(collections.namedtuple("Point", ["x", "y"])):
-    def __add__(self, p):
-        return Point(
-            x=Expr("add", [self.x, p.x]),
-            y=Expr("add", [self.y, p.y])
-        )
+# Used as references to variables in a constraint system
+Var = collections.namedtuple("Var", ["name"])
 
-    def smul(self, z):
-        return Point(
-            x=Expr("mul", [self.x, z]),
-            y=Expr("mul", [self.y, z])
-        )
 
 #####################
 ## Constraint System
@@ -88,10 +88,80 @@ class ConstraintSystem:
         else:
             raise NotImplementedError("FIXME: Finish sample")
 
-    def sample_uniform(self, ps):
+    # FIXME: Currently all vars will be trainable!
+    def sample_uniform(self, ps, lo=-1.0, hi=1.0):
         [p] = ps
-        P = Point(x=Init("uniform"), y=Init("uniform"))
+        xvar, yvar = f"{p}x", f"{p}y"
+        self.params.extend([Init(xvar, "uniform", [lo, hi]), Init(yvar, "uniform", [lo, hi])])
+        P = Point(x=Var(xvar), y=Var(yvar))
         self.name2pt[p] = P
+
+
+    def sample_polygon(self, ps):
+        if len(ps) < 4:
+            print("WARNING: sample_polygon expecting >3 points")
+
+        angle_zs = [Init(f"polygon_angle_z{i}", "uniform", [-1.0, 1.0]) for i in range(len(ps))]
+        self.params.extend(angle_zs)
+        angles = list()
+        multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
+        for az in angle_zs:
+            ang = Expr("mul", [multiplicand, Expr("tanh", Expr("mul", [0.2, az]))])
+            angles.append(ang)
+
+        scale_zs = [Init(f"polygon_scale_z{i}", "uniform", [-1.0, 1.0]) for i in range(len(ps))]
+        self.params.extend(scale_zs)
+        scales = list()
+        for sz in scale_zs:
+            scale = Expr("mul", [0.5, Expr("tanh", Expr("mul", [0.2, sz]))])
+            scales.append(scale)
+
+        Ps = [Point(x=const(-2.0), y=const(0.0)), Point(x=const(2.0), y=const(0.0))]
+        s = dist(Ps[0], Ps[1])
+
+        for i in range(2, len(ps) + 1):
+            A, B = Ps[-2:]
+            X    = B + rotate_counterclockwise(-angles[i-1], A - B)
+            P    = B + (X - B).smul(s * (1 + scales[i-1]) / dist(X, B))
+            Ps.append(P)
+
+        # FIXME: Register losses
+
+        # FIXME: Register points
+
+
+    def sample_triangle(self, ps, iso=None, right=None, acute=False, equi=False):
+        if not (iso or right or acute or equi):
+            return self.sample_polygon(ps)
+
+        [nA, nB, nC] = ps
+        B = Point(x=const(-2.0), y=const(0.0)
+        C = Point(x=const(2.0), y=const(0.0))
+
+        if iso is not None or equi:
+            Ax = const(0.0)
+        else:
+            Ax = Init("tri_x", "uniform", [-1.2, 1.2])
+
+        if right is not None:
+            Ay = Expr("sqrt", [Expr("sub", [4, Expr("pow", [Ax, 2.0])])])
+        elif equi:
+            Ay = Expr("mul", [2, Expr("sqrt", [const(3.0)])])
+        else:
+            aylo = 1.1 if acute else 0.4
+            z = Init("tri", "uniform", [-1.0, 1.0])
+            self.params.append(z)
+            Ay = Expr("add", [onst(aylo), Expr("mul", [const(3.0), Expr("sigmoid", [Var("tri")])])])
+
+        A = Point(x=Ax, y=Ay)
+
+        # Shuffle, if the isosceles vertex was not C
+        if iso == nB or right == nB:   (A, B, C) = (B, A, C)
+        elif iso == nC or right == nC: (A, B, C) = (C, B, A)
+
+        self.name2pt[nA] = A
+        self.name2pt[nB] = B
+        self.name2pt[nC] = C
 
     #####################
     ## Compute
@@ -105,8 +175,8 @@ class ConstraintSystem:
 
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
-
-        raise NotImplementedError("FIXME: Finish compute_midp")
+        M = midp(A, B)
+        self.name2pt[m] = M
 
 
     #####################
@@ -120,18 +190,12 @@ class ConstraintSystem:
         else:
             raise NotImplementedError("FIXME: Finish parameterize")
 
+    # def sample_uniform(self, ps, lo=-1.0, hi=1.0):
     def parameterize_coords(self, p):
-        xvar, yvar = f"{p}x", f"{p}y"
-        self.params.extend([xvar, yvar])
-        P = Point(x=xvar, y=yvar)
-        self.name2pt[p] = P
+        self.sample_uniform([p])
 
-    #####################
-    ## Computational Geometry
-    ####################
 
-    def midp(self, A, B):
-        return (A + B).smul(0.5)
+
 
     #####################
     ## Utility
