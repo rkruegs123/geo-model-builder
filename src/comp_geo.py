@@ -1,24 +1,31 @@
 import collections
+import numbers
 
 
 class Expr(collections.namedtuple("Expr", ["op", "args"])):
     def __add__(self, e):
-        return Expr("add", [self, e])
+        return Expr("add", [self, self.preprocess_expr(e)])
 
     def __sub__(self, e):
-        return Expr("sub", [self, e])
+        return Expr("sub", [self, self.preprocess_expr(e)])
 
     def __mul__(self, e):
-        return Expr("mul", [self, e])
+        return Expr("mul", [self, self.preprocess_expr(e)])
 
     def __truediv__(self, e):
-        return Expr("div", [self, e])
+        return Expr("div", [self, self.preprocess_expr(e)])
 
     def __pow__(self, e):
-        return Expr("pow", [self, e])
+        return Expr("pow", [self, self.preprocess_expr(e)])
 
     def __neg__(self):
         return Expr("neg", [self])
+
+    def preprocess_expr(self, e):
+        if isinstance(e, numbers.Number):
+            return const(e)
+        else:
+            return e
 
 # NOTE: The logic for dealing with consts in tf will be something like:
 # if const then tf.const, else process_expr (and don't use tf.const)
@@ -66,14 +73,14 @@ def rotate_clockwise_90(pt):
 def rotate_counterclockwise_90(pt):
     return matrix_mul((Point(x=const(0.0), y=const(-1.0)), Point(x=const(1.0), y=const(0.0))), pt)
 
-def midp(self, A, B):
+def midp(A, B):
     return (A + B).smul(0.5)
 
 def sqdist(A, B):
     return (A.x - B.x)**2 + (A.y - B.y)**2
 
 def dist(A, B):
-    return sqdist(A, B) ** (1/2)
+    return sqdist(A, B) ** const(0.5)
 
 def side_lengths(A, B, C):
     return dist(B, C), dist(C, A), dist(A, B)

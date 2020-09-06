@@ -5,6 +5,15 @@ from instruction import *
 from comp_geo import *
 
 '''
+AM of 9.5.20 TODO:
+
+DONE: Warmup: Given dict mapping variable name to value, need to reduce expressions to values (to get point values)
+Then, use sample polygon as a test for training
+If goes well, then extend a bit and plug in scipy (or at least think how you could. Don't want to finish TF and then realize it doesn't work for scipy)
+
+'''
+
+'''
 PCoords a
 PCoords b
 Compute x (midp a b)
@@ -60,12 +69,13 @@ def var(name):
 class ConstraintSystem:
     def __init__(self, instructions):
         self.instructions = instructions
-        self.name2pt = {}
+        self.name2pt = dict()
         self.params = list()
         self.losses = list()
 
         for i in instructions:
             self.process_instruction(i)
+
 
     def process_instruction(self, i):
         if isinstance(i, Sample):
@@ -76,6 +86,15 @@ class ConstraintSystem:
             self.parameterize(i)
         else:
             raise NotImplementedError("FIXME: Finish process_instruction")
+
+
+
+    def get_point_vals(self, assn):
+        p_vals = dict()
+        for p_name, p in self.name2pt.items():
+            xval, yval = self.reduce_expr(p.x, assn), self.reduce_expr(p.y, assn)
+            p_vals[p_name] = Point(xval, yval)
+        return p_vals
 
     #####################
     ## Sample
@@ -202,7 +221,6 @@ class ConstraintSystem:
         else:
             raise NotImplementedError("FIXME: Finish parameterize")
 
-    # def sample_uniform(self, ps, lo=-1.0, hi=1.0):
     def parameterize_coords(self, p):
         self.sample_uniform([p])
 
@@ -213,3 +231,35 @@ class ConstraintSystem:
 
     def lookup_pts(self, ps):
         return [self.name2pt[p] for p in ps]
+
+
+    def reduce_expr(self, expr, assn):
+        op = expr.op
+        if op == "const":
+            [x] = expr.args
+            return x
+        elif op == "var":
+            [var_name] = expr.args
+            if var_name not in assn:
+                raise RuntimeError("[reduce_expr] Variable not found in assignment")
+            return assn[var_name]
+        elif op == "add":
+            [x1, x2] = expr.args
+            return self.reduce_expr(x1, assn) + self.reduce_expr(x2, assn)
+        elif op == "sub":
+            [x1, x2] = expr.args
+            return self.reduce_expr(x1, assn) - self.reduce_expr(x2, assn)
+        elif op == "mul":
+            [x1, x2] = expr.args
+            return self.reduce_expr(x1, assn) * self.reduce_expr(x2, assn)
+        elif op == "div":
+            [x1, x2] = expr.args
+            return self.reduce_expr(x1, assn) / self.reduce_expr(x2, assn)
+        elif op == "pow":
+            [x1, x2] = expr.args
+            return self.reduce_expr(x1, assn) ** self.reduce_expr(x2, assn)
+        elif op == "neg":
+            [x] = expr.args
+            return -self.reduce_expr(x, assn)
+        else:
+            raise NotImplemnetedError(f"[reduce_expr] op not supported: {op}")

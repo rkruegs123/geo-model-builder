@@ -4,6 +4,7 @@ import collections
 import tensorflow.compat.v1 as tf
 import scipy
 import os
+import matplotlib.pyplot as plt
 
 from problem import Problem
 from constraint_system import ConstraintSystem
@@ -49,3 +50,17 @@ if __name__ == "__main__":
             print(unfiltered_models)
     else:
         raise NotImplementedError("Solver not implemented")
+
+    for m in unfiltered_models:
+        p_vals = c_sys.get_point_vals(m)
+        print(p_vals)
+
+        xs = [p.x for p in p_vals.values()]
+        ys = [p.y for p in p_vals.values()]
+        names = [n for n in p_vals.keys()]
+
+        fit, ax = plt.subplots()
+        ax.scatter(xs, ys)
+        for i, n in enumerate(names):
+            ax.annotate(n, (xs[i], ys[i]))
+        plt.show()

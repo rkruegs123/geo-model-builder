@@ -2,6 +2,9 @@ import tensorflow.compat.v1 as tf
 import tensorflow_probability as tfp
 import itertools
 import pdb
+import random
+
+from comp_geo import Point, dist
 
 '''
 
@@ -32,12 +35,17 @@ class SolveTF:
             else:
                 raise NotImplementedError("Unsupported sampling method")
 
+        self.losses = dict()
+
+        self.name2pt = { n : Point(self.expr2tf(val.x), self.expr2tf(val.y)) for n, val in c_sys.name2pt.items() }
+
+
     def run(self, x):
         return self.sess.run(x)
 
     def solve(self):
         if self.has_loss:
-            raise NotImplementedError("TODO: Implement training for SolveTF")
+            self.freeze()
 
         assignments = list()
         for _ in range(self.opts.n_tries):
@@ -46,5 +54,115 @@ class SolveTF:
                 assignment = self.run(self.params)
                 assignments.append(assignment)
             else:
+                # TODO: Make problem that just samples polygon, and freeze it. if works, add self.train
                 raise NotImplementedError("TODO: Implement training for SolveTF")
         return assignments
+
+    def mk_non_zero(err):
+        res = tf.reduce_mean(tf.exp(- (err ** 2) * 20))
+        tf.check_numerics(res, message="mk_non_zero")
+        return res
+
+    def mk_zero(err):
+        res = tf.reduce_mean(err**2)
+        tf.check_numerics(res, message="mk_zero")
+        return res
+
+    def register_loss(self, key, val, weight=1.0):
+        k = key + ("" if len(vals) == 1 else "_" + str(i+1))
+        assert(not k in self.losses)
+        # TF has a bug that causes nans when differentiating something exactly 0
+        self.losses[k] = weight * mk_zero(val + 1e-6 * (random.random() / 2))
+
+    def regularize_points(self):
+        norms = tf.cast([self.point_norm(p) for p in self.name2pt.values()], dtype=tf.float64)
+        self.losses["points"] = self.opts.regularize_points * tf.reduce_mean(norms)
+
+    def make_points_distinct(self):
+        if random.random() < self.opts.distinct_prob:
+            distincts = tf.cast([dist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)], tf.float64)
+            dloss     = tf.reduce_mean(mk_non_zero(distincts))
+            self.losses["distinct"] = self.opts.make_distinct * dloss
+
+    def freeze(self):
+        opts = self.opts
+        self.regularize_points()
+        self.make_points_distinct()
+        self.loss = sum(self.losses.values())
+        self.global_step = tf.train.get_or_create_global_step()
+        self.learning_rate = tf.train.exponential_decay(
+            global_step=self.global_step,
+            learning_rate=opts.learning_rate,
+            decay_steps=opts.decay_steps,
+            decay_rate=opts.decay_rate,
+            staircase=False)
+        optimizer         = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        gs, vs            = zip(*optimizer.compute_gradients(self.loss))
+        self.apply_grads  = optimizer.apply_gradients(zip(gs, vs), name='apply_gradients', global_step=self.global_step)
+        self.reset_step   = tf.assign(self.global_step, 0)
+
+
+    #####################
+    ## Expr Utilities
+    ####################
+
+    def point2tf(self, p):
+        return tf.cast([p.x, p.y], dtype=tf.float64)
+
+    def point_norm(self, p):
+        return tf.norm(self.point2tf(p), ord=2)
+
+    def expr2tf_aux(self, expr):
+        op = expr.op
+        if op == "const":
+            [x] = expr.args
+            # Note that we aren't using tf.constant here
+            return x
+        elif op == "var":
+            [var_name] = expr.args
+            if var_name not in self.params:
+                raise RuntimeError(f"[expr2tf_aux] Var not found in self.params: {var_name}")
+            return self.params[var_name]
+        elif op == "cos":
+            [x] = expr.args
+            return tf.math.cos(self.expr2tf_aux(x))
+        elif op == "sin":
+            [x] = expr.args
+            return tf.math.sin(self.expr2tf_aux(x))
+        elif op == "acos":
+            [x] = expr.args
+            return tf.math.acos(self.expr2tf_aux(x))
+        elif op == "tanh":
+            [x] = expr.args
+            return tf.nn.tanh(self.expr2tf_aux(x))
+        elif op == "sum":
+            xs = expr.args
+            return tf.reduce_sum([self.expr2tf_aux(x) for x in xs])
+        elif op == "sqrt":
+            [x] = expr.args
+            return tf.sqrt(self.expr2tf_aux(x))
+        elif op == "sigmoid":
+            [x] = expr.args
+            return tf.nn.sigmoid(x)
+        elif op == "mul":
+            [x1, x2] = expr.args
+            return self.expr2tf_aux(x1) * self.expr2tf_aux(x2)
+        elif op == "add":
+            [x1, x2] = expr.args
+            return self.expr2tf_aux(x1) + self.expr2tf_aux(x2)
+        elif op == "sub":
+            [x1, x2] = expr.args
+            return self.expr2tf_aux(x1) - self.expr2tf_aux(x2)
+        elif op == "div":
+            [x1, x2] = expr.args
+            return self.expr2tf_aux(x1) / self.expr2tf_aux(x2)
+        else:
+            raise NotImplementedError(f"[expr2tf_aux] Op not implemented: {op}")
+
+    def expr2tf(self, expr):
+        op = expr.op
+        if op == "const":
+            [x] = expr.args
+            return tf.constant(x, dtype=tf.float64)
+        else:
+            return self.expr2tf_aux(expr)
