@@ -143,7 +143,7 @@ class SolveTF:
             return tf.sqrt(self.expr2tf_aux(x))
         elif op == "sigmoid":
             [x] = expr.args
-            return tf.nn.sigmoid(x)
+            return tf.nn.sigmoid(self.expr2tf_aux(x))
         elif op == "mul":
             [x1, x2] = expr.args
             return self.expr2tf_aux(x1) * self.expr2tf_aux(x2)
@@ -156,6 +156,12 @@ class SolveTF:
         elif op == "div":
             [x1, x2] = expr.args
             return self.expr2tf_aux(x1) / self.expr2tf_aux(x2)
+        elif op == "pow":
+            [x1, x2] = expr.args
+            return self.expr2tf_aux(x1) ** self.expr2tf_aux(x2)
+        elif op == "neg":
+            [x] = expr.args
+            return -self.expr2tf_aux(x)
         else:
             raise NotImplementedError(f"[expr2tf_aux] Op not implemented: {op}")
 

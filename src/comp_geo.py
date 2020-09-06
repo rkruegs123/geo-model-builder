@@ -1,5 +1,6 @@
 import collections
 import numbers
+import pdb
 
 
 class Expr(collections.namedtuple("Expr", ["op", "args"])):
@@ -60,8 +61,8 @@ def inner_product(A, B):
     return a1*b1 + a2*b2
 
 def rotation_matrix(theta):
-    r1 = Point(x=Expr("cos" [theta]), y=-Expr("sin", [theta]))
-    r1 = Point(x=Expr("sin" [theta]), y=Expr("cos", [theta]))
+    r1 = Point(x=Expr("cos", [theta]), y=-Expr("sin", [theta]))
+    r2 = Point(x=Expr("sin", [theta]), y=Expr("cos", [theta]))
     return (r1, r2)
 
 def rotate_counterclockwise(theta, pt):
@@ -87,4 +88,4 @@ def side_lengths(A, B, C):
 
 def angle(A, B, C):
     a, b, c = side_lengths(A, B, C)
-    return Expr("acos", [(a**2 + c**2 - b**2) / (2 * a * c)])
+    return Expr("acos", [(a**2 + c**2 - b**2) / (const(2) * a * c)])

@@ -1,5 +1,6 @@
 import collections
 import math
+import pdb
 
 from instruction import *
 from comp_geo import *
@@ -104,6 +105,8 @@ class ConstraintSystem:
         sampling_method = i.sampler
         if sampling_method == "uniform":
             self.sample_uniform(i.points)
+        elif sampling_method == "polygon":
+            self.sample_polygon(i.points)
         else:
             raise NotImplementedError("FIXME: Finish sample")
 
@@ -125,7 +128,7 @@ class ConstraintSystem:
         angles = list()
         multiplicand = const(((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3))
         for az in angle_zs:
-            ang = multiplicand * Expr("tanh", const(0.2) * var(az.name))
+            ang = multiplicand * Expr("tanh", [const(0.2) * var(az.name)])
             angles.append(ang)
 
         scale_zs = [Init(f"polygon_scale_z{i}", "uniform", [-1.0, 1.0]) for i in range(len(ps))]
@@ -141,7 +144,7 @@ class ConstraintSystem:
         for i in range(2, len(ps) + 1):
             A, B = Ps[-2:]
             X    = B + rotate_counterclockwise(-angles[i-1], A - B)
-            P    = B + (X - B).smul(s * (1 + scales[i-1]) / dist(X, B))
+            P    = B + (X - B).smul(s * (const(1) + scales[i-1]) / dist(X, B))
             Ps.append(P)
 
         # Record losses
