@@ -108,7 +108,7 @@ class Problem:
                 pdb.set_trace()
                 raise RuntimeError("Unhandled triangle sampling")
         elif sampler.pred == "polygon":
-            poly_points = set(sampler.points)
+            poly_points = sampler.points
 
             if not aux_cs:
                 sample_instructions.append(Sample(poly_points, "polygon"))

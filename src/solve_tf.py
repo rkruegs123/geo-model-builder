@@ -35,9 +35,42 @@ class SolveTF:
             else:
                 raise NotImplementedError("Unsupported sampling method")
 
+        # FIXME: Need to populate losses
         self.losses = dict()
 
+        pdb.set_trace()
+
         self.name2pt = { n : Point(self.expr2tf(val.x), self.expr2tf(val.y)) for n, val in c_sys.name2pt.items() }
+
+
+    def train(self):
+        opts = self.opts
+        self.sess.run(self.reset_step)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+
+        loss_v = None
+
+        for i in range(opts.n_iterations):
+            loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
+            '''
+            if i > 0 and i % opts.print_freq == 0:
+                if opts.verbose: print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
+                if opts.verbose > 1: self.print_losses()
+                if opts.plot > 1: self.plot()
+            '''
+            if loss_v < opts.eps:
+                '''
+                check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)
+                if opts.verbose: print("DONE: %f" % loss_v)
+                if opts.verbose: self.print_losses()
+                if opts.plot: self.plot()
+                '''
+                return loss_v
+            else:
+                self.sess.run(self.apply_grads)
+
+        return loss_v
+
 
 
     def run(self, x):
@@ -54,8 +87,16 @@ class SolveTF:
                 assignment = self.run(self.params)
                 assignments.append(assignment)
             else:
-                # TODO: Make problem that just samples polygon, and freeze it. if works, add self.train
-                raise NotImplementedError("TODO: Implement training for SolveTF")
+                # raise NotImplementedError("TODO: Implement training for SolveTF")
+                loss = None
+                try:
+                    loss = self.train()
+                except Exception as e:
+                    print("ERROR: %s ..." % (str(e)))
+                if loss is not None and loss < self.opts.eps:
+                    print("got assignment via training!")
+                    assignment = self.run(self.params)
+                    assignments.append(assignment)
         return assignments
 
     def mk_non_zero(err):

@@ -264,5 +264,14 @@ class ConstraintSystem:
         elif op == "neg":
             [x] = expr.args
             return -self.reduce_expr(x, assn)
+        elif op == "cos":
+            [x] = expr.args
+            return math.cos(self.reduce_expr(x, assn))
+        elif op == "sin":
+            [x] = expr.args
+            return math.sin(self.reduce_expr(x, assn))
+        elif op == "tanh":
+            [x] = expr.args
+            return math.tanh(self.reduce_expr(x, assn))
         else:
-            raise NotImplemnetedError(f"[reduce_expr] op not supported: {op}")
+            raise NotImplementedError(f"[reduce_expr] op not supported: {op}")
