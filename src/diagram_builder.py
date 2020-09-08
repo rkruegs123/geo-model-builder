@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from problem import Problem
 from constraint_system import ConstraintSystem
 from solve_tf import SolveTF
+from oo_approach.tf_optimizer import TfOptimizer
+from oo_approach.sp_optimizer import ScpOptimizer
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -52,17 +54,53 @@ if __name__ == "__main__":
     # Convert the instructions to a general constraint solving problem
     c_sys = ConstraintSystem(problem.instructions)
 
+
+
+
+
+
     # Solve the constraint problem with the chosen solving method
     if args.solver == "tensorflow":
+
         g = tf.Graph()
         with g.as_default():
+
+            solver = TfOptimizer(c_sys.instructions, args, g)
+            solver.preprocess()
+            unfiltered_models = solver.solve()
+            print(unfiltered_models)
+
+            '''
             solver = SolveTF(c_sys, g, args)
             print(solver.params)
             unfiltered_models = solver.solve()
             print(unfiltered_models)
-    else:
-        raise NotImplementedError("Solver not implemented")
+            '''
+    elif args.solver == "scipy":
+        solver = ScpOptimizer(c_sys.instructions, args)
+        solver.preprocess()
+        unfiltered_models = solver.solve()
+        print(unfiltered_models)
 
+    else:
+        raise NotImplementedError(f"Solver not implemented: {args.solver}")
+
+
+
+
+    for m in unfiltered_models:
+        xs = [p.x for p in m.values()]
+        ys = [p.y for p in m.values()]
+        names = [n for n in m.keys()]
+
+        fit, ax = plt.subplots()
+        ax.scatter(xs, ys)
+        for i, n in enumerate(names):
+            ax.annotate(n, (xs[i], ys[i]))
+        plt.show()
+
+
+    '''
     for m in unfiltered_models:
         p_vals = c_sys.get_point_vals(m)
         print(p_vals)
@@ -76,3 +114,4 @@ if __name__ == "__main__":
         for i, n in enumerate(names):
             ax.annotate(n, (xs[i], ys[i]))
         plt.show()
+    '''
