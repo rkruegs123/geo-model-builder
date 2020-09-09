@@ -1,6 +1,7 @@
 import tensorflow.compat.v1 as tf
 import pdb
 import collections
+import random
 
 from oo_approach.optimizer import Optimizer
 
@@ -42,6 +43,9 @@ class TfOptimizer(Optimizer):
     def negV(self, x):
         return -x
 
+    def sumVs(self, xs):
+        return tf.reduce_sum(xs)
+
     def mulV(self, x, y):
         return x * y
 
@@ -57,6 +61,9 @@ class TfOptimizer(Optimizer):
     def cosV(self, x):
         return tf.math.cos(x)
 
+    def acosV(self, x):
+        return tf.math.acos(x)
+
     def tanhV(self, x):
         return tf.nn.tanh(x)
 
@@ -68,11 +75,21 @@ class TfOptimizer(Optimizer):
     ## Tensorflow Utilities
     ####################
 
+    def mk_zero(self, err):
+        res = tf.reduce_mean(err**2)
+        tf.check_numerics(res, message="mk_zero")
+        return res
+
     def register_pt(self, p, P):
-        assert(not p in self.name2pt)
+        assert(p not in self.name2pt)
         Px = tf.debugging.check_numerics(P.x, message=str(p))
         Py = tf.debugging.check_numerics(P.y, message=str(p))
         self.name2pt[p] = self.get_point(Px, Py)
+
+    def register_loss(self, key, val, weight=1.0):
+        assert(key not in self.losses)
+        # TF has a bug that causes nans when differentiating something exactly 0
+        self.losses[key] = weight * self.mk_zero(val + 1e-6 * (random.random() / 2))
 
     #####################
     ## Sample

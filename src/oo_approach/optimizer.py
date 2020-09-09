@@ -8,6 +8,7 @@ class Optimizer(ABC):
     def __init__(self, instructions, opts):
 
         self.name2pt = dict()
+        self.losses = dict()
         self.has_loss = False
         self.opts = opts
         self.instructions = instructions
@@ -45,6 +46,10 @@ class Optimizer(ABC):
     def register_pt(self, p, P):
         pass
 
+    @abstractmethod
+    def register_loss(self, key, var, weight=1.0):
+        pass
+
     # FIXME: The below should be combined with an abstract Point class
 
     #####################
@@ -60,6 +65,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def negV(self, x):
+        pass
+
+    @abstractmethod
+    def sumVs(self, xs):
         pass
 
     @abstractmethod
@@ -80,6 +89,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def cosV(self, x):
+        pass
+
+    @abstractmethod
+    def acosV(self, x):
         pass
 
     @abstractmethod
@@ -131,7 +144,19 @@ class Optimizer(ABC):
             P = B + (X - B).smul(scale)
             Ps.append(P)
 
-        # FIXME: Register losses
+        # Angles should sum to (n-2) * pi
+        angle_sum = self.sumVs(angles)
+        expected_angle_sum = math.pi * (len(ps) - 2)
+        self.register_loss("polygon-angle-sum", self.subV(angle_sum, expected_angle_sum), weight=1e-1)
+
+        # First point shoudl equal the last point
+        self.register_loss("polygon-first-eq-last", self.dist(Ps[0], Ps[len(ps)]), weight=1e-2)
+
+        # First angle should be the one sampled (known to be <180)
+        self.register_loss("polygon-first-angle-eq-sampled",
+                           self.subV(angles[0], self.angle(Ps[-1], Ps[0], Ps[1])),
+                           weight=1e-2)
+
 
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
@@ -197,3 +222,12 @@ class Optimizer(ABC):
 
     def rotate_counterclockwise(self, theta, pt):
         return self.matrix_mul(self.rotation_matrix(theta), pt)
+
+    def side_lengths(self, A, B, C):
+        return self.dist(B, C), self.dist(C, A), self.dist(A, B)
+
+    def angle(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        num = self.subV(self.addV(self.powV(a, 2), self.powV(c, 2)), self.powV(b, 2))
+        denom = self.mulV(self.mulV(a, 2), c)
+        return self.acosV(self.divV(num, denom))

@@ -48,6 +48,18 @@ class ScpOptimizer(Optimizer):
         assert(p not in self.name2pt)
         self.name2pt[p] = P.simplify()
 
+    # Note that weight not relevant for scipy
+    def register_loss(self, key, val, weight=1.0):
+        assert(key not in self.losses)
+
+        for i, param in enumerate(self.params):
+            p_name = param.name
+            val = val.replace(p_name, f"x[{i}]")
+
+        scipy_constraint = { 'type': 'eq', 'fun': self.get_scipy_lambda(val) }
+        self.losses[key] = scipy_constraint
+
+
     #####################
     ## Math Utilities
     ####################
@@ -59,6 +71,9 @@ class ScpOptimizer(Optimizer):
 
     def negV(self, x):
         return f"(-{x})"
+
+    def sumVs(self, xs):
+        return f"sum({xs})"
 
     def mulV(self, x, y):
         return f"({x}) * ({y})"
@@ -75,6 +90,9 @@ class ScpOptimizer(Optimizer):
     def cosV(self, x):
         return f"cos({x})"
 
+    def acosV(self, x):
+        return f"acos({x})"
+
     def tanhV(self, x):
         return f"tanh({x})"
 
@@ -86,18 +104,8 @@ class ScpOptimizer(Optimizer):
     ## Scipy Utilities
     ####################
 
-    #####################
-    ## Sample
-    ####################
-
-    '''
-    def sample_uniform(self, ps):
-        [p] = ps
-        xvar, yvar = f"{p}x", f"{p}y"
-        self.params.extend([Init(xvar, "uniform", [-1.0, 1.0]), Init(yvar, "uniform", [-1.0, 1.0])])
-        P = self.get_point(xvar, yvar)
-        self.name2pt[p] = P
-    '''
+    def get_scipy_lambda(self, fun_str):
+        return lambda x: eval(fun_str)
 
     #####################
     ## Core
