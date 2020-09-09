@@ -2,6 +2,7 @@ import tensorflow.compat.v1 as tf
 import pdb
 import collections
 import random
+import itertools
 
 from oo_approach.optimizer import Optimizer
 
@@ -27,7 +28,7 @@ class TfOptimizer(Optimizer):
     def get_point(self, x, y):
         return TfPoint(x, y)
 
-    def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=False):
+    def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):
         init = tf.random_uniform_initializer(minval=lo, maxval=hi)
         return tf.compat.v1.get_variable(name=name, shape=shape, dtype=tf.float64, initializer=init, trainable=trainable)
 
@@ -75,6 +76,11 @@ class TfOptimizer(Optimizer):
     ## Tensorflow Utilities
     ####################
 
+    def mk_non_zero(self, err):
+        res = tf.reduce_mean(tf.exp(- (err ** 2) * 20))
+        tf.check_numerics(res, message="mk_non_zero")
+        return res
+
     def mk_zero(self, err):
         res = tf.reduce_mean(err**2)
         tf.check_numerics(res, message="mk_zero")
@@ -90,17 +96,66 @@ class TfOptimizer(Optimizer):
         assert(key not in self.losses)
         # TF has a bug that causes nans when differentiating something exactly 0
         self.losses[key] = weight * self.mk_zero(val + 1e-6 * (random.random() / 2))
+        self.has_loss = True
 
-    #####################
-    ## Sample
-    ####################
+    def regularize_points(self):
+        norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
+        self.register_loss("points", tf.reduce_mean(norms), self.opts.regularize_points)
+        # self.losses["points"] = self.opts.regularize_points * tf.reduce_mean(norms)
 
-    '''
-    def sample_uniform(self, ps):
-        [p] = ps
-        P   = self.get_point(x=self.uvar(p+"x"), y=self.uvar(p+"y"))
-        self.register_pt(p, P)
-    '''
+    def make_points_distinct(self):
+        if random.random() < self.opts.distinct_prob:
+            distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)], tf.float64)
+            dloss     = tf.reduce_mean(self.mk_non_zero(distincts))
+            self.register_loss("distinct", dloss, self.opts.make_distinct)
+            # self.losses["distinct"] = self.opts.make_distinct * dloss
+
+    def freeze(self):
+        opts = self.opts
+        self.regularize_points()
+        self.make_points_distinct()
+        self.loss = sum(self.losses.values())
+        self.global_step = tf.train.get_or_create_global_step()
+        self.learning_rate = tf.train.exponential_decay(
+            global_step=self.global_step,
+            learning_rate=opts.learning_rate,
+            decay_steps=opts.decay_steps,
+            decay_rate=opts.decay_rate,
+            staircase=False)
+        optimizer         = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        pdb.set_trace()
+        gs, vs            = zip(*optimizer.compute_gradients(self.loss))
+        self.apply_grads  = optimizer.apply_gradients(zip(gs, vs), name='apply_gradients', global_step=self.global_step)
+        self.reset_step   = tf.assign(self.global_step, 0)
+
+    def train(self):
+        opts = self.opts
+        self.sess.run(self.reset_step)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+
+        loss_v = None
+
+        for i in range(opts.n_iterations):
+            loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
+            '''
+            if i > 0 and i % opts.print_freq == 0:
+                if opts.verbose: print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
+                if opts.verbose > 1: self.print_losses()
+                if opts.plot > 1: self.plot()
+            '''
+            if loss_v < opts.eps:
+                '''
+                check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)
+                if opts.verbose: print("DONE: %f" % loss_v)
+                if opts.verbose: self.print_losses()
+                if opts.plot: self.plot()
+                '''
+                return loss_v
+            else:
+                self.sess.run(self.apply_grads)
+
+        return loss_v
+
 
     #####################
     ## Core
@@ -111,7 +166,8 @@ class TfOptimizer(Optimizer):
 
     def solve(self):
         if self.has_loss:
-            raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
+            self.freeze()
+            # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         assignments = list()
         for _ in range(self.opts.n_tries):
@@ -119,8 +175,14 @@ class TfOptimizer(Optimizer):
                 self.run(tf.compat.v1.global_variables_initializer())
                 assignment = self.run(self.name2pt)
                 assignments.append(assignment)
+            else:
+                loss = None
+                try:
+                    loss = self.train()
+                except Exception as e:
+                    print(f"ERROR: {e}")
+
+                if loss is not None and loss < self.opts.eps:
+                    assignment = self.run(self.name2pt)
+                    assignments.append(assignment)
         return assignments
-
-
-
-# try sample polygon (4, then 6 points)

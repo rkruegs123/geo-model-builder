@@ -39,7 +39,7 @@ class Optimizer(ABC):
         return [self.name2pt[p] for p in ps]
 
     @abstractmethod
-    def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=False):
+    def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):
         pass
 
     @abstractmethod
