@@ -159,14 +159,24 @@ class ScpOptimizer(Optimizer):
                 cons = [c for c in self.losses.values()]
 
                 pdb.set_trace()
-                # res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-1, 'disp': True, 'iprint': 99})
-                res = minimize(objective_fun, init_vals, constraints=cons, options={'xtol': 1e-1, 'gtol': 1e-1, 'verbose': 2}, method="trust-constr")
+                res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-1, 'disp': True, 'iprint': 99})
+                # res = minimize(objective_fun, init_vals, constraints=cons, options={'xtol': 1e-2, 'gtol': 1e-2, 'verbose': 2}, method="trust-constr")
 
-                # Check: is the constraint violation total or average? If total, tolerance can be higher...
-                # plot scipy results, see consequences of higher tolerances
-                # try scipy with 6 point polygon
 
                 print(res)
 
-
+                if res.success:
+                    solved_vals = [(init.name, val) for (init, val) in zip(self.params, res.x)]
+                    assignment = self.get_point_assignment(solved_vals)
+                    assignments.append(assignment)
         return assignments
+
+
+# Check: is the constraint violation total or average? If total, tolerance can be higher...
+# plot scipy results, see consequences of higher tolerances
+# try scipy with 6 point polygon
+# also try bigger step sizes
+# add verbosity
+# add regularization, etc for scipy
+# try more problems
+# make eps universal?
