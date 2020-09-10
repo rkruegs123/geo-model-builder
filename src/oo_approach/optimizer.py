@@ -50,6 +50,15 @@ class Optimizer(ABC):
     def register_loss(self, key, var, weight=1.0):
         pass
 
+
+    @abstractmethod
+    def regularize_points(self):
+        pass
+
+    @abstractmethod
+    def make_points_distinct(self):
+        pass
+
     # FIXME: The below should be combined with an abstract Point class
 
     #####################

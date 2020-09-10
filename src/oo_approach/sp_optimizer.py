@@ -5,7 +5,7 @@ import random
 import sympy as sp
 # import scipy
 from scipy.optimize import minimize
-from math import tanh, cos, sin, acos
+from math import tanh, cos, sin, acos, sqrt
 
 from oo_approach.optimizer import Optimizer
 
@@ -17,6 +17,8 @@ class ScpPoint(collections.namedtuple("ScpPoint", ["x", "y"])):
         return ScpPoint(f"({self.x}) - ({p.x})", f"({self.y}) - ({p.y})")
     def smul(self, z):
         return ScpPoint(f"({self.x}) * ({z})", f"({self.y}) * ({z})")
+    def norm(self):
+        return f"sqrt(({self.x})**2 + ({self.y})**2)"
 
     # TODO: Try simplify, and if it takes too long, revert to sympify
     def simplify(self):
@@ -33,6 +35,7 @@ class ScpOptimizer(Optimizer):
 
     def __init__(self, instructions, opts):
         self.params = list()
+        self.obj_fun = ""
 
         super().__init__(instructions, opts)
 
@@ -56,13 +59,24 @@ class ScpOptimizer(Optimizer):
     def register_loss(self, key, val, weight=1.0):
         assert(key not in self.losses)
 
-        for i, param in enumerate(self.params):
-            p_name = param.name
-            val = val.replace(p_name, f"x[{i}]")
-
+        val = self.param_str_2_scipy_str(val)
+        # Note that in tensorflow, we'd be minimizing val**2
         scipy_constraint = { 'type': 'eq', 'fun': self.get_scipy_lambda(val) }
         self.losses[key] = scipy_constraint
         self.has_loss = True
+
+    def regularize_points(self):
+        norms = [p.norm() for p in self.name2pt.values()]
+        summed_norms = self.sumVs(norms) # Note that in tensorflow we take the mean
+        self.add_to_objective(f"{self.opts.regularize_points} * {summed_norms}")
+
+    def make_points_distinct(self):
+        if random.random() < self.opts.distinct_prob:
+            # Note that in tensorflow we do something much different
+            sqdists = [self.sqdist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)]
+            summed_sqdists = self.sumVs(sqdists)
+            self.add_to_objective(f"{self.opts.make_distinct} * {summed_sqdists}")
+
 
     #####################
     ## Math Utilities
@@ -111,6 +125,19 @@ class ScpOptimizer(Optimizer):
     def get_scipy_lambda(self, fun_str):
         return lambda x: eval(fun_str)
 
+    def add_to_objective(self, expr_str):
+        if self.obj_fun:
+            self.obj_fun += f"+ {expr_str}"
+        else:
+            self.obj_fun = expr_str
+
+    def param_str_2_scipy_str(self, pstr):
+        scipy_str = pstr
+        for i, param in enumerate(self.params):
+            p_name = param.name
+            scipy_str = scipy_str.replace(p_name, f"x[{i}]")
+        return scipy_str
+
     #####################
     ## Core
     ####################
@@ -143,8 +170,10 @@ class ScpOptimizer(Optimizer):
         return pt_assn
 
     def solve(self):
-        # if self.has_loss:
-        #     raise NotImplementedError("[scp_optimizer.solve] Cannot solve with loss")
+        if self.has_loss:
+            self.regularize_points()
+            self.make_points_distinct()
+            # raise NotImplementedError("[scp_optimizer.solve] Cannot solve with loss")
 
         assignments = list()
         for _ in range(self.opts.n_tries):
@@ -154,7 +183,11 @@ class ScpOptimizer(Optimizer):
                 assignments.append(assignment)
             else:
                 # FIXME: objective_fun with soft constraints
-                objective_fun = self.get_scipy_lambda("0")
+                if not self.obj_fun:
+                    objective_fun = self.get_scipy_lambda("0")
+                else:
+                    scipy_obj_fun = self.param_str_2_scipy_str(self.obj_fun)
+                    objective_fun = self.get_scipy_lambda(scipy_obj_fun)
                 init_vals = [x[1] for x in inits]
                 cons = [c for c in self.losses.values()]
 
@@ -180,3 +213,5 @@ class ScpOptimizer(Optimizer):
 # add regularization, etc for scipy
 # try more problems
 # make eps universal?
+
+# make err squared for scipy

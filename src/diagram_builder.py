@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--solver', action='store', type=str, help='Name of the constraint solving method -- options are scipy or tensorflow', default="tensorflow")
     parser.add_argument('--n_tries', action='store', dest='n_tries', type=int, default=1)
     parser.add_argument('--regularize_points', action='store', dest='regularize_points', type=float, default=1e-6)
+    parser.add_argument('--make_distinct', action='store', dest='make_distinct', type=float, default=1e-2)
     parser.add_argument('--distinct_prob', action='store', dest='distinct_prob', type=float, default=0.2)
 
     # Tensorflow arguments
