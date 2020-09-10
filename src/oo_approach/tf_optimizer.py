@@ -123,7 +123,6 @@ class TfOptimizer(Optimizer):
             decay_rate=opts.decay_rate,
             staircase=False)
         optimizer         = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        pdb.set_trace()
         gs, vs            = zip(*optimizer.compute_gradients(self.loss))
         self.apply_grads  = optimizer.apply_gradients(zip(gs, vs), name='apply_gradients', global_step=self.global_step)
         self.reset_step   = tf.assign(self.global_step, 0)

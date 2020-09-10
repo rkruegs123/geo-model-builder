@@ -3,7 +3,7 @@ import pdb
 import collections
 import random
 import sympy as sp
-# import scipy
+import itertools
 from scipy.optimize import minimize
 from math import tanh, cos, sin, acos, sqrt
 
