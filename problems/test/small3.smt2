@@ -1,3 +1,3 @@
-(declare-points A B C D)
+(declare-points A B C D E F)
 
-(assert (polygon A B C D))
+(assert (polygon A B C D E F))

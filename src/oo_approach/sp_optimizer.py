@@ -159,8 +159,8 @@ class ScpOptimizer(Optimizer):
                 cons = [c for c in self.losses.values()]
 
                 pdb.set_trace()
-                res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-1, 'disp': True, 'iprint': 99})
-                # res = minimize(objective_fun, init_vals, constraints=cons, options={'xtol': 1e-2, 'gtol': 1e-2, 'verbose': 2}, method="trust-constr")
+                # res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-1, 'disp': True, 'iprint': 99, 'eps': 1.5e-6})
+                res = minimize(objective_fun, init_vals, constraints=cons, options={'xtol': 1e-2, 'gtol': 1e-2, 'verbose': 2}, method="trust-constr")
 
 
                 print(res)
