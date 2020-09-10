@@ -56,6 +56,9 @@ class TfOptimizer(Optimizer):
     def powV(self, x, y):
         return x ** y
 
+    def sqrtV(self, x):
+        return tf.math.sqrt(x)
+
     def sinV(self, x):
         return tf.math.sin(x)
 
@@ -67,6 +70,9 @@ class TfOptimizer(Optimizer):
 
     def tanhV(self, x):
         return tf.nn.tanh(x)
+
+    def sigmoidV(self, x):
+        return tf.nn.sigmoid(x)
 
     def constV(self, x):
         return tf.constant(x, dtype=tf.float64)

@@ -97,13 +97,13 @@ class Problem:
             elif len(aux_cs) == 1 and acute:
                 sample_instructions.append(Sample(tri_points, "acuteTri"))
             elif len(aux_cs) == 1 and iso_points:
-                sample_instructions.append(Sample(tri_points, ("isoTri", iso_points[0])))
+                sample_instructions.append(Sample(tri_points, "isoTri", (iso_points[0])))
             elif len(aux_cs) == 2 and acute and iso_points:
-                sample_instructions.append(Sample(tri_points, ("acuteIsoTri", iso_points[0])))
+                sample_instructions.append(Sample(tri_points, "acuteIsoTri", (iso_points[0])))
             elif len(aux_cs) == 2 and len(iso_points) == 2:
                 sample_instructions.append(Sample(tri_points, "equiTri"))
             elif len(aux_cs) == 1 and lenright_points:
-                sample_instructions.append(Sample(tri_points, ("rightTri", right_points[0])))
+                sample_instructions.append(Sample(tri_points, "rightTri", (right_points[0])))
             else:
                 pdb.set_trace()
                 raise RuntimeError("Unhandled triangle sampling")

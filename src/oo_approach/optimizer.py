@@ -93,6 +93,10 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
+    def sqrtV(self, x):
+        pass
+
+    @abstractmethod
     def sinV(self, x):
         pass
 
@@ -109,6 +113,10 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
+    def sigmoidV(self, x):
+        pass
+
+    @abstractmethod
     def constV(self, x):
         pass
 
@@ -117,13 +125,17 @@ class Optimizer(ABC):
     ####################
 
     def sample(self, i):
-        sampling_method = i.sampler
-        if sampling_method == "uniform":
-            self.sample_uniform(i.points)
-        elif sampling_method == "polygon":
-            self.sample_polygon(i.points)
-        else:
-            raise NotImplementedError("FIXME: Finish sample")
+        s_method = i.sampler
+        s_args = i.args
+        if s_method == "uniform": self.sample_uniform(i.points)
+        elif s_method == "polygon": self.sample_polygon(i.points)
+        elif s_method == "triangle": self.sample_triangle(i.points)
+        elif s_method == "isoTri": self.sample_triangle(i.points, iso=args[0])
+        elif s_method == "acuteTri": self.sample_triangle(i.points, acute=True)
+        elif s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=args[0], acute=True)
+        elif s_method == "rightTri": self.sample_triangle(i.points, right=args[0])
+        elif s_method == "equiTri": self.sample_triangle(i.points, equi=True)
+        else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
     def sample_uniform(self, ps):
         [p] = ps
@@ -171,6 +183,40 @@ class Optimizer(ABC):
             self.register_pt(p, P)
 
 
+    def sample_triangle(self, ps, iso=None, right=None, acute=False, equi=False):
+        if not (iso or right or acute or equi):
+            return self.sample_polygon(ps)
+
+        [nA, nB, nC] = ps
+        B = self.get_point(self.constV(-2.0), self.constV(0.0))
+        C = self.get_point(self.constV(2.0), self.constV(0.0))
+
+        if iso is not None or equi:
+            Ax = self.constV(0.0)
+        else:
+            Ax = self.mkvar("tri_x", lo=-1.0, hi=1.2)
+
+        if right is not None:
+            Ay = self.sqrtV(self.subV(4, self.powV(Ax, 2)))
+        elif equi:
+            Ay = self.mulV(2, self.sqrtV(self.constV(3)))
+        else:
+            AyLo = 1.1 if acute else 0.4
+            z = mkvar("tri")
+            Ay = self.addV(self.constV(AyLo), self.mulV(3.0, self.sigmoidV(z)))
+
+        A = self.get_point(Ax, Ay)
+
+        # Shuffle if the isosceles vertex was not C
+        if iso == nB or right == nB:   (A, B, C) = (B, A, C)
+        elif iso == nC or right == nC: (A, B, C) = (C, B, A)
+
+        self.register_pt(nA, A)
+        self.register_pt(nB, B)
+        self.register_pt(nC, C)
+
+
+
     #####################
     ## Compute
     ####################
@@ -184,7 +230,9 @@ class Optimizer(ABC):
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
         M = self.midp(A, B)
-        self.name2pt[m] = M
+        self.register_pt(m, M)
+        # self.name2pt[m] = M
+
 
     #####################
     ## Parameterize
@@ -240,3 +288,57 @@ class Optimizer(ABC):
         num = self.subV(self.addV(self.powV(a, 2), self.powV(c, 2)), self.powV(b, 2))
         denom = self.mulV(self.mulV(a, 2), c)
         return self.acosV(self.divV(num, denom))
+
+    def conway_vals(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+
+        def cv_aux(x1, x2, x3):
+            num = self.subV(self.addV(self.powV(x1, 2), self.powV(x2, 2)), self.powV(x3, 2)) # x1**2 + x2**2 - x3**2
+            return self.divV(num, 2)
+
+        return cv_aux(b, c, a), cv_aux(c, a ,b), cv_aux(a, b, c)
+
+    def trilinear(self, A, B, C, x, y, z):
+        a, b, c = self.side_lengths(A, B, C)
+        denom = self.addV(
+            self.addV(self.mulV(a, x), self.mulV(b, y)),
+            self.mulV(c, z)) # a * x + b * y + c * z
+        xnum = self.addV(
+            self.addV(
+                self.mulV(self.mulV(a, x), A.x),
+                self.mulV(self.mulV(b, y), B.x)),
+            self.mulV(self.mulV(c, z), C.x))
+        ynum = self.addV(
+            self.addV(
+                self.mulV(self.mulV(a, x), A.y),
+                self.mulV(self.mulV(b, y), B.y)),
+            self.mulV(self.mulV(c, z), C.y))
+        return self.get_point(self.divV(xnum, 2), self.divV(ynum, 2))
+
+    def barycentric(self, A, B, C, x, y, z):
+        a, b, c = self.side_lengths(A, B, C)
+        return self.trilinear(A, B, C, self.divV(x, a), self.divV(y, b), self.divV(z, c))
+
+    def circumcenter(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        Sa, Sb, Sc = self.conway_vals(A, B, C)
+        res = self.barycentric(A, B, C,
+                               self.mulV(self.powV(a, 2), Sa),
+                               self.mulV(self.powV(b, 2), Sb),
+                               self.mulV(self.powV(c, 2), Sc))
+        return res
+
+    def orthocenter(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        Sa, Sb, Sc = self.conway_vals(A, B, C)
+        res = self.barycentric(A, B, C,
+                               self.mulV(Sb, Sc),
+                               self.mulV(Sc, Sa),
+                               self.mulV(Sa, Sb))
+        return res
+
+    def centroid(self, A, B, C):
+        return self.barycentric(A, B, C, 1, 1, 1)
+
+    def incenter(self, A, B, C):
+        return self.trilinear(A, B, C, 1, 1, 1)

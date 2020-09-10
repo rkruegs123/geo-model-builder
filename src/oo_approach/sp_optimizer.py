@@ -5,9 +5,14 @@ import random
 import sympy as sp
 import itertools
 from scipy.optimize import minimize
-from math import tanh, cos, sin, acos, sqrt
+from math import tanh, cos, sin, acos, sqrt, exp
+
 
 from oo_approach.optimizer import Optimizer
+
+
+def sigmoid(x):
+    return 1 / (1 + exp(-x))
 
 # FIXME: Could call simplify in __init__
 class ScpPoint(collections.namedtuple("ScpPoint", ["x", "y"])):
@@ -102,6 +107,9 @@ class ScpOptimizer(Optimizer):
     def powV(self, x, y):
         return f"({x}) ** ({y})"
 
+    def sqrtV(self, x):
+        return f"sqrt({x})"
+
     def sinV(self, x):
         return f"sin({x})"
 
@@ -113,6 +121,9 @@ class ScpOptimizer(Optimizer):
 
     def tanhV(self, x):
         return f"tanh({x})"
+
+    def sigmoidV(self, x):
+        return f"sigmoid({x})"
 
     def constV(self, x):
         return str(x)
@@ -205,13 +216,20 @@ class ScpOptimizer(Optimizer):
         return assignments
 
 
-# Check: is the constraint violation total or average? If total, tolerance can be higher...
-# plot scipy results, see consequences of higher tolerances
-# try scipy with 6 point polygon
-# also try bigger step sizes
-# add verbosity
-# add regularization, etc for scipy
-# try more problems
-# make eps universal?
 
-# make err squared for scipy
+
+'''
+TODOS:
+-See if simplification gets scipy to work for hexagon
+-Play with tolerances and step sizes for scipy
+-Add verbosity
+-Add more support to try more problems
+-Generalize eps to any optimizer?
+-Understand meaning of scipy metrics. For example, is constraint violation total or average?
+-Simplify constraints before registering them?
+'''
+
+'''
+Notes:
+- err isn't squared for scipy -- regularization and distinctness are enforced much differently than for tensorflow
+'''

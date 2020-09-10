@@ -36,12 +36,13 @@ class Compute:
         )
 
 class Sample:
-    def __init__(self, points, sampler):
+    def __init__(self, points, sampler, args=()):
         self.points = points
         self.sampler = sampler
+        self.args = args
 
     def __str__(self):
-        return f"sample [{' '.join(self.points)}] {self.sampler}"
+        return f"sample [{' '.join(self.points)}] {self.sampler} [{' '.join(self.args)}]"
 
 class Confirm:
     def __init__(self, constraint):
