@@ -53,7 +53,7 @@ if __name__ == "__main__":
     print(instructions_str)
 
     # Convert the instructions to a general constraint solving problem
-    c_sys = ConstraintSystem(problem.instructions)
+    # c_sys = ConstraintSystem(problem.instructions)
 
 
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         g = tf.Graph()
         with g.as_default():
 
-            solver = TfOptimizer(c_sys.instructions, args, g)
+            solver = TfOptimizer(problem.instructions, args, g)
             solver.preprocess()
             unfiltered_models = solver.solve()
             print(unfiltered_models)
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             print(unfiltered_models)
             '''
     elif args.solver == "scipy":
-        solver = ScpOptimizer(c_sys.instructions, args)
+        solver = ScpOptimizer(problem.instructions, args)
         solver.preprocess()
         unfiltered_models = solver.solve()
         print(unfiltered_models)

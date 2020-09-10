@@ -202,7 +202,7 @@ class Optimizer(ABC):
             Ay = self.mulV(2, self.sqrtV(self.constV(3)))
         else:
             AyLo = 1.1 if acute else 0.4
-            z = mkvar("tri")
+            z = self.mkvar("tri")
             Ay = self.addV(self.constV(AyLo), self.mulV(3.0, self.sigmoidV(z)))
 
         A = self.get_point(Ax, Ay)
@@ -222,10 +222,9 @@ class Optimizer(ABC):
     ####################
 
     def compute(self, i):
-        if i.computation[0] == "midp":
-            self.compute_midp(i.point, i.computation[1])
-        else:
-            raise NotImplementedError("FIXME: Finish compute")
+        if i.computation[0] == "midp": self.compute_midp(i.point, i.computation[1])
+        elif i.computation[0] == "circumcenter": self.compute_circumcenter(i.point, i.computation[1])
+        else: raise NotImplementedError(f"[compute] NYI: {i.computatoin[0]} not supported")
 
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
@@ -233,6 +232,10 @@ class Optimizer(ABC):
         self.register_pt(m, M)
         # self.name2pt[m] = M
 
+    def compute_circumcenter(self, o, ps):
+        A, B, C = self.lookup_pts(ps)
+        O = self.circumcenter(A, B, C)
+        self.register_pt(o, O)
 
     #####################
     ## Parameterize
@@ -293,7 +296,11 @@ class Optimizer(ABC):
         a, b, c = self.side_lengths(A, B, C)
 
         def cv_aux(x1, x2, x3):
-            num = self.subV(self.addV(self.powV(x1, 2), self.powV(x2, 2)), self.powV(x3, 2)) # x1**2 + x2**2 - x3**2
+            num = self.subV(
+                self.addV(
+                    self.powV(x1, 2),
+                    self.powV(x2, 2)),
+                self.powV(x3, 2)) # x1**2 + x2**2 - x3**2
             return self.divV(num, 2)
 
         return cv_aux(b, c, a), cv_aux(c, a ,b), cv_aux(a, b, c)
@@ -301,19 +308,21 @@ class Optimizer(ABC):
     def trilinear(self, A, B, C, x, y, z):
         a, b, c = self.side_lengths(A, B, C)
         denom = self.addV(
-            self.addV(self.mulV(a, x), self.mulV(b, y)),
+            self.addV(
+                self.mulV(a, x),
+                self.mulV(b, y)),
             self.mulV(c, z)) # a * x + b * y + c * z
         xnum = self.addV(
             self.addV(
                 self.mulV(self.mulV(a, x), A.x),
                 self.mulV(self.mulV(b, y), B.x)),
-            self.mulV(self.mulV(c, z), C.x))
+            self.mulV(self.mulV(c, z), C.x)) # a * x * A.x + b * y * B.x + c * z * C.x
         ynum = self.addV(
             self.addV(
                 self.mulV(self.mulV(a, x), A.y),
                 self.mulV(self.mulV(b, y), B.y)),
             self.mulV(self.mulV(c, z), C.y))
-        return self.get_point(self.divV(xnum, 2), self.divV(ynum, 2))
+        return self.get_point(self.divV(xnum, denom), self.divV(ynum, denom))
 
     def barycentric(self, A, B, C, x, y, z):
         a, b, c = self.side_lengths(A, B, C)

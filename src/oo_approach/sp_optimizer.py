@@ -175,8 +175,10 @@ class ScpOptimizer(Optimizer):
             for (param_name, param_val) in model:
                 px = px.replace(param_name, str(param_val))
                 py = py.replace(param_name, str(param_val))
-            px = sp.sympify(px).evalf()
-            py = sp.sympify(py).evalf()
+            px = eval(px)
+            py = eval(py)
+            # px = sp.sympify(px).evalf()
+            # py = sp.sympify(py).evalf()
             pt_assn[pt_name] = ScpPoint(px, py)
         return pt_assn
 
