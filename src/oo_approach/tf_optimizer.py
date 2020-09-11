@@ -77,6 +77,8 @@ class TfOptimizer(Optimizer):
     def constV(self, x):
         return tf.constant(x, dtype=tf.float64)
 
+    def maxV(self, x, y):
+        return tf.maximum(x, y)
 
     #####################
     ## Tensorflow Utilities

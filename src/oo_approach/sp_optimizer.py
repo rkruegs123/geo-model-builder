@@ -128,6 +128,9 @@ class ScpOptimizer(Optimizer):
     def constV(self, x):
         return str(x)
 
+    def maxV(self, x, y):
+        return f"max({x}, {y})"
+
 
     #####################
     ## Scipy Utilities
@@ -222,10 +225,10 @@ class ScpOptimizer(Optimizer):
 
 '''
 TODOS:
+-Add assertion support, try more problems
 -See if simplification gets scipy to work for hexagon
 -Play with tolerances and step sizes for scipy
 -Add verbosity
--Add more support to try more problems
 -Generalize eps to any optimizer?
 -Understand meaning of scipy metrics. For example, is constraint violation total or average?
 -Simplify constraints before registering them?

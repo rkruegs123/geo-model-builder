@@ -28,6 +28,8 @@ class Optimizer(ABC):
             self.compute(i)
         elif isinstance(i, Parameterize):
             self.parameterize(i)
+        elif isinstance(i, Assert):
+            self.add(i)
         else:
             raise NotImplementedError("FIXME: Finish process_instruction")
 
@@ -118,6 +120,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def constV(self, x):
+        pass
+
+    @abstractmethod
+    def maxV(self, x, y):
         pass
 
     #####################
@@ -224,7 +230,9 @@ class Optimizer(ABC):
     def compute(self, i):
         if i.computation[0] == "midp": self.compute_midp(i.point, i.computation[1])
         elif i.computation[0] == "circumcenter": self.compute_circumcenter(i.point, i.computation[1])
-        else: raise NotImplementedError(f"[compute] NYI: {i.computatoin[0]} not supported")
+        elif i.computation[0] == "orthocenter": self.compute_orthocenter(i.point, i.computation[1])
+        elif i.computation[0] == "centroid": self.compute_centroid(i.point, i.computation[1])
+        else: raise NotImplementedError(f"[compute] NYI: {i.computation[0]} not supported")
 
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
@@ -236,6 +244,21 @@ class Optimizer(ABC):
         A, B, C = self.lookup_pts(ps)
         O = self.circumcenter(A, B, C)
         self.register_pt(o, O)
+
+    def compute_orthocenter(self, h, ps):
+        A, B, C = self.lookup_pts(ps)
+        H = self.orthocenter(A, B, C)
+        self.register_pt(h, H)
+
+    def compute_centroid(self, g, ps):
+        A, B, C = self.lookup_pts(ps)
+        G = self.centroid(A, B, C)
+        self.register_pt(g, G)
+
+    def compute_incenter(self, i, ps):
+        A, B, C = self.lookup_pts(ps)
+        I = self.incenter(A, B, C)
+        self.register_pt(i, I)
 
     #####################
     ## Parameterize
@@ -250,6 +273,32 @@ class Optimizer(ABC):
 
     def parameterize_coords(self, p):
         self.sample_uniform([p])
+
+    #####################
+    ## Assert
+    ####################
+
+    def add(self, i):
+        assertion = i.constraint
+        pred, ps, negate = assertion.pred, assertion.points, assertion.negate
+
+        if negate:
+            raise RuntimeError("[add] Mishandled negation")
+
+        vals = self.assertion_vals(pred, ps)
+
+        a_str = f"{pred}_{'_'.join(ps)}"
+        weight = 1 / len(vals)
+        for i, val in enumerate(vals):
+            loss_str = a_str if len(vals) == 1 else f"a_str_{i}"
+            self.register_loss(loss_str, val, weight=weight)
+
+    def assertion_vals(self, pred, ps):
+        if pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
+        elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
+        elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
+
 
     #####################
     ## Comp. Geo
@@ -351,3 +400,52 @@ class Optimizer(ABC):
 
     def incenter(self, A, B, C):
         return self.trilinear(A, B, C, 1, 1, 1)
+
+    def perp_phi(self, A, B, C, D):
+        # (A.x - B.x) * (C.x - D.x) + (A.y - B.y) * (C.y - D.y)
+        t1 = self.mulV(self.subV(A.x, B.x),
+                       self.subV(C.x, D.x))
+        t2 = self.mulV(self.subV(A.y, B.y),
+                       self.subV(C.y, D.y))
+        return self.addV(t1, t2)
+
+    def para_phi(self, A, B, C, D):
+        # (A.x - B.x) * (C.y - D.y) - (A.y - B.y) * (C.x - D.x)
+        t1 = self.mulV(self.subV(A.x, B.x),
+                       self.subV(C.y, D.y))
+        t2 = self.mulV(self.subV(A.y, B.y),
+                       self.subV(C.x, D.x))
+        return self.subV(t1, t2)
+
+    def cong_diff(self, A, B, C, D):
+        return self.subV(self.sqdist(A, B),
+                         self.sqdist(C, D))
+
+    def coll_phi(self, A, B, C):
+        # A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
+        t1 = self.mulV(A.x, self.subV(B.y, C.y))
+        t2 = self.mulV(B.x, self.subV(C.y, A.y))
+        t3 = self.mulV(C.x, self.subV(A.y, B.y))
+        return self.addV(self.addV(t1, t2), t3)
+
+    def between_gap(self, X, A, B):
+        eps = 0.2
+
+        def diff_signs(x, y):
+            return self.maxV(self.constV(0.0), self.mulV(x, y))
+
+        # Point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
+        A1 = self.get_point(
+            self.addV(A.x, self.mulV(eps, self.subV(B.x, A.x))),
+            self.addV(A.y, self.mulV(eps, self.subV(B.y, A.y))))
+
+        # Point(B.x + eps * (A.x - B.x), B.y + eps * (A.y - B.y))
+        B1 = self.get_point(
+            self.addV(B.x, self.mulV(eps, self.subV(A.x, B.x))),
+            self.addV(B.y, self.mulV(eps, self.subV(A.y, B.y))))
+
+        x_loss = diff_signs(self.subV(X.x, A1.x), self.subV(X.x, B1.x))
+        y_loss = diff_signs(self.subV(X.y, A1.y), self.subV(X.y, B1.y))
+        return [x_loss, y_loss]
+
+        return [diff_signs(X.x - A1.x, X.x - B1.x), diff_signs(X.y - A1.y, X.y - B1.y)]
