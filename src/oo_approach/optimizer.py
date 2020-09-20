@@ -148,7 +148,6 @@ class Optimizer(ABC):
         P   = self.get_point(x=self.mkvar(p+"x"), y=self.mkvar(p+"y"))
         self.register_pt(p, P)
 
-
     def sample_polygon(self, ps):
         if len(ps) < 4:
             print("WARNING: sample_polygon expecting >3 points")
@@ -184,10 +183,8 @@ class Optimizer(ABC):
                            self.subV(angles[0], self.angle(Ps[-1], Ps[0], Ps[1])),
                            weight=1e-2)
 
-
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
-
 
     def sample_triangle(self, ps, iso=None, right=None, acute=False, equi=False):
         if not (iso or right or acute or equi):
@@ -260,6 +257,11 @@ class Optimizer(ABC):
         I = self.incenter(A, B, C)
         self.register_pt(i, I)
 
+    def compute_inter_ll(self, p, l1, l2):
+        lnf1 = self.line2nf(l1)
+        lnf2 = self.line2nf(l2)
+
+
     #####################
     ## Parameterize
     ####################
@@ -297,6 +299,8 @@ class Optimizer(ABC):
         if pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
         elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
         elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(ps))] + self.between_gap(*self.lookup_pts(ps))
+        elif pred == "between": return self.between_gap(*self.lookup_pts(ps))
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 
@@ -331,6 +335,18 @@ class Optimizer(ABC):
 
     def rotate_counterclockwise(self, theta, pt):
         return self.matrix_mul(self.rotation_matrix(theta), pt)
+
+    def rotate_clockwise_90(self, pt):
+        return self.matrix_mul(
+            (self.get_point(self.constV(0.0), self.constV(1.0)),
+             self.get_point(self.constV(-1.0),self.constV(0.0))),
+            pt)
+
+    def rotate_counterclockwise_90(self, pt):
+        return self.matrix_mul(
+            (self.get_point(self.constV(0.0), self.constV(-1.0)),
+             self.get_point(self.constV(1.0),self.constV(0.0))),
+            pt)
 
     def side_lengths(self, A, B, C):
         return self.dist(B, C), self.dist(C, A), self.dist(A, B)
@@ -449,3 +465,41 @@ class Optimizer(ABC):
         return [x_loss, y_loss]
 
         return [diff_signs(X.x - A1.x, X.x - B1.x), diff_signs(X.y - A1.y, X.y - B1.y)]
+
+    #####################
+    ## Utilities
+    ####################
+    def line2nf(self, l):
+        def line2twoPts(pred, ps):
+            if pred == "connecting":
+                return self.lookup_pts(ps)
+            elif pred == "paraAt":
+                X, A, B = self.lookup_pts(ps)
+                return X, X + B - A
+            elif pred == "perpAt":
+                X, A, B = self.lookup_pts(ps)
+                return X, X + self.rotate_counterclockwise_90(A - B)
+            elif pred == "mediator":
+                A, B = self.lookup_pts(ps)
+                M = self.midp(A, B)
+                return M, M + self.rotate_counterclockwise_90(A - B)
+            elif pred == "ibisector":
+                A, B, C = self.lookup_pts(ps)
+                X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                M = self.midp(X, C)
+                return B, M
+            elif pred == "ebisector":
+                A, B, C = self.lookup_pts(ps)
+                X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                M = self.midp(X, C)
+                Y = B + self.rotate_counterclockwise_90(M - B)
+                return B, Y
+            elif pred == "eqoangle":
+                B, C, D, E, F = self.lookup_pts(ps)
+                theta = self.angle(D, E, F)
+                X = B + self.rotate_counterclockwise(theta, C - B)
+                return B, X
+            else: raise RuntimeException(f"[line2nf] Unexpected line pred: {pred}")
+
+        p1, p2 = line2twoPts(l.pred, l.points)
+        return pp2lnf(p1, p2)

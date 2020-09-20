@@ -3,6 +3,7 @@ import pdb
 import collections
 import random
 import sympy as sp
+from sympy import Sum
 import itertools
 from scipy.optimize import minimize
 from math import tanh, cos, sin, acos, sqrt, exp
@@ -14,16 +15,25 @@ from oo_approach.optimizer import Optimizer
 def sigmoid(x):
     return 1 / (1 + exp(-x))
 
+def simp(str_expr, method="half"):
+    return str_expr
+    '''
+    if method == "full":
+        return str(sp.sympify(str_expr).simplify())
+    else:
+        return str(sp.sympify(str_expr))
+    '''
+
 # FIXME: Could call simplify in __init__
 class ScpPoint(collections.namedtuple("ScpPoint", ["x", "y"])):
     def __add__(self, p):
-        return ScpPoint(f"({self.x}) + ({p.x})", f"({self.y}) + ({p.y})")
+        return ScpPoint(simp(f"({self.x}) + ({p.x})"), simp(f"({self.y}) + ({p.y})"))
     def __sub__(self, p):
-        return ScpPoint(f"({self.x}) - ({p.x})", f"({self.y}) - ({p.y})")
+        return ScpPoint(simp(f"({self.x}) - ({p.x})"), simp(f"({self.y}) - ({p.y})"))
     def smul(self, z):
-        return ScpPoint(f"({self.x}) * ({z})", f"({self.y}) * ({z})")
+        return ScpPoint(simp(f"({self.x}) * ({z})"), simp(f"({self.y}) * ({z})"))
     def norm(self):
-        return f"sqrt(({self.x})**2 + ({self.y})**2)"
+        return simp(f"sqrt(({self.x})**2 + ({self.y})**2)")
 
     # TODO: Try simplify, and if it takes too long, revert to sympify
     def simplify(self):
@@ -87,25 +97,32 @@ class ScpOptimizer(Optimizer):
     ## Math Utilities
     ####################
     def addV(self, x, y):
-        return f"({x}) + ({y})"
+        return simp(f"({x}) + ({y})")
 
     def subV(self, x, y):
-        return f"({x}) - ({y})"
+        return simp(f"({x}) - ({y})")
 
     def negV(self, x):
-        return f"(-{x})"
+        return simp(f"(-{x})")
 
     def sumVs(self, xs):
-        return f"sum([{', '.join(xs)}])"
+        if len(xs) < 2:
+            raise RuntimeError("[sumVs] len(xs) < 2")
+
+        if len(xs) == 2:
+            return self.addV(xs[0], xs[1])
+        else:
+            return self.addV(xs[0], self.sumVs(xs[1:]))
+        # return f"sum([{', '.join(xs)}])"
 
     def mulV(self, x, y):
-        return f"({x}) * ({y})"
+        return simp(f"({x}) * ({y})")
 
     def divV(self, x, y):
-        return f"({x}) / ({y})"
+        return simp(f"({x}) / ({y})")
 
     def powV(self, x, y):
-        return f"({x}) ** ({y})"
+        return simp(f"({x}) ** ({y})")
 
     def sqrtV(self, x):
         return f"sqrt({x})"
@@ -150,6 +167,7 @@ class ScpOptimizer(Optimizer):
         for i, param in enumerate(self.params):
             p_name = param.name
             scipy_str = scipy_str.replace(p_name, f"x[{i}]")
+
         return scipy_str
 
     #####################
