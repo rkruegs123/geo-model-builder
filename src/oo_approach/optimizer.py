@@ -490,7 +490,7 @@ class Optimizer(ABC):
     def inter_lc(self, l, c, root_select):
         p1, p2 = l.p1, l.p2
         I1, I2 = self.inter_pp_c(p1, p2, c)
-        raise NotImplementedError("[inter_lc] NYI")
+        return self.process_rs(P1, P2, root_select)
 
     #####################
     ## Utilities
