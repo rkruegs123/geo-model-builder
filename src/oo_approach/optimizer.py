@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 import math
 import pdb
+import collections
 
 from instruction import *
 
-
+SlopeInterceptForm = collections.namedtuple("SlopeInterceptForm", ["m", "b"])
 
 class Optimizer(ABC):
     def __init__(self, instructions, opts):
@@ -239,6 +240,7 @@ class Optimizer(ABC):
         elif i.computation[0] == "circumcenter": self.compute_circumcenter(i.point, i.computation[1])
         elif i.computation[0] == "orthocenter": self.compute_orthocenter(i.point, i.computation[1])
         elif i.computation[0] == "centroid": self.compute_centroid(i.point, i.computation[1])
+        elif i.computation[0] == "interLL": self.compute_inter_ll(i.point, i.computation[1], i.computation[2])
         else: raise NotImplementedError(f"[compute] NYI: {i.computation[0]} not supported")
 
     def compute_midp(self, m, ps):
@@ -266,6 +268,12 @@ class Optimizer(ABC):
         A, B, C = self.lookup_pts(ps)
         I = self.incenter(A, B, C)
         self.register_pt(i, I)
+
+    def compute_inter_ll(self, p, l1, l2):
+        sif1 = self.line2sif(l1)
+        sif2 = self.line2sif(l2)
+        P = self.inter_ll(sif1, sif2)
+        self.register_pt(p, P)
 
     #####################
     ## Parameterize
@@ -477,7 +485,7 @@ class Optimizer(ABC):
     #####################
     ## Utilities
     ####################
-    def line2nf(self, l):
+    def line2sif(self, l):
         def line2twoPts(pred, ps):
             if pred == "connecting":
                 return self.lookup_pts(ps)
@@ -510,4 +518,22 @@ class Optimizer(ABC):
             else: raise RuntimeException(f"[line2nf] Unexpected line pred: {pred}")
 
         p1, p2 = line2twoPts(l.pred, l.points)
-        return pp2lnf(p1, p2)
+        return self.pp2sif(p1, p2)
+
+    # Two points on a line to slope-intercept form (y = mx + b)
+    def pp2sif(self, p1, p2):
+        (x1, y1) = p1
+        (x2, y2) = p2
+
+        m = self.divV(self.subV(y2, y1), self.subV(x2, x1))
+        b = self.subV(y1, self.mulV(m, x1))
+        return SlopeInterceptForm(m=m, b=b)
+
+    def inter_ll(self, sif1, sif2):
+        (m1, b1) = sif1
+        (m2, b2) = sif2
+
+        px = self.divV(self.subV(b2, b1),
+                       self.subV(m1, m2))
+        py = self.addV(self.mulV(m1, px), b1)
+        return self.get_point(px, py)

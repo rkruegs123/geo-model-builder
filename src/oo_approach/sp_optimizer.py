@@ -220,7 +220,7 @@ class ScipyOptimizer(Optimizer):
         for pt_name, pt in self.name2pt.items():
             px = pt.x if isinstance(pt.x, float) else pt.x.subs(model)
             py = pt.y if isinstance(pt.y, float) else pt.y.subs(model)
-            if not (type(px) in [sp.Float, float] and type(py) in [sp.Float, float]):
+            if not (isinstance(px, sp.Number) or type(px) == float) or not (isinstance(py, sp.Number) or type(py) == float):
                 raise RuntimeError("Failed evaluation")
             pt_assn[pt_name] = SpPoint(float(px), float(py))
         return pt_assn
