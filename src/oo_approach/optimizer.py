@@ -75,39 +75,39 @@ class Optimizer(ABC):
     ## Math Utilities
     ####################
     @abstractmethod
-    def sumVs(self, xs):
+    def sum(self, xs):
         pass
 
     @abstractmethod
-    def sqrtV(self, x):
+    def sqrt(self, x):
         pass
 
     @abstractmethod
-    def sinV(self, x):
+    def sin(self, x):
         pass
 
     @abstractmethod
-    def cosV(self, x):
+    def cos(self, x):
         pass
 
     @abstractmethod
-    def acosV(self, x):
+    def acos(self, x):
         pass
 
     @abstractmethod
-    def tanhV(self, x):
+    def tanh(self, x):
         pass
 
     @abstractmethod
-    def sigmoidV(self, x):
+    def sigmoid(self, x):
         pass
 
     @abstractmethod
-    def constV(self, x):
+    def const(self, x):
         pass
 
     @abstractmethod
-    def maxV(self, x, y):
+    def max(self, x, y):
         pass
 
     #####################
@@ -139,13 +139,13 @@ class Optimizer(ABC):
 
         angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-0.5, hi=0.5) for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
-        angles = [multiplicand * self.tanhV(0.2 * az) for az in angle_zs]
+        angles = [multiplicand * self.tanh(0.2 * az) for az in angle_zs]
 
         scale_zs = [self.mkvar(name=f"polygon_scale_zs_{i}") for i in range(len(ps))]
-        scales = [0.5 * self.tanhV(0.2 * sz) for sz in scale_zs]
+        scales = [0.5 * self.tanh(0.2 * sz) for sz in scale_zs]
 
-        Ps = [self.get_point(self.constV(-2.0), self.constV(0.0)),
-              self.get_point(self.constV(2.0), self.constV(0.0))]
+        Ps = [self.get_point(self.const(-2.0), self.const(0.0)),
+              self.get_point(self.const(2.0), self.const(0.0))]
         s = self.dist(Ps[0], Ps[1])
 
         for i in range(2, len(ps) + 1):
@@ -157,7 +157,7 @@ class Optimizer(ABC):
             Ps.append(self.simplify(P, method="trig"))
 
         # Angles should sum to (n-2) * pi
-        angle_sum = self.sumVs(angles)
+        angle_sum = self.sum(angles)
         expected_angle_sum = math.pi * (len(ps) - 2)
         self.register_loss("polygon-angle-sum", angle_sum - expected_angle_sum, weight=1e-1)
 
@@ -178,22 +178,22 @@ class Optimizer(ABC):
             return self.sample_polygon(ps)
 
         [nA, nB, nC] = ps
-        B = self.get_point(self.constV(-2.0), self.constV(0.0))
-        C = self.get_point(self.constV(2.0), self.constV(0.0))
+        B = self.get_point(self.const(-2.0), self.const(0.0))
+        C = self.get_point(self.const(2.0), self.const(0.0))
 
         if iso is not None or equi:
-            Ax = self.constV(0.0)
+            Ax = self.const(0.0)
         else:
             Ax = self.mkvar("tri_x", lo=-1.0, hi=1.2)
 
         if right is not None:
-            Ay = self.sqrtV(4 - (Ax ** 2))
+            Ay = self.sqrt(4 - (Ax ** 2))
         elif equi:
-            Ay = 2 * self.sqrtV(self.constV(3.0))
+            Ay = 2 * self.sqrt(self.const(3.0))
         else:
             AyLo = 1.1 if acute else 0.4
             z = self.mkvar("tri")
-            Ay = self.constV(AyLo) + 3.0 * self.sigmoidV(z)
+            Ay = self.const(AyLo) + 3.0 * self.sigmoid(z)
 
         A = self.get_point(Ax, Ay)
 
@@ -325,8 +325,8 @@ class Optimizer(ABC):
         return self.get_point(self.inner_product(pt1, pt), self.inner_product(pt2, pt))
 
     def rotation_matrix(self, theta):
-        r1 = self.get_point(self.cosV(theta), -self.sinV(theta))
-        r2 = self.get_point(self.sinV(theta), self.cosV(theta))
+        r1 = self.get_point(self.cos(theta), -self.sin(theta))
+        r2 = self.get_point(self.sin(theta), self.cos(theta))
         return (r1, r2)
 
     def rotate_counterclockwise(self, theta, pt):
@@ -334,14 +334,14 @@ class Optimizer(ABC):
 
     def rotate_clockwise_90(self, pt):
         return self.matrix_mul(
-            (self.get_point(self.constV(0.0), self.constV(1.0)),
-             self.get_point(self.constV(-1.0),self.constV(0.0))),
+            (self.get_point(self.const(0.0), self.const(1.0)),
+             self.get_point(self.const(-1.0),self.const(0.0))),
             pt)
 
     def rotate_counterclockwise_90(self, pt):
         return self.matrix_mul(
-            (self.get_point(self.constV(0.0), self.constV(-1.0)),
-             self.get_point(self.constV(1.0),self.constV(0.0))),
+            (self.get_point(self.const(0.0), self.const(-1.0)),
+             self.get_point(self.const(1.0),self.const(0.0))),
             pt)
 
     def side_lengths(self, A, B, C):
@@ -349,7 +349,7 @@ class Optimizer(ABC):
 
     def angle(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
-        return self.acosV((a**2 + c**2 - b**2) / (2 * a * c))
+        return self.acos((a**2 + c**2 - b**2) / (2 * a * c))
 
     def conway_vals(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
@@ -398,7 +398,7 @@ class Optimizer(ABC):
         eps = 0.2
 
         def diff_signs(x, y):
-            return self.maxV(self.constV(0.0), x * y)
+            return self.max(self.const(0.0), x * y)
 
         A1 = self.get_point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
         B1 = self.get_point(B.x + eps * (A.x - B.x), B.y + eps * (A.y - B.y))
@@ -421,7 +421,7 @@ class Optimizer(ABC):
         dx = P1.x - P2.x
         dy = P1.y - P2.y
 
-        dr = self.sqrtV(dx**2 + dy**2)
+        dr = self.sqrt(dx**2 + dy**2)
         D = P2.x * P1.y - P1.x * P2.y
 
         radicand = r**2 * dr**2 - D**2

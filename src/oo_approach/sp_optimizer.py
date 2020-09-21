@@ -114,31 +114,31 @@ class ScipyOptimizer(Optimizer):
     #####################
     ## Math Utilities
     ####################
-    def sumVs(self, xs):
+    def sum(self, xs):
         return sum(xs)
 
-    def sqrtV(self, x):
+    def sqrt(self, x):
         return sp.sqrt(x)
 
-    def sinV(self, x):
+    def sin(self, x):
         return sp.sin(x)
 
-    def cosV(self, x):
+    def cos(self, x):
         return sp.cos(x)
 
-    def acosV(self, x):
+    def acos(self, x):
         return sp.acos(x)
 
-    def tanhV(self, x):
+    def tanh(self, x):
         return sp.tanh(x)
 
-    def sigmoidV(self, x):
+    def sigmoid(self, x):
         return 1 / (1 + sp.exp(-x))
 
-    def constV(self, x):
+    def const(self, x):
         return x
 
-    def maxV(self, x, y):
+    def max(self, x, y):
         return sp.Max(x, y)
         # raise NotImplementedError("How to max with sympy?")
 

@@ -38,31 +38,31 @@ class TfOptimizer(Optimizer):
     #####################
     ## Math Utilities
     ####################
-    def sumVs(self, xs):
+    def sum(self, xs):
         return tf.reduce_sum(xs)
 
-    def sqrtV(self, x):
+    def sqrt(self, x):
         return tf.math.sqrt(x)
 
-    def sinV(self, x):
+    def sin(self, x):
         return tf.math.sin(x)
 
-    def cosV(self, x):
+    def cos(self, x):
         return tf.math.cos(x)
 
-    def acosV(self, x):
+    def acos(self, x):
         return tf.math.acos(x)
 
-    def tanhV(self, x):
+    def tanh(self, x):
         return tf.nn.tanh(x)
 
     def sigmoidV(self, x):
         return tf.nn.sigmoid(x)
 
-    def constV(self, x):
+    def const(self, x):
         return tf.constant(x, dtype=tf.float64)
 
-    def maxV(self, x, y):
+    def max(self, x, y):
         return tf.maximum(x, y)
 
     #####################
