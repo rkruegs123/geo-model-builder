@@ -41,7 +41,7 @@ class ScipyOptimizer(Optimizer):
 
     def __init__(self, instructions, opts):
         self.params = list()
-        self.obj_fun = ""
+        self.obj_fun = None
 
         super().__init__(instructions, opts)
 
@@ -88,27 +88,33 @@ class ScipyOptimizer(Optimizer):
     # Note that weight not relevant for scipy
     def register_loss(self, key, val, weight=1.0):
         assert(key not in self.losses)
+        self.losses[key] = val
+        self.has_loss = True
+
+        '''
+        assert(key not in self.losses)
 
         val = self.param_str_2_sp_str(str(val))
         # Note that in tensorflow, we'd be minimizing val**2
         scipy_constraint = { 'type': 'eq', 'fun': self.get_scipy_lambda(val) }
         self.losses[key] = scipy_constraint
         self.has_loss = True
+        '''
 
     def regularize_points(self):
         norms = [p.norm() for p in self.name2pt.values()]
         # summed_norms = self.sumVs(norms)
-        mean_norm = self.sumVs(norms) / len(norms)
+        mean_norm = self.sum(norms) / len(norms)
         # self.add_to_objective(f"{self.opts.regularize_points} * {summed_norms}")
-        self.add_to_objective(f"{self.opts.regularize_points} * {mean_norm}")
+        self.add_to_objective(self.opts.regularize_points * mean_norm)
 
     def make_points_distinct(self):
         if random.random() < self.opts.distinct_prob:
             sqdists = [self.sqdist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)]
-            mean_sqdist = self.sumVs(sqdists) / len(sqdists)
+            mean_sqdist = self.sum(sqdists) / len(sqdists)
             # summed_sqdists = self.sumVs(sqdists)
             # self.add_to_objective(f"{self.opts.make_distinct} * {summed_sqdists}")
-            self.add_to_objective(f"{self.opts.make_distinct} * {mean_sqdist}")
+            self.add_to_objective(self.opts.make_distinct * mean_sqdist)
 
 
     #####################
@@ -167,11 +173,11 @@ class ScipyOptimizer(Optimizer):
     def get_scipy_lambda(self, fun_str):
         return lambda x: eval(fun_str)
 
-    def add_to_objective(self, expr_str):
+    def add_to_objective(self, sp_expr):
         if self.obj_fun:
-            self.obj_fun += f"+ {expr_str}"
+            self.obj_fun += sp_expr
         else:
-            self.obj_fun = expr_str
+            self.obj_fun = sp_expr
 
     def param_str_2_sp_str(self, pstr):
 
@@ -221,9 +227,16 @@ class ScipyOptimizer(Optimizer):
         return pt_assn
 
     def solve(self):
+
         if self.has_loss:
             self.regularize_points()
             self.make_points_distinct()
+
+            lambdified_losses = dict()
+            x = tuple([sp.Symbol(p.name, real=True) for p in self.params])
+            for key, loss_expr in self.losses.items():
+                loss_lambda = sp.lambdify([x], loss_expr)
+                lambdified_losses[key] = { 'type': 'eq', 'fun': loss_lambda }
 
         assignments = list()
         for _ in range(self.opts.n_tries):
@@ -233,12 +246,12 @@ class ScipyOptimizer(Optimizer):
                 assignments.append(assignment)
             else:
                 if not self.obj_fun:
-                    objective_fun = self.get_scipy_lambda("0")
-                else:
-                    scipy_obj_fun = self.param_str_2_sp_str(self.obj_fun)
-                    objective_fun = self.get_scipy_lambda(scipy_obj_fun)
+                    objective_fun = sp.sympify(0)
+                scipy_obj_fun = self.param_str_2_sp_str(str(self.obj_fun))
+                objective_fun = self.get_scipy_lambda(scipy_obj_fun)
                 init_vals = [x[1] for x in inits]
-                cons = [c for c in self.losses.values()]
+                # cons = [c for c in self.losses.values()]
+                cons = [c for c in lambdified_losses.values()]
 
                 # res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-2, 'disp': True, 'iprint': 99, 'eps': 1.5e-8, 'maxiter': 300}, method="SLSQP")
                 res = minimize(objective_fun, init_vals, constraints=cons, options={'xtol': 1e-5, 'gtol': 1e-2, 'verbose': 3}, method="trust-constr")
