@@ -5,7 +5,9 @@ import collections
 
 from instruction import *
 
+# Also stores the points used to compute it
 SlopeInterceptForm = collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])
+
 CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
 
 class Optimizer(ABC):
@@ -108,6 +110,30 @@ class Optimizer(ABC):
 
     @abstractmethod
     def max(self, x, y):
+        pass
+
+    @abstractmethod
+    def cond(self, cond, t_val, f_val):
+        pass
+
+    @abstractmethod
+    def lt(self, x, y):
+        pass
+
+    @abstractmethod
+    def lte(self, x, y):
+        pass
+
+    @abstractmethod
+    def gt(self, x, y):
+        pass
+
+    @abstractmethod
+    def gte(self, x, y):
+        pass
+
+    @abstractmethod
+    def abs(self, x):
         pass
 
     #####################
@@ -426,9 +452,31 @@ class Optimizer(ABC):
 
         radicand = r**2 * dr**2 - D**2
 
-        raise NotImplementedError("Finish inter_pp_c")
+        def on_nneg():
+            def sgnstar(x):
+                return self.cond(self.lt(x, self.const(0.0)), self.const(-1.0), self.const(1.0))
 
+            # NEXT: Change to self....
+            Q1 = self.get_point((D * dy + sgnstar(dy) * dx * self.sqrt(radicand)) / (dr**2),
+                                (-D * dx + self.abs(dy) * self.sqrt(radicand)) / (dr**2))
 
+            Q2 = self.get_point((D * dy - sgnstar(dy) * dx * self.sqrt(radicand)) / (dr**2),
+                                (-D * dx - self.abs(dy) * self.sqrt(radicand)) / (dr**2))
+            return self.unshift(O, [Q1, Q2])
+
+        def on_neg():
+            Operp = self.rotate_counterclockwise_90(P1 - P2) + O
+            F = self.inter_ll(self.pp2sif(P1, P2), self.pp2sif(O, Operp))
+            X = O + (F - O).smul(r / self.dist(O, F))
+            Q = self.midp(F, X)
+            return self.unshift(O, [Q, Q])
+
+        return self.cond(self.less(radicand, self.const(0.0)), on_neg(), on_nneg())
+
+    def inter_lc(self, l, c, root_select):
+        p1, p2 = l.p1, l.p2
+        I1, I2 = self.inter_pp_c(p1, p2, c)
+        raise NotImplementedError("[inter_lc] NYI")
 
     #####################
     ## Utilities
@@ -505,3 +553,21 @@ class Optimizer(ABC):
 
     def unshift(O, Ps):
         return [self.get_point(P.x + O.x, P.y + O.y) for P in Ps]
+
+    def pt_eq(self, p1, p2):
+        return self.less(self.dist(p1, p2), 1e-6)
+
+    def pt_neq(self, p1, p2):
+        return self.greater(self.dist(p1, p2), 1e-6)
+
+    def process_rs(self, P1, P2, root_select):
+        pred = root_select.pred
+        ps = root_select.vars
+        if pred == "neq":
+            [pt] = self.lookup_pts(ps)
+            return self.cond(self.pt_neq(P1, pt), P1, P2)
+        elif pred == "closerTo":
+            [pt] = self.lookup_pts(ps)
+            test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
+            return self.cond(test, P1, P2)
+        raise NotImplementedError("[process_rs] NYI")

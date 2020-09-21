@@ -65,6 +65,24 @@ class TfOptimizer(Optimizer):
     def max(self, x, y):
         return tf.maximum(x, y)
 
+    def cond(self, cond, t_val, f_val):
+        return tf.cond(cond, lambda: t_val, lambda: f_val)
+
+    def lt(self, x, y):
+        return tf.less(x, y)
+
+    def lte(self, x, y):
+        return tf.less_equal(x, y)
+
+    def gt(self, x, y):
+        return tf.greater(x, y)
+
+    def gte(self, x, y):
+        return tf.greater_equal(x, y)
+
+    def abs(self, x):
+        return tf.math.abs(x)
+
     #####################
     ## Tensorflow Utilities
     ####################

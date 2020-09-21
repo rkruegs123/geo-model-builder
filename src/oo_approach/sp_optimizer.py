@@ -140,7 +140,24 @@ class ScipyOptimizer(Optimizer):
 
     def max(self, x, y):
         return sp.Max(x, y)
-        # raise NotImplementedError("How to max with sympy?")
+
+    def cond(self, cond, t_val, f_val):
+        return sp.Piecewise((t_val, cond), (f_val, True))
+
+    def lt(self, x, y):
+        return x < y
+
+    def lte(self, x, y):
+        return x <= y
+
+    def gt(self, x, y):
+        return x > y
+
+    def gte(self, x, y):
+        return x >= y
+
+    def abs(self, x, y):
+        return sp.Abs(x)
 
 
     #####################
