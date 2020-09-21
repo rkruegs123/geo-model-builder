@@ -10,12 +10,7 @@ import re
 
 from optimizer import Optimizer
 
-def multisub(subs, subject):
-    "Simultaneously perform all substitutions on the subject string."
-    pattern = '|'.join('(%s)' % re.escape(p) for p, s in subs)
-    substs = [s for p, s in subs]
-    replace = lambda m: substs[m.lastindex - 1]
-    return re.sub(pattern, replace, subject)
+# Can we now get rid of simpliification given lambdify!?
 
 def handler(signum, frame):
     print("Simplification failed!")
@@ -91,30 +86,18 @@ class ScipyOptimizer(Optimizer):
         self.losses[key] = val
         self.has_loss = True
 
-        '''
-        assert(key not in self.losses)
-
-        val = self.param_str_2_sp_str(str(val))
-        # Note that in tensorflow, we'd be minimizing val**2
-        scipy_constraint = { 'type': 'eq', 'fun': self.get_scipy_lambda(val) }
-        self.losses[key] = scipy_constraint
-        self.has_loss = True
-        '''
-
     def regularize_points(self):
         norms = [p.norm() for p in self.name2pt.values()]
         # summed_norms = self.sumVs(norms)
         mean_norm = self.sum(norms) / len(norms)
-        # self.add_to_objective(f"{self.opts.regularize_points} * {summed_norms}")
-        self.add_to_objective(self.opts.regularize_points * mean_norm)
+        self.update_objective(self.opts.regularize_points * mean_norm)
 
     def make_points_distinct(self):
         if random.random() < self.opts.distinct_prob:
             sqdists = [self.sqdist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)]
             mean_sqdist = self.sum(sqdists) / len(sqdists)
             # summed_sqdists = self.sumVs(sqdists)
-            # self.add_to_objective(f"{self.opts.make_distinct} * {summed_sqdists}")
-            self.add_to_objective(self.opts.make_distinct * mean_sqdist)
+            self.update_objective(self.opts.make_distinct * mean_sqdist)
 
 
     #####################
@@ -170,31 +153,11 @@ class ScipyOptimizer(Optimizer):
     ## Scipy Utilities
     ####################
 
-    def get_scipy_lambda(self, fun_str):
-        return lambda x: eval(fun_str)
-
-    def add_to_objective(self, sp_expr):
+    def update_objective(self, sp_expr):
         if self.obj_fun:
             self.obj_fun += sp_expr
         else:
             self.obj_fun = sp_expr
-
-    def param_str_2_sp_str(self, pstr):
-
-        replace_map = [
-            ("Abs", "abs")
-        ]
-        replace_map += [(param.name, f"x[{i}]") for i, param in enumerate(self.params)]
-
-        scipy_str = multisub(replace_map, pstr)
-
-        '''
-        scipy_str = pstr
-        for i, param in enumerate(self.params):
-            p_name = param.name
-            scipy_str = scipy_str.replace(p_name, f"x[{i}]")
-        '''
-        return scipy_str
 
     #####################
     ## Core
@@ -228,15 +191,22 @@ class ScipyOptimizer(Optimizer):
 
     def solve(self):
 
+
         if self.has_loss:
             self.regularize_points()
             self.make_points_distinct()
 
+            # We wanted to wait until all the params are populated!
             lambdified_losses = dict()
             x = tuple([sp.Symbol(p.name, real=True) for p in self.params])
             for key, loss_expr in self.losses.items():
                 loss_lambda = sp.lambdify([x], loss_expr)
                 lambdified_losses[key] = { 'type': 'eq', 'fun': loss_lambda }
+
+            if not self.obj_fun:
+                self.obj_fun = sp.sympify(0)
+            objective_fun = sp.lambdify([x], self.obj_fun)
+
 
         assignments = list()
         for _ in range(self.opts.n_tries):
@@ -245,12 +215,7 @@ class ScipyOptimizer(Optimizer):
                 assignment = self.get_point_assignment(inits)
                 assignments.append(assignment)
             else:
-                if not self.obj_fun:
-                    objective_fun = sp.sympify(0)
-                scipy_obj_fun = self.param_str_2_sp_str(str(self.obj_fun))
-                objective_fun = self.get_scipy_lambda(scipy_obj_fun)
                 init_vals = [x[1] for x in inits]
-                # cons = [c for c in self.losses.values()]
                 cons = [c for c in lambdified_losses.values()]
 
                 # res = minimize(objective_fun, init_vals, constraints=cons, options={'ftol': 1e-2, 'disp': True, 'iprint': 99, 'eps': 1.5e-8, 'maxiter': 300}, method="SLSQP")
@@ -263,22 +228,3 @@ class ScipyOptimizer(Optimizer):
                     assignment = self.get_point_assignment(solved_vals)
                     assignments.append(assignment)
         return assignments
-
-
-
-
-'''
-TODOS:
--Add assertion support, try more problems
--See if simplification gets scipy to work for hexagon
--Play with tolerances and step sizes for scipy
--Add verbosity
--Generalize eps to any optimizer?
--Understand meaning of scipy metrics. For example, is constraint violation total or average?
--Simplify constraints before registering them?
-'''
-
-'''
-Notes:
-- err isn't squared for scipy -- regularization and distinctness are enforced much differently than for tensorflow
-'''
