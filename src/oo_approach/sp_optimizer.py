@@ -23,9 +23,6 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGALRM, handler)
 
-def sigmoid(x):
-    return 1 / (1 + sp.exp(-x))
-
 # FIXME: Could call simplify in __init__
 class SpPoint(collections.namedtuple("SpPoint", ["x", "y"])):
     def __add__(self, p):
@@ -100,14 +97,13 @@ class ScipyOptimizer(Optimizer):
 
     def regularize_points(self):
         norms = [p.norm() for p in self.name2pt.values()]
-        # summed_norms = self.sumVs(norms) # Note that in tensorflow we take the mean
+        # summed_norms = self.sumVs(norms)
         mean_norm = self.sumVs(norms) / len(norms)
         # self.add_to_objective(f"{self.opts.regularize_points} * {summed_norms}")
         self.add_to_objective(f"{self.opts.regularize_points} * {mean_norm}")
 
     def make_points_distinct(self):
         if random.random() < self.opts.distinct_prob:
-            # Note that in tensorflow we do something much different
             sqdists = [self.sqdist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)]
             mean_sqdist = self.sumVs(sqdists) / len(sqdists)
             # summed_sqdists = self.sumVs(sqdists)
@@ -137,7 +133,7 @@ class ScipyOptimizer(Optimizer):
         return sp.tanh(x)
 
     def sigmoidV(self, x):
-        return sigmoid(x)
+        return 1 / (1 + sp.exp(-x))
 
     def constV(self, x):
         return x
