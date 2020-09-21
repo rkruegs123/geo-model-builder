@@ -431,6 +431,20 @@ class Optimizer(ABC):
 
         return [diff_signs(X.x - A1.x, X.x - B1.x), diff_signs(X.y - A1.y, X.y - B1.y)]
 
+    def det3(self, A, O, B):
+        lhs = (A.x - O.x) * (B.y - O.y)
+        rhs = (A.y - O.y) * (B.x - O.x)
+        return lhs - rhs
+
+    def side_score_prod(self, a, b, x, y):
+        return self.det3(a, x, y) * self.det3(b, x, y)
+
+    def opp_sides(self, a, b, x, y):
+        return self.lt(self.side_score_prod(a, b, x, y), 0.0)
+
+    def same_side(self, a, b, x, y):
+        return self.gt(self.side_score_prod(a, b, x, y), 0.0)
+
     def inter_ll(self, sif1, sif2):
         (m1, b1) = sif1
         (m2, b2) = sif2
@@ -481,41 +495,42 @@ class Optimizer(ABC):
     #####################
     ## Utilities
     ####################
-    def line2sif(self, l):
-        def line2twoPts(pred, ps):
-            if pred == "connecting":
-                return self.lookup_pts(ps)
-            elif pred == "paraAt":
-                X, A, B = self.lookup_pts(ps)
-                return X, X + B - A
-            elif pred == "perpAt":
-                X, A, B = self.lookup_pts(ps)
-                return X, X + self.rotate_counterclockwise_90(A - B)
-            elif pred == "mediator":
-                A, B = self.lookup_pts(ps)
-                M = self.midp(A, B)
-                return M, M + self.rotate_counterclockwise_90(A - B)
-            elif pred == "ibisector":
-                A, B, C = self.lookup_pts(ps)
-                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
-                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
-                M = self.midp(X, C)
-                return B, M
-            elif pred == "ebisector":
-                A, B, C = self.lookup_pts(ps)
-                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
-                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
-                M = self.midp(X, C)
-                Y = B + self.rotate_counterclockwise_90(M - B)
-                return B, Y
-            elif pred == "eqoangle":
-                B, C, D, E, F = self.lookup_pts(ps)
-                theta = self.angle(D, E, F)
-                X = B + self.rotate_counterclockwise(theta, C - B)
-                return B, X
-            else: raise RuntimeException(f"[line2nf] Unexpected line pred: {pred}")
 
-        p1, p2 = line2twoPts(l.pred, l.points)
+    def line2twoPts(pred, ps):
+        if pred == "connecting":
+            return self.lookup_pts(ps)
+        elif pred == "paraAt":
+            X, A, B = self.lookup_pts(ps)
+            return X, X + B - A
+        elif pred == "perpAt":
+            X, A, B = self.lookup_pts(ps)
+            return X, X + self.rotate_counterclockwise_90(A - B)
+        elif pred == "mediator":
+            A, B = self.lookup_pts(ps)
+            M = self.midp(A, B)
+            return M, M + self.rotate_counterclockwise_90(A - B)
+        elif pred == "ibisector":
+            A, B, C = self.lookup_pts(ps)
+            # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+            X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
+            M = self.midp(X, C)
+            return B, M
+        elif pred == "ebisector":
+            A, B, C = self.lookup_pts(ps)
+            X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
+            # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+            M = self.midp(X, C)
+            Y = B + self.rotate_counterclockwise_90(M - B)
+            return B, Y
+        elif pred == "eqoangle":
+            B, C, D, E, F = self.lookup_pts(ps)
+            theta = self.angle(D, E, F)
+            X = B + self.rotate_counterclockwise(theta, C - B)
+            return B, X
+        else: raise RuntimeException(f"[line2nf] Unexpected line pred: {pred}")
+
+    def line2sif(self, l):
+        p1, p2 = self.line2twoPts(l.pred, l.points)
         return self.pp2sif(p1, p2)
 
     # Two points on a line to slope-intercept form (y = mx + b)
@@ -562,12 +577,27 @@ class Optimizer(ABC):
 
     def process_rs(self, P1, P2, root_select):
         pred = root_select.pred
-        ps = root_select.vars
+        rs_args = root_select.vars
         if pred == "neq":
-            [pt] = self.lookup_pts(ps)
+            [pt] = self.lookup_pts(rs_args)
             return self.cond(self.pt_neq(P1, pt), P1, P2)
         elif pred == "closerTo":
-            [pt] = self.lookup_pts(ps)
+            [pt] = self.lookup_pts(rs_args)
             test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
             return self.cond(test, P1, P2)
-        raise NotImplementedError("[process_rs] NYI")
+        elif pred == "furtherFrom":
+            [pt] = self.lookup_pts(rs_args)
+            test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
+            return self.cond(test, P1, P2)
+        elif pred == "oppSides":
+            [pt] = self.lookup_pts(rs_args[0])
+            a, b = self.line2twoPts(rs_args[1])
+            return self.cond(self.opp_sides(P1, pt, a, b), P1, P2)
+        elif pred == "sameSide":
+            [pt] = self.lookup_pts(rs_args[0])
+            a, b = self.line2twoPts(rs_args[1])
+            return self.cond(self.same_side(P1, pt, a, b), P1, P2)
+        elif pred == "arbitrary":
+            return P2
+        else:
+            raise NotImplementedError(f"[process_rs] NYI: {pred}")
