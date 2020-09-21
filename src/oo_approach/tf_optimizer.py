@@ -38,26 +38,8 @@ class TfOptimizer(Optimizer):
     #####################
     ## Math Utilities
     ####################
-    def addV(self, x, y):
-        return x + y
-
-    def subV(self, x, y):
-        return x - y
-
-    def negV(self, x):
-        return -x
-
     def sumVs(self, xs):
         return tf.reduce_sum(xs)
-
-    def mulV(self, x, y):
-        return x * y
-
-    def divV(self, x, y):
-        return x / y
-
-    def powV(self, x, y):
-        return x ** y
 
     def sqrtV(self, x):
         return tf.math.sqrt(x)

@@ -5,7 +5,8 @@ import collections
 
 from instruction import *
 
-SlopeInterceptForm = collections.namedtuple("SlopeInterceptForm", ["m", "b"])
+SlopeInterceptForm = collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])
+CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
 
 class Optimizer(ABC):
     def __init__(self, instructions, opts):
@@ -74,31 +75,7 @@ class Optimizer(ABC):
     ## Math Utilities
     ####################
     @abstractmethod
-    def addV(self, x, y):
-        pass
-
-    @abstractmethod
-    def subV(self, x, y):
-        pass
-
-    @abstractmethod
-    def negV(self, x):
-        pass
-
-    @abstractmethod
     def sumVs(self, xs):
-        pass
-
-    @abstractmethod
-    def mulV(self, x, y):
-        pass
-
-    @abstractmethod
-    def divV(self, x, y):
-        pass
-
-    @abstractmethod
-    def powV(self, x, y):
         pass
 
     @abstractmethod
@@ -162,10 +139,10 @@ class Optimizer(ABC):
 
         angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-0.5, hi=0.5) for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
-        angles = [self.mulV(multiplicand, self.tanhV(self.mulV(0.2, az))) for az in angle_zs]
+        angles = [multiplicand * self.tanhV(0.2 * az) for az in angle_zs]
 
         scale_zs = [self.mkvar(name=f"polygon_scale_zs_{i}") for i in range(len(ps))]
-        scales = [self.mulV(0.5, self.tanhV(self.mulV(0.2, sz))) for sz in scale_zs]
+        scales = [0.5 * self.tanhV(0.2 * sz) for sz in scale_zs]
 
         Ps = [self.get_point(self.constV(-2.0), self.constV(0.0)),
               self.get_point(self.constV(2.0), self.constV(0.0))]
@@ -174,23 +151,22 @@ class Optimizer(ABC):
         for i in range(2, len(ps) + 1):
             # print(f"sampling polygon: {i}")
             A, B = Ps[-2:]
-            X = B + self.rotate_counterclockwise(self.negV(angles[i-1]), A - B)
-            scale = self.divV(self.mulV(s, self.addV(1, scales[i-1])), self.dist(X, B))
-            P = B + (X - B).smul(scale)
+            X = B + self.rotate_counterclockwise(-angles[i-1], A - B)
+            P = B + (X - B).smul(s * (1 + scales[i-1]) / self.dist(X, B))
             # Ps.append(P)
             Ps.append(self.simplify(P, method="trig"))
 
         # Angles should sum to (n-2) * pi
         angle_sum = self.sumVs(angles)
         expected_angle_sum = math.pi * (len(ps) - 2)
-        self.register_loss("polygon-angle-sum", self.subV(angle_sum, expected_angle_sum), weight=1e-1)
+        self.register_loss("polygon-angle-sum", angle_sum - expected_angle_sum, weight=1e-1)
 
         # First point shoudl equal the last point
         self.register_loss("polygon-first-eq-last", self.dist(Ps[0], Ps[len(ps)]), weight=1e-2)
 
         # First angle should be the one sampled (known to be <180)
         self.register_loss("polygon-first-angle-eq-sampled",
-                           self.subV(angles[0], self.angle(Ps[-1], Ps[0], Ps[1])),
+                           angles[0] - self.angle(Ps[-1], Ps[0], Ps[1]),
                            weight=1e-2)
 
         for p, P in zip(ps, Ps[:-1]):
@@ -211,13 +187,13 @@ class Optimizer(ABC):
             Ax = self.mkvar("tri_x", lo=-1.0, hi=1.2)
 
         if right is not None:
-            Ay = self.sqrtV(self.subV(4, self.powV(Ax, 2)))
+            Ay = self.sqrtV(4 - (Ax ** 2))
         elif equi:
-            Ay = self.mulV(2, self.sqrtV(self.constV(3)))
+            Ay = 2 * self.sqrtV(self.constV(3.0))
         else:
             AyLo = 1.1 if acute else 0.4
             z = self.mkvar("tri")
-            Ay = self.addV(self.constV(AyLo), self.mulV(3.0, self.sigmoidV(z)))
+            Ay = self.constV(AyLo) + 3.0 * self.sigmoidV(z)
 
         A = self.get_point(Ax, Ay)
 
@@ -237,6 +213,7 @@ class Optimizer(ABC):
 
     def compute(self, i):
         if i.computation[0] == "midp": self.compute_midp(i.point, i.computation[1])
+        elif i.computation[0] == "midpFrom": self.compute_midp_from(i.point, i.computation[1])
         elif i.computation[0] == "circumcenter": self.compute_circumcenter(i.point, i.computation[1])
         elif i.computation[0] == "orthocenter": self.compute_orthocenter(i.point, i.computation[1])
         elif i.computation[0] == "centroid": self.compute_centroid(i.point, i.computation[1])
@@ -247,7 +224,11 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         M = self.midp(A, B)
         self.register_pt(m, M)
-        # self.name2pt[m] = M
+
+    def compute_midp_from(self, p, ps):
+        M, A = self.lookup_pts(ps)
+        P = self.midp_from(M, A)
+        self.register_pt(p, P)
 
     def compute_circumcenter(self, o, ps):
         A, B, C = self.lookup_pts(ps)
@@ -325,25 +306,26 @@ class Optimizer(ABC):
     def midp(self, A, B):
         return (A + B).smul(0.5)
 
+    def midp_from(self, M, A):
+        return A + (M - A).smul(2)
+
     def sqdist(self, A, B):
-        xdiff = self.subV(A.x, B.x)
-        ydiff = self.subV(A.y, B.y)
-        return self.addV(self.powV(xdiff, 2), self.powV(ydiff, 2))
+        return (A.x - B.x)**2 + (A.y - B.y)**2
 
     def dist(self, A, B):
-        return self.powV(self.sqdist(A,B), 0.5)
+        return self.sqdist(A, B) ** (1 / 2)
 
     def inner_product(self, A, B):
         a1, a2 = A
         b1, b2 = B
-        return self.addV(self.mulV(a1, b1), self.mulV(a2, b2))
+        return a1*b1 + a2*b2
 
     def matrix_mul(self, mat, pt):
         pt1, pt2 = mat
         return self.get_point(self.inner_product(pt1, pt), self.inner_product(pt2, pt))
 
     def rotation_matrix(self, theta):
-        r1 = self.get_point(self.cosV(theta), self.negV(self.sinV(theta)))
+        r1 = self.get_point(self.cosV(theta), -self.sinV(theta))
         r2 = self.get_point(self.sinV(theta), self.cosV(theta))
         return (r1, r2)
 
@@ -367,63 +349,32 @@ class Optimizer(ABC):
 
     def angle(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
-        num = self.subV(self.addV(self.powV(a, 2), self.powV(c, 2)), self.powV(b, 2))
-        denom = self.mulV(self.mulV(a, 2), c)
-        return self.acosV(self.divV(num, denom))
+        return self.acosV((a**2 + c**2 - b**2) / (2 * a * c))
 
     def conway_vals(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
-
-        def cv_aux(x1, x2, x3):
-            num = self.subV(
-                self.addV(
-                    self.powV(x1, 2),
-                    self.powV(x2, 2)),
-                self.powV(x3, 2)) # x1**2 + x2**2 - x3**2
-            return self.divV(num, 2)
-
-        return cv_aux(b, c, a), cv_aux(c, a ,b), cv_aux(a, b, c)
+        return (b**2 + c**2 - a**2)/2, (c**2 + a**2 - b**2)/2, (a**2 + b**2 - c**2)/2
 
     def trilinear(self, A, B, C, x, y, z):
         a, b, c = self.side_lengths(A, B, C)
-        denom = self.addV(
-            self.addV(
-                self.mulV(a, x),
-                self.mulV(b, y)),
-            self.mulV(c, z)) # a * x + b * y + c * z
-        xnum = self.addV(
-            self.addV(
-                self.mulV(self.mulV(a, x), A.x),
-                self.mulV(self.mulV(b, y), B.x)),
-            self.mulV(self.mulV(c, z), C.x)) # a * x * A.x + b * y * B.x + c * z * C.x
-        ynum = self.addV(
-            self.addV(
-                self.mulV(self.mulV(a, x), A.y),
-                self.mulV(self.mulV(b, y), B.y)),
-            self.mulV(self.mulV(c, z), C.y))
-        return self.get_point(self.divV(xnum, denom), self.divV(ynum, denom))
+        denom = a * x + b * y + c * z
+        return self.get_point((a * x * A.x + b * y * B.x + c * z * C.x) / denom,
+                              (a * x * A.y + b * y * B.y + c * z * C.y) / denom)
 
     def barycentric(self, A, B, C, x, y, z):
         a, b, c = self.side_lengths(A, B, C)
-        return self.trilinear(A, B, C, self.divV(x, a), self.divV(y, b), self.divV(z, c))
+        return self.trilinear(A, B, C, x/a, y/b, z/c)
 
     def circumcenter(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
         Sa, Sb, Sc = self.conway_vals(A, B, C)
-        res = self.barycentric(A, B, C,
-                               self.mulV(self.powV(a, 2), Sa),
-                               self.mulV(self.powV(b, 2), Sb),
-                               self.mulV(self.powV(c, 2), Sc))
+        res = self.barycentric(A, B, C, a**2 * Sa, b**2 * Sb, c**2 * Sc)
         return res
 
     def orthocenter(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
         Sa, Sb, Sc = self.conway_vals(A, B, C)
-        res = self.barycentric(A, B, C,
-                               self.mulV(Sb, Sc),
-                               self.mulV(Sc, Sa),
-                               self.mulV(Sa, Sb))
-        return res
+        return self.barycentric(A, B, C, Sb * Sc, Sc * Sa, Sa * Sb)
 
     def centroid(self, A, B, C):
         return self.barycentric(A, B, C, 1, 1, 1)
@@ -432,53 +383,50 @@ class Optimizer(ABC):
         return self.trilinear(A, B, C, 1, 1, 1)
 
     def perp_phi(self, A, B, C, D):
-        # (A.x - B.x) * (C.x - D.x) + (A.y - B.y) * (C.y - D.y)
-        t1 = self.mulV(self.subV(A.x, B.x),
-                       self.subV(C.x, D.x))
-        t2 = self.mulV(self.subV(A.y, B.y),
-                       self.subV(C.y, D.y))
-        return self.addV(t1, t2)
+        return (A.x - B.x) * (C.x - D.x) + (A.y - B.y) * (C.y - D.y)
 
     def para_phi(self, A, B, C, D):
-        # (A.x - B.x) * (C.y - D.y) - (A.y - B.y) * (C.x - D.x)
-        t1 = self.mulV(self.subV(A.x, B.x),
-                       self.subV(C.y, D.y))
-        t2 = self.mulV(self.subV(A.y, B.y),
-                       self.subV(C.x, D.x))
-        return self.subV(t1, t2)
+        return (A.x - B.x) * (C.y - D.y) - (A.y - B.y) * (C.x - D.x)
 
     def cong_diff(self, A, B, C, D):
-        return self.subV(self.sqdist(A, B),
-                         self.sqdist(C, D))
+        return self.sqdist(A, B) - self.sqdist(C, D)
 
     def coll_phi(self, A, B, C):
-        # A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
-        t1 = self.mulV(A.x, self.subV(B.y, C.y))
-        t2 = self.mulV(B.x, self.subV(C.y, A.y))
-        t3 = self.mulV(C.x, self.subV(A.y, B.y))
-        return self.addV(self.addV(t1, t2), t3)
+        return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
 
     def between_gap(self, X, A, B):
         eps = 0.2
 
         def diff_signs(x, y):
-            return self.maxV(self.constV(0.0), self.mulV(x, y))
+            return self.maxV(self.constV(0.0), x * y)
 
-        # Point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
-        A1 = self.get_point(
-            self.addV(A.x, self.mulV(eps, self.subV(B.x, A.x))),
-            self.addV(A.y, self.mulV(eps, self.subV(B.y, A.y))))
-
-        # Point(B.x + eps * (A.x - B.x), B.y + eps * (A.y - B.y))
-        B1 = self.get_point(
-            self.addV(B.x, self.mulV(eps, self.subV(A.x, B.x))),
-            self.addV(B.y, self.mulV(eps, self.subV(A.y, B.y))))
-
-        x_loss = diff_signs(self.subV(X.x, A1.x), self.subV(X.x, B1.x))
-        y_loss = diff_signs(self.subV(X.y, A1.y), self.subV(X.y, B1.y))
-        return [x_loss, y_loss]
+        A1 = self.get_point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
+        B1 = self.get_point(B.x + eps * (A.x - B.x), B.y + eps * (A.y - B.y))
 
         return [diff_signs(X.x - A1.x, X.x - B1.x), diff_signs(X.y - A1.y, X.y - B1.y)]
+
+    def inter_ll(self, sif1, sif2):
+        (m1, b1) = sif1
+        (m2, b2) = sif2
+
+        px = (b2 - b1) / (m1 - m2)
+        py = m1 * px + b1
+        return self.get_point(px, py)
+
+    def inter_pp_c(self, p1, p2, cnf):
+        # We follow http://mathworld.wolfram.com/Circle-LineIntersection.html
+        O, r = cnf
+        P1, P2 = self.shift(O, [P1, P2])
+
+        dx = P1.x - P2.x
+        dy = P1.y - P2.y
+
+        dr = self.sqrtV(dx**2 + dy**2)
+        D = P2.x * P1.y - P1.x * P2.y
+
+        radicand = r**2 * dr**2 - D**2
+
+        raise NotImplementedError("Finish inter_pp_c")
 
 
 
@@ -501,12 +449,14 @@ class Optimizer(ABC):
                 return M, M + self.rotate_counterclockwise_90(A - B)
             elif pred == "ibisector":
                 A, B, C = self.lookup_pts(ps)
-                X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
                 M = self.midp(X, C)
                 return B, M
             elif pred == "ebisector":
                 A, B, C = self.lookup_pts(ps)
-                X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
+                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
                 M = self.midp(X, C)
                 Y = B + self.rotate_counterclockwise_90(M - B)
                 return B, Y
@@ -525,15 +475,33 @@ class Optimizer(ABC):
         (x1, y1) = p1
         (x2, y2) = p2
 
-        m = self.divV(self.subV(y2, y1), self.subV(x2, x1))
-        b = self.subV(y1, self.mulV(m, x1))
-        return SlopeInterceptForm(m=m, b=b)
+        m = (y2 - y1) / (x2 - x1)
+        b = y1 - m * x1
+        return SlopeInterceptForm(m=m, b=b, p1=p1, p2=p2)
 
-    def inter_ll(self, sif1, sif2):
-        (m1, b1) = sif1
-        (m2, b2) = sif2
+    def circ2nf(self, circ):
+        pred = circ.pred
+        ps = circ.points
 
-        px = self.divV(self.subV(b2, b1),
-                       self.subV(m1, m2))
-        py = self.addV(self.mulV(m1, px), b1)
-        return self.get_point(px, py)
+        if pred == "c3":
+            A, B, C = self.lookup_pts(ps)
+            O = self.circumcenter(A, B, C)
+            return CircleNF(center=O, radius=self.dist(O, A))
+        elif pred == "cOA":
+            O, A = self.lookup_pts(ps)
+            return CircleNF(center=O, radius=self.dist(O, A))
+        elif pred == "cong":
+            O, X, Y = self.lookup_pts(ps)
+            return CircleNF(center=O, radius=self.dist(X, Y))
+        elif pred == "diam":
+            B, C = self.lookup_pts(ps)
+            O = self.midp(B, C)
+            return CircleNF(center=O, radius=dist(O, B))
+        else:
+            raise RuntimeError(f"[circ2nf] NYI: {pred}")
+
+    def shift(self, O, Ps):
+        return [self.get_point(P.x - O.x, P.y - O.y) for P in Ps]
+
+    def unshift(O, Ps):
+        return [self.get_point(P.x + O.x, P.y + O.y) for P in Ps]
