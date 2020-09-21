@@ -5,12 +5,13 @@ import tensorflow.compat.v1 as tf
 import scipy
 import os
 import matplotlib.pyplot as plt
+import pdb
 
 from problem import Problem
 from constraint_system import ConstraintSystem
 from solve_tf import SolveTF
 from oo_approach.tf_optimizer import TfOptimizer
-from oo_approach.sp_optimizer import ScpOptimizer
+from oo_approach.sp_optimizer import ScipyOptimizer
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -52,13 +53,6 @@ if __name__ == "__main__":
     )
     print(instructions_str)
 
-    # Convert the instructions to a general constraint solving problem
-    # c_sys = ConstraintSystem(problem.instructions)
-
-
-
-
-
 
     # Solve the constraint problem with the chosen solving method
     if args.solver == "tensorflow":
@@ -78,7 +72,7 @@ if __name__ == "__main__":
             print(unfiltered_models)
             '''
     elif args.solver == "scipy":
-        solver = ScpOptimizer(problem.instructions, args)
+        solver = ScipyOptimizer(problem.instructions, args)
         solver.preprocess()
         unfiltered_models = solver.solve()
         print(unfiltered_models)
@@ -98,21 +92,5 @@ if __name__ == "__main__":
         ax.scatter(xs, ys)
         for i, n in enumerate(names):
             ax.annotate(n, (xs[i], ys[i]))
+        plt.axis('square')
         plt.show()
-
-
-    '''
-    for m in unfiltered_models:
-        p_vals = c_sys.get_point_vals(m)
-        print(p_vals)
-
-        xs = [p.x for p in p_vals.values()]
-        ys = [p.y for p in p_vals.values()]
-        names = [n for n in p_vals.keys()]
-
-        fit, ax = plt.subplots()
-        ax.scatter(xs, ys)
-        for i, n in enumerate(names):
-            ax.annotate(n, (xs[i], ys[i]))
-        plt.show()
-    '''

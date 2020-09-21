@@ -4,6 +4,8 @@ import pdb
 
 from instruction import *
 
+
+
 class Optimizer(ABC):
     def __init__(self, instructions, opts):
 
@@ -35,6 +37,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def get_point(self, x, y):
+        pass
+
+    @abstractmethod
+    def simplify(self, p, method="all"):
         pass
 
     def lookup_pts(self, ps):
@@ -153,7 +159,7 @@ class Optimizer(ABC):
         if len(ps) < 4:
             print("WARNING: sample_polygon expecting >3 points")
 
-        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}") for i in range(len(ps))]
+        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-0.5, hi=0.5) for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
         angles = [self.mulV(multiplicand, self.tanhV(self.mulV(0.2, az))) for az in angle_zs]
 
@@ -165,11 +171,13 @@ class Optimizer(ABC):
         s = self.dist(Ps[0], Ps[1])
 
         for i in range(2, len(ps) + 1):
+            # print(f"sampling polygon: {i}")
             A, B = Ps[-2:]
             X = B + self.rotate_counterclockwise(self.negV(angles[i-1]), A - B)
             scale = self.divV(self.mulV(s, self.addV(1, scales[i-1])), self.dist(X, B))
             P = B + (X - B).smul(scale)
-            Ps.append(P)
+            # Ps.append(P)
+            Ps.append(self.simplify(P, method="trig"))
 
         # Angles should sum to (n-2) * pi
         angle_sum = self.sumVs(angles)
@@ -183,7 +191,6 @@ class Optimizer(ABC):
         self.register_loss("polygon-first-angle-eq-sampled",
                            self.subV(angles[0], self.angle(Ps[-1], Ps[0], Ps[1])),
                            weight=1e-2)
-
 
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
@@ -297,6 +304,9 @@ class Optimizer(ABC):
         if pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
         elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
         elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        elif pred == "midp":
+            [M, A, B] = self.lookup_pts(ps)
+            return [self.dist(M, self.midp(A, B))]
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 

@@ -28,6 +28,9 @@ class TfOptimizer(Optimizer):
     def get_point(self, x, y):
         return TfPoint(x, y)
 
+    def simplify(self, p, method="all"):
+        return p
+
     def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):
         init = tf.random_uniform_initializer(minval=lo, maxval=hi)
         return tf.compat.v1.get_variable(name=name, shape=shape, dtype=tf.float64, initializer=init, trainable=trainable)
