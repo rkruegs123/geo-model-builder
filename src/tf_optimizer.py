@@ -4,7 +4,7 @@ import collections
 import random
 import itertools
 
-from oo_approach.optimizer import Optimizer
+from optimizer import Optimizer
 
 class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
     def __add__(self, p):  return TfPoint(self.x + p.x, self.y + p.y)
@@ -56,7 +56,7 @@ class TfOptimizer(Optimizer):
     def tanh(self, x):
         return tf.nn.tanh(x)
 
-    def sigmoidV(self, x):
+    def sigmoid(self, x):
         return tf.nn.sigmoid(x)
 
     def const(self, x):

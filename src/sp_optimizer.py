@@ -8,7 +8,7 @@ from math import tanh, cos, sin, acos, sqrt, exp
 import signal
 import re
 
-from oo_approach.optimizer import Optimizer
+from optimizer import Optimizer
 
 def multisub(subs, subject):
     "Simultaneously perform all substitutions on the subject string."

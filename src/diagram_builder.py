@@ -8,10 +8,8 @@ import matplotlib.pyplot as plt
 import pdb
 
 from problem import Problem
-from constraint_system import ConstraintSystem
-from solve_tf import SolveTF
-from oo_approach.tf_optimizer import TfOptimizer
-from oo_approach.sp_optimizer import ScipyOptimizer
+from tf_optimizer import TfOptimizer
+from sp_optimizer import ScipyOptimizer
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -65,12 +63,6 @@ if __name__ == "__main__":
             unfiltered_models = solver.solve()
             print(unfiltered_models)
 
-            '''
-            solver = SolveTF(c_sys, g, args)
-            print(solver.params)
-            unfiltered_models = solver.solve()
-            print(unfiltered_models)
-            '''
     elif args.solver == "scipy":
         solver = ScipyOptimizer(problem.instructions, args)
         solver.preprocess()
