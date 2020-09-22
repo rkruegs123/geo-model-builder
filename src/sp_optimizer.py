@@ -154,6 +154,11 @@ class ScipyOptimizer(Optimizer):
     def exp(self, x):
         return sp.exp(x)
 
+    def softmax(self, xs):
+        exps = [self.exp(x) for x in xs]
+        sum_exps = self.sum(exps)
+        return [e / sum_exps for e in exps]
+
 
     #####################
     ## Scipy Utilities

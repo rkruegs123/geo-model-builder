@@ -144,6 +144,10 @@ class Optimizer(ABC):
     def exp(self, x):
         pass
 
+    @abstractmethod
+    def softmax(self, xs):
+        pass
+
     #####################
     ## Sample
     ####################
@@ -329,14 +333,14 @@ class Optimizer(ABC):
         p_method = i.parameterization[0]
         p_args = i.parameterization
         param_method = i.parameterization
-        if p_method == "coords":
-            self.parameterize_coords(p)
-        elif p_method == "onSeg":
-            self.parameterize_on_seg(p, p_args[1])
-        elif p_method == "onRay":
-            self.parameterize_on_ray(p, p_args[1])
-        else:
-            raise NotImplementedError("FIXME: Finish parameterize")
+        if p_method == "coords": self.parameterize_coords(p)
+        elif p_method == "onSeg": self.parameterize_on_seg(p, p_args[1])
+        elif p_method == "onLine": self.parameterize_on_line(p, p_args[1])
+        elif p_method == "onRay": self.parameterize_on_ray(p, p_args[1])
+        elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p, p_args[1])
+        elif p_method == "onCirc": self.parameterize_on_circ(p, p_args[1])
+        elif p_method == "inPoly": self.parameterize_in_poly(p, p_args[1])
+        else: raise NotImplementedError("FIXME: Finish parameterize")
 
     def parameterize_coords(self, p):
         self.sample_uniform([p])
@@ -348,10 +352,43 @@ class Optimizer(ABC):
         self.register_loss(f"{p}_seg_regularization", [z], weight=1e-4)
         self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
 
+    def parameterize_on_line(self, p, l):
+        A, B = self.line2twoPts(l)
+        z = self.mkvar(name=f"{p}_line")
+        z = 0.2 * z
+        self.register_loss(f"{p}_line_regularization", [z], weight=1e-4)
+        # TODO: arbitrary and awkward. Better to sample "zones" first?
+        s = 3.0
+        P1 = A + (A - B).smul(s)
+        P2 = B + (B - A).smul(s)
+        self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)))
+
     def parameterize_on_ray(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_ray")
         P = A + (B - A).smul(self.exp(z))
+        self.register_pt(p, P)
+
+    def parameterize_on_ray_opp(self, p, ps):
+        A, B = self.lookup_pts(ps)
+        z = self.mkvar(f"{p}_ray_opp")
+        P = A + (A - B).smul(self.exp(z))
+        self.register_pt(p, P)
+
+    def parameterize_on_circ(self, p, circ):
+        O, r = self.circ2nf(circ)
+        rot = self.mkvar(name=f"{p}_rot")
+        theta = rot * 2 * self.const(math.pi)
+        X = self.get_point(x=O.x + r * self.cos(theta), y=O.y + r * self.sin(theta))
+        self.register_pt(p, X)
+
+    def parameterize_in_poly(self, p, ps):
+        Ps = self.lookup_pts(ps)
+        zs = [self.mkvar(name=f"{p}_in_poly_{poly_p}") for poly_p in ps]
+        ws = self.softmax(zs)
+        Px = self.sum([P.x * w for (P, w) in zip(Ps, ws)])
+        Py = self.sum([P.y * w for (P, w) in zip(Ps, ws)])
+        P = self.get_point(Px, Py)
         self.register_pt(p, P)
 
     #####################

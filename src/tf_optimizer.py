@@ -89,6 +89,9 @@ class TfOptimizer(Optimizer):
     def exp(self, x):
         return tf.math.exp(x)
 
+    def softmax(self, xs):
+        return list(tf.nn.softmax(xs))
+
     #####################
     ## Tensorflow Utilities
     ####################
