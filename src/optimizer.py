@@ -429,10 +429,27 @@ class Optimizer(ABC):
         elif pred == "circumcenter":
             O, A, B, C = self.lookup_pts(ps)
             return [self.dist(O, self.circumcenter(A, B, C))]
+        elif pred == "coll":
+            coll_ps = self.lookup_pts(ps)
+            diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(ps, 3)]
+            return diffs
         elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        elif pred == "cycl":
+            cycl_ps = self.lookup_pts(ps)
+            assert(len(ps) > 3)
+            diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
+            return diffs
+        elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(ps))]
+        elif pred == "eqoangle":
+            A, B, C, P, Q, R = self.lookup_pts(ps)
+            return [self.angle(A, B, C) - self.angle(P, Q, R)]
+        elif pred == "eqratio": return [self.eqratio_diff(*self.lookup_pts(ps))]
         elif pred == "foot":
             F, X, A, B = self.lookup_pts(ps)
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
+        elif pred == "ibisector":
+            X, B, A, C = self.lookup_pts(ps)
+            return [self.eqangle8_diff(B, A, A, X, X, A, A, C)]
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(ps)
             return [self.dist(I, self.incenter(A, B, C))]
@@ -477,6 +494,11 @@ class Optimizer(ABC):
         a1, a2 = A
         b1, b2 = B
         return a1*b1 + a2*b2
+
+    def scalar_product(self, O, A, B):
+        lhs = (A.x - O.x) * (B.x - O.x)
+        rhs = (A.y - O.y) * (B.y - O.y)
+        return lhs + rhs
 
     def matrix_mul(self, mat, pt):
         pt1, pt2 = mat
@@ -677,6 +699,23 @@ class Optimizer(ABC):
     def radical_axis(self, cnf1, cnf2):
         p1, p2 = self.radical_axis_pts(cnf1, cnf2)
         return self.pp2sif(p1, p2)
+
+    def eqangle6_diff(self, A, B, C, P, Q, R):
+        s1 = self.det3(A, B, C)
+        c1 = self.scalar_product(A, B, C)
+        s2 = self.det3(P, Q, R)
+        c2 = self.scalar_product(P, Q, R)
+        return 0.1 * (s1 * c2 - s2 * c1)
+
+    def eqratio_diff(self, A, B, C, D, P, Q, R, S):
+        # AB/CD = PQ/RS
+        return self.sqrt(dist(A, B) * self.dist(R, S)) - self.sqrt(self.dist(P, Q) * self.dist(C, D))
+
+    def cycl_diff(self, A, B, C, D):
+        return self.eqangle6_diff(A, B, D, A, C, D)
+
+    def eqangle8_diff(self, A, B1, B2, C, P, Q1, Q2, R):
+        return self, eqangle6_diff(A, B1, C - B2 + B1, P, Q1, R - Q2 + Q1)
 
     #####################
     ## Utilities
