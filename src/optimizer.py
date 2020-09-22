@@ -187,7 +187,7 @@ class Optimizer(ABC):
         s = self.dist(Ps[0], Ps[1])
 
         for i in range(2, len(ps) + 1):
-            # print(f"sampling polygon: {i}")
+            # print(f"sampling polygon point: {i}")
             A, B = Ps[-2:]
             X = B + self.rotate_counterclockwise(-angles[i-1], A - B)
             P = B + (X - B).smul(s * (1 + scales[i-1]) / self.dist(X, B))

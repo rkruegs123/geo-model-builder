@@ -213,7 +213,6 @@ class ScipyOptimizer(Optimizer):
             for key, loss_expr in self.losses.items():
                 loss_lambda = sp.lambdify([x], loss_expr)
                 lambdified_losses[key] = { 'type': 'eq', 'fun': loss_lambda }
-
             if not self.obj_fun:
                 self.obj_fun = sp.sympify(0)
             objective_fun = sp.lambdify([x], self.obj_fun)
