@@ -250,6 +250,8 @@ class Optimizer(ABC):
         elif c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
         elif c_method == "amidpSame": self.compute_amidp_same(p, c_args[1])
         elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
+        elif c_method == "incenter": self.compute_incenter(p, c_args[1])
+        elif c_method == "excenter": self.compute_excenter(p, c_args[1])
         elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
         elif c_method == "centroid": self.compute_centroid(p, c_args[1])
         elif c_method == "interLL": self.compute_inter_ll(p, c_args[1], c_args[2])
@@ -294,6 +296,11 @@ class Optimizer(ABC):
     def compute_incenter(self, i, ps):
         A, B, C = self.lookup_pts(ps)
         I = self.incenter(A, B, C)
+        self.register_pt(i, I)
+
+    def compute_excenter(self, i, ps):
+        A, B, C = self.lookup_pts(ps)
+        I = self.excenter(A, B, C)
         self.register_pt(i, I)
 
     def compute_inter_ll(self, p, l1, l2):
@@ -434,6 +441,9 @@ class Optimizer(ABC):
 
     def incenter(self, A, B, C):
         return self.trilinear(A, B, C, 1, 1, 1)
+
+    def excenter(self, A, B, C):
+        return self.trilinear(A, B, C, -1, 1, 1)
 
     def perp_phi(self, A, B, C, D):
         return (A.x - B.x) * (C.x - D.x) + (A.y - B.y) * (C.y - D.y)
