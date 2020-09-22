@@ -419,12 +419,41 @@ class Optimizer(ABC):
             self.register_loss(loss_str, val, weight=weight)
 
     def assertion_vals(self, pred, ps):
-        if pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
-        elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
+        if pred == "amidpOpp":
+            M, B, C, A = self.lookup_pts(ps)
+            return [self.dist(M, self.amidp_opp(B, C, A))]
+        elif pred == "amidpSame":
+            M, B, C, A = self.lookup_pts(ps)
+            return [self.dist(M, self.amidp_same(B, C, A))]
+        elif pred == "between": return self.between_gap(*self.lookup_pts(ps))
+        elif pred == "circumcenter":
+            O, A, B, C = self.lookup_pts(ps)
+            return [self.dist(O, self.circumcenter(A, B, C))]
         elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        elif pred == "foot":
+            F, X, A, B = self.lookup_pts(ps)
+            return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
+        elif pred == "incenter":
+            I, A, B, C = self.lookup_pts(ps)
+            return [self.dist(I, self.incenter(A, B, C))]
+        elif pred == "interLL":
+            X, A, B, C, D = self.lookup_pts(ps)
+            return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]
         elif pred == "midp":
-            [M, A, B] = self.lookup_pts(ps)
+            M, A, B = self.lookup_pts(ps)
             return [self.dist(M, self.midp(A, B))]
+        elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(ps))] + self.between_gap(*self.lookup_pts(ps))
+        elif pred == "oppSides":
+            A, B, X, Y = self.lookup_pts(ps)
+            return [self.max(self.const(0.0), self.side_score_prod(A, B, X, Y))]
+        elif pred == "orthocenter":
+            H, A, B, C = self.lookup_pts(ps)
+            return [self.dist(H, self.orthocenter(A, B, C))]
+        elif pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
+        elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
+        elif pred == "sameSide":
+            A, B, X, Y = self.lookup_pts(ps)
+            return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 
