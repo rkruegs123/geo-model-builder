@@ -151,6 +151,9 @@ class ScipyOptimizer(Optimizer):
     def abs(self, x, y):
         return sp.Abs(x)
 
+    def exp(self, x):
+        return sp.exp(x)
+
 
     #####################
     ## Scipy Utilities

@@ -86,6 +86,9 @@ class TfOptimizer(Optimizer):
     def abs(self, x):
         return tf.math.abs(x)
 
+    def exp(self, x):
+        return tf.math.exp(x)
+
     #####################
     ## Tensorflow Utilities
     ####################

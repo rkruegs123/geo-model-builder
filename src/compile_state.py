@@ -380,7 +380,7 @@ class CompileState:
 
     def paramCoords(self, p, cs):
         print(f"WARNING: point is parameterized by its coordinates: {p}")
-        self.solve_instructions.append(Parameterize(p, "coords"))
+        self.solve_instructions.append(Parameterize(p, ("coords")))
         return True
 
 

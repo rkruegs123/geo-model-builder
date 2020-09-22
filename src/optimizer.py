@@ -140,6 +140,10 @@ class Optimizer(ABC):
     def abs(self, x):
         pass
 
+    @abstractmethod
+    def exp(self, x):
+        pass
+
     #####################
     ## Sample
     ####################
@@ -321,14 +325,34 @@ class Optimizer(ABC):
     ####################
 
     def parameterize(self, i):
+        p = i.point
+        p_method = i.parameterization[0]
+        p_args = i.parameterization
         param_method = i.parameterization
-        if param_method == "coords":
-            self.parameterize_coords(i.point)
+        if p_method == "coords":
+            self.parameterize_coords(p)
+        elif p_method == "onSeg":
+            self.parameterize_on_seg(p, p_args[1])
+        elif p_method == "onRay":
+            self.parameterize_on_ray(p, p_args[1])
         else:
             raise NotImplementedError("FIXME: Finish parameterize")
 
     def parameterize_coords(self, p):
         self.sample_uniform([p])
+
+    def parameterize_on_seg(self, p, ps):
+        A, B = self.lookup_pts(ps)
+        z = self.mkvar(name=f"{p}_seg")
+        z = 0.2 * z
+        self.register_loss(f"{p}_seg_regularization", [z], weight=1e-4)
+        self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
+
+    def parameterize_on_ray(self, p, ps):
+        A, B = self.lookup_pts(ps)
+        z = self.mkvar(name=f"{p}_ray")
+        P = A + (B - A).smul(self.exp(z))
+        self.register_pt(p, P)
 
     #####################
     ## Assert
