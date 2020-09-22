@@ -247,6 +247,8 @@ class Optimizer(ABC):
         c_args = i.computation
         if c_method == "midp": self.compute_midp(p, c_args[1])
         elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
+        elif c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
+        elif c_method == "amidpSame": self.compute_amidp_same(p, c_args[1])
         elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
         elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
         elif c_method == "centroid": self.compute_centroid(p, c_args[1])
@@ -262,6 +264,16 @@ class Optimizer(ABC):
     def compute_midp_from(self, p, ps):
         M, A = self.lookup_pts(ps)
         P = self.midp_from(M, A)
+        self.register_pt(p, P)
+
+    def compute_amidp_opp(self, p, ps):
+        B, C, A = self.lookup_pts(ps)
+        P = self.amidp_opp(B, C, A)
+        self.register_pt(p, P)
+
+    def compute_amidp_same(self, p, ps):
+        B, C, A = self.lookup_pts(ps)
+        P = self.amidp_same(B, C, A)
         self.register_pt(p, P)
 
     def compute_circumcenter(self, o, ps):
@@ -520,6 +532,20 @@ class Optimizer(ABC):
                                          self.less(self.dist(A, B), 1e-6)),
                          self.const(0.0), f_val)
         self.register_loss(f"interLC_{name}", [loss], weight=1e-1)
+
+    def second_meet_pp_c(self, A, B, O):
+        P1, P2 = self.inter_pp_c(A, B, CircleNF(O, self.dist(O, A)))
+        return self.cond(self.less(self.sqdist(A, P1), self.sqdist(A, P2)), P2, P1)
+
+    def amidp_opp(self, B, C, A):
+        O = self.circumcenter(A, B, C)
+        I = self.incenter(A, B, C)
+        return self.second_meet_pp_c(A, I, O)
+
+    def amidp_same(self, B, C, A):
+        M = self.amidp_opp(B, C, A)
+        O = self.circumcenter(A, B, C)
+        return self.second_meet_pp_c(M, O, O)
 
     #####################
     ## Utilities
