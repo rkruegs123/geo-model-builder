@@ -264,6 +264,7 @@ class Optimizer(ABC):
         elif c_method == "centroid": self.compute_centroid(p, c_args[1])
         elif c_method == "interLL": self.compute_inter_ll(p, c_args[1], c_args[2])
         elif c_method == "interLC": self.compute_inter_lc(p, c_args[1], c_args[2], c_args[3])
+        elif c_method == "interCC": self.compute_inter_cc(p, c_args[1], c_args[2], c_args[3])
         else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
@@ -322,6 +323,13 @@ class Optimizer(ABC):
         cnf = self.circ2nf(c)
         P = self.inter_lc(l_sif, cnf, root_select)
         self.make_lc_intersect(p, l_sif, cnf)
+        self.register_pt(p, P)
+
+    def compute_inter_cc(self, p, c1, c2, root_select):
+        cnf1 = self.circ2nf(c1)
+        cnf2 = self.circ2nf(c2)
+        P = self.inter_cc(cnf1, cnf2, root_select)
+        self.make_lc_intersect(p, self.radical_axis(cnf1, cnf2), cnf1)
         self.register_pt(p, P)
 
     #####################
@@ -590,6 +598,11 @@ class Optimizer(ABC):
         I1, I2 = self.inter_pp_c(p1, p2, c)
         return self.process_rs(P1, P2, root_select)
 
+    def inter_cc(self, cnf1, cnf2, root_select):
+        l = self.radical_axis(cnf1, cnf2)
+        result = self.inter_lc(l, cnf1, root_select)
+        return result
+
     def make_lc_intersect(self, name, l, c):
         A, B = l.pp()
         O, r = c
@@ -617,6 +630,24 @@ class Optimizer(ABC):
         M = self.amidp_opp(B, C, A)
         O = self.circumcenter(A, B, C)
         return self.second_meet_pp_c(M, O, O)
+
+
+    def radical_axis_pts(self, cnf1, cnf2):
+        (c1x, c1y), r1 = cnf1
+        (c2x, c2y), r2 = cnf2
+
+        A = self.const(2.0) * (c2x - c1x)
+        B = self.const(2.0) * (c2y - c1y)
+        C = (r1**2 - r2**2) + (c2y**2 - c1y**2) + (c2x**2 - c1x**2)
+
+        p1, p2 = self.cond(self.greater(self.abs(A), 1e-6),
+                           (self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=C/A, y=self.const(0.0))),
+                           (self.get_point(x=self.const(1.0), y=C/B), self.get_point(x=self.const(0.0), y=C/B)))
+        return p1, p2
+
+    def radical_axis(self, cnf1, cnf2):
+        p1, p2 = self.radical_axis_pts(cnf1, cnf2)
+        return self.pp2sif(p1, p2)
 
     #####################
     ## Utilities
