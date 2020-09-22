@@ -145,6 +145,9 @@ class ScipyOptimizer(Optimizer):
     def gte(self, x, y):
         return x >= y
 
+    def logical_or(self, x, y):
+        return sp.Or(x, y)
+
     def abs(self, x, y):
         return sp.Abs(x)
 

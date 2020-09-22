@@ -133,6 +133,10 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
+    def logical_or(self, x, y):
+        pass
+
+    @abstractmethod
     def abs(self, x):
         pass
 
@@ -238,13 +242,17 @@ class Optimizer(ABC):
     ####################
 
     def compute(self, i):
-        if i.computation[0] == "midp": self.compute_midp(i.point, i.computation[1])
-        elif i.computation[0] == "midpFrom": self.compute_midp_from(i.point, i.computation[1])
-        elif i.computation[0] == "circumcenter": self.compute_circumcenter(i.point, i.computation[1])
-        elif i.computation[0] == "orthocenter": self.compute_orthocenter(i.point, i.computation[1])
-        elif i.computation[0] == "centroid": self.compute_centroid(i.point, i.computation[1])
-        elif i.computation[0] == "interLL": self.compute_inter_ll(i.point, i.computation[1], i.computation[2])
-        else: raise NotImplementedError(f"[compute] NYI: {i.computation[0]} not supported")
+        p = i.point
+        c_method = i.computation[0]
+        c_args = i.computation
+        if c_method == "midp": self.compute_midp(p, c_args[1])
+        elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
+        elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
+        elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
+        elif c_method == "centroid": self.compute_centroid(p, c_args[1])
+        elif c_method == "interLL": self.compute_inter_ll(p, c_args[1], c_args[2])
+        elif c_method == "interLC": self.compute_inter_lc(p, c_args[1], c_args[2], c_args[3])
+        else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
@@ -280,6 +288,13 @@ class Optimizer(ABC):
         sif1 = self.line2sif(l1)
         sif2 = self.line2sif(l2)
         P = self.inter_ll(sif1, sif2)
+        self.register_pt(p, P)
+
+    def compute_inter_lc(self, p, l, c, root_select):
+        l_sif = self.line2sif(l)
+        cnf = self.circ2nf(c)
+        P = self.inter_lc(l_sif, cnf, root_select)
+        self.make_lc_intersect(p, l_sif, cnf)
         self.register_pt(p, P)
 
     #####################
@@ -491,6 +506,20 @@ class Optimizer(ABC):
         p1, p2 = l.p1, l.p2
         I1, I2 = self.inter_pp_c(p1, p2, c)
         return self.process_rs(P1, P2, root_select)
+
+    def make_lc_intersect(self, name, l, c):
+        A, B = l.pp()
+        O, r = c
+        Operp = self.rotate_counterclockwise_90(A - B) + O
+
+        F = self.inter_ll(l, self.pp2sif(O, Operp))
+        d = self.dist(O, F)
+        f_val = self.cond(self.less(r, d), d, self.const(0.0))
+
+        loss = self.cond(self.logical_or(self.less(self.dist(O, Operp), 1e-6),
+                                         self.less(self.dist(A, B), 1e-6)),
+                         self.const(0.0), f_val)
+        self.register_loss(f"interLC_{name}", [loss], weight=1e-1)
 
     #####################
     ## Utilities

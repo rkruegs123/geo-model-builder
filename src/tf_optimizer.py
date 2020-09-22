@@ -80,6 +80,9 @@ class TfOptimizer(Optimizer):
     def gte(self, x, y):
         return tf.greater_equal(x, y)
 
+    def logical_or(self, x, y):
+        return tf.logical_or(x, y)
+
     def abs(self, x):
         return tf.math.abs(x)
 
