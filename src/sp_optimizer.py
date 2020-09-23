@@ -9,6 +9,7 @@ import signal
 import re
 
 from optimizer import Optimizer
+from model import Model
 
 # Can we now get rid of simpliification given lambdify!?
 
@@ -187,21 +188,25 @@ class ScipyOptimizer(Optimizer):
                 inits.append((name, val))
         return inits
 
+    def params2point(self, p, solved_params):
+        px = p.x if isinstance(p.x, float) else p.x.subs(solved_params)
+        py = p.y if isinstance(p.y, float) else p.y.subs(solved_params)
 
-    def get_point_assignment(self, model):
+        if not (isinstance(px, sp.Number) or type(px) == float) or not (isinstance(py, sp.Number) or type(py) == float):
+            raise RuntimeError("[params2point] Failed evaluation")
+        return self.get_point(float(px), float(py))
+
+    def get_model(self, solved_params):
         # FIXME: Make cleaner -- shouldn't have to convert to dict here
-        model = { sp.Symbol(p_name, real=True) : val for (p_name, val) in model }
+        solved_params = { sp.Symbol(p_name, real=True) : val for (p_name, val) in solved_params }
         pt_assn = dict()
         for pt_name, pt in self.name2pt.items():
-            px = pt.x if isinstance(pt.x, float) else pt.x.subs(model)
-            py = pt.y if isinstance(pt.y, float) else pt.y.subs(model)
-            if not (isinstance(px, sp.Number) or type(px) == float) or not (isinstance(py, sp.Number) or type(py) == float):
-                raise RuntimeError("Failed evaluation")
-            pt_assn[pt_name] = SpPoint(float(px), float(py))
-        return pt_assn
+            pt_assn[pt_name] = self.params2point(pt, solved_params)
+        segments = [(self.params2point(sa, solved_params), self.params2point(sb, solved_params)) for (sa, sb) in self.segments]
+        circles = [(self.params2point(sO, solved_params), sr.subs(solved_params)) for (sO, sr) in self.circles]
+        return Model(points=pt_assn, segments=segments, circles=circles)
 
     def solve(self):
-
 
         if self.has_loss:
             self.regularize_points()
@@ -218,12 +223,12 @@ class ScipyOptimizer(Optimizer):
             objective_fun = sp.lambdify([x], self.obj_fun)
 
 
-        assignments = list()
+        models = list()
         for _ in range(self.opts.n_tries):
             inits = self.sample_inits()
             if not self.has_loss:
-                assignment = self.get_point_assignment(inits)
-                assignments.append(assignment)
+                model = self.get_model(inits)
+                models.append(model)
             else:
                 init_vals = [x[1] for x in inits]
                 cons = [c for c in lambdified_losses.values()]
@@ -235,6 +240,6 @@ class ScipyOptimizer(Optimizer):
 
                 if res.success:
                     solved_vals = [(init.name, val) for (init, val) in zip(self.params, res.x)]
-                    assignment = self.get_point_assignment(solved_vals)
-                    assignments.append(assignment)
-        return assignments
+                    model = self.get_model(solved_vals)
+                    models.append(model)
+        return models

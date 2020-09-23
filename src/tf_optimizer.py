@@ -5,6 +5,7 @@ import random
 import itertools
 
 from optimizer import Optimizer
+from model import Model
 
 class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
     def __add__(self, p):  return TfPoint(self.x + p.x, self.y + p.y)
@@ -188,12 +189,14 @@ class TfOptimizer(Optimizer):
             self.freeze()
             # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
-        assignments = list()
+        models = list()
         for _ in range(self.opts.n_tries):
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
-                assignment = self.run(self.name2pt)
-                assignments.append(assignment)
+                pt_assn = self.run(self.name2pt)
+                segments = self.run(segments)
+                circles = self.run(circles)
+                models.append(Model(points=pt_assn, segments=segments, circles=circles))
             else:
                 loss = None
                 try:
@@ -202,6 +205,8 @@ class TfOptimizer(Optimizer):
                     print(f"ERROR: {e}")
 
                 if loss is not None and loss < self.opts.eps:
-                    assignment = self.run(self.name2pt)
-                    assignments.append(assignment)
-        return assignments
+                    pt_assn = self.run(self.name2pt)
+                    segments = self.run(self.segments)
+                    circles = self.run(self.circles)
+                    models.append(Model(points=pt_assn, segments=segments, circles=circles))
+        return models

@@ -73,16 +73,5 @@ if __name__ == "__main__":
         raise NotImplementedError(f"Solver not implemented: {args.solver}")
 
 
-
-
     for m in unfiltered_models:
-        xs = [p.x for p in m.values()]
-        ys = [p.y for p in m.values()]
-        names = [n for n in m.keys()]
-
-        fit, ax = plt.subplots()
-        ax.scatter(xs, ys)
-        for i, n in enumerate(names):
-            ax.annotate(n, (xs[i], ys[i]))
-        plt.axis('square')
-        plt.show()
+        m.plot()

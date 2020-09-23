@@ -19,6 +19,9 @@ class Optimizer(ABC):
         self.opts = opts
         self.instructions = instructions
 
+        self.circles = list()
+        self.segments = list()
+
         super().__init__()
 
         # self.preprocess()
@@ -36,6 +39,8 @@ class Optimizer(ABC):
             self.parameterize(i)
         elif isinstance(i, Assert):
             self.add(i)
+        elif isinstance(i, Confirm):
+            print("WARNING: Confirm support not implemented yet")
         else:
             raise NotImplementedError("FIXME: Finish process_instruction")
 
@@ -207,6 +212,9 @@ class Optimizer(ABC):
                            angles[0] - self.angle(Ps[-1], Ps[0], Ps[1]),
                            weight=1e-2)
 
+        for i in range(len(ps)):
+            self.segments.append((Ps[i], Ps[(i+1) % (len(ps))]))
+
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
 
@@ -243,7 +251,7 @@ class Optimizer(ABC):
         self.register_pt(nB, B)
         self.register_pt(nC, C)
 
-
+        self.segments.extend([(A, B), (B, C), (C, A)])
 
     #####################
     ## Compute
@@ -271,16 +279,19 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         M = self.midp(A, B)
         self.register_pt(m, M)
+        self.segments.append((A, B))
 
     def compute_midp_from(self, p, ps):
         M, A = self.lookup_pts(ps)
         P = self.midp_from(M, A)
         self.register_pt(p, P)
+        self.segments.append((P, A))
 
     def compute_amidp_opp(self, p, ps):
         B, C, A = self.lookup_pts(ps)
         P = self.amidp_opp(B, C, A)
         self.register_pt(p, P)
+
 
     def compute_amidp_same(self, p, ps):
         B, C, A = self.lookup_pts(ps)
@@ -291,6 +302,7 @@ class Optimizer(ABC):
         A, B, C = self.lookup_pts(ps)
         O = self.circumcenter(A, B, C)
         self.register_pt(o, O)
+        self.circles.append((O, self.dist(O, A)))
 
     def compute_orthocenter(self, h, ps):
         A, B, C = self.lookup_pts(ps)
@@ -306,11 +318,13 @@ class Optimizer(ABC):
         A, B, C = self.lookup_pts(ps)
         I = self.incenter(A, B, C)
         self.register_pt(i, I)
+        self.circles.append((I, self.inradius(A, B, C)))
 
     def compute_excenter(self, i, ps):
         A, B, C = self.lookup_pts(ps)
         I = self.excenter(A, B, C)
         self.register_pt(i, I)
+        self.circles.append((I, self.exradius(A, B, C)))
 
     def compute_inter_ll(self, p, l1, l2):
         sif1 = self.line2sif(l1)
@@ -357,31 +371,35 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_seg")
         z = 0.2 * z
-        self.register_loss(f"{p}_seg_regularization", [z], weight=1e-4)
+        self.register_loss(f"{p}_seg_regularization", z, weight=1e-4)
         self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
+        self.segments.append((A, B))
 
     def parameterize_on_line(self, p, l):
         A, B = self.line2twoPts(l)
         z = self.mkvar(name=f"{p}_line")
         z = 0.2 * z
-        self.register_loss(f"{p}_line_regularization", [z], weight=1e-4)
+        self.register_loss(f"{p}_line_regularization", z, weight=1e-4)
         # TODO: arbitrary and awkward. Better to sample "zones" first?
         s = 3.0
         P1 = A + (A - B).smul(s)
         P2 = B + (B - A).smul(s)
         self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)))
+        self.segments.append((A, B))
 
     def parameterize_on_ray(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_ray")
         P = A + (B - A).smul(self.exp(z))
         self.register_pt(p, P)
+        self.segments.extend([(A, B), (A, P)])
 
     def parameterize_on_ray_opp(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(f"{p}_ray_opp")
         P = A + (A - B).smul(self.exp(z))
         self.register_pt(p, P)
+        self.segments.extend([(A, B), (A, P)])
 
     def parameterize_on_circ(self, p, circ):
         O, r = self.circ2nf(circ)
@@ -389,6 +407,7 @@ class Optimizer(ABC):
         theta = rot * 2 * self.const(math.pi)
         X = self.get_point(x=O.x + r * self.cos(theta), y=O.y + r * self.sin(theta))
         self.register_pt(p, X)
+        self.circles.append((O, r))
 
     def parameterize_in_poly(self, p, ps):
         Ps = self.lookup_pts(ps)
@@ -415,7 +434,7 @@ class Optimizer(ABC):
         a_str = f"{pred}_{'_'.join(ps)}"
         weight = 1 / len(vals)
         for i, val in enumerate(vals):
-            loss_str = a_str if len(vals) == 1 else f"a_str_{i}"
+            loss_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
             self.register_loss(loss_str, val, weight=weight)
 
     def assertion_vals(self, pred, ps):
@@ -428,16 +447,24 @@ class Optimizer(ABC):
         elif pred == "between": return self.between_gap(*self.lookup_pts(ps))
         elif pred == "circumcenter":
             O, A, B, C = self.lookup_pts(ps)
+            self.circles.append((O, self.dist(O, A)))
             return [self.dist(O, self.circumcenter(A, B, C))]
         elif pred == "coll":
             coll_ps = self.lookup_pts(ps)
             diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(ps, 3)]
+            for i in range(len(coll_ps)-1):
+                self.segments.append((coll_ps[i], coll_ps[i+1]))
             return diffs
-        elif pred == "cong": return [self.cong_diff(*self.lookup_pts(ps))]
+        elif pred == "cong":
+            A, B, C, D = self.lookup_pts(ps)
+            if A in [C, D]: self.circles.append((A, self.dist(A, B)))
+            elif B in [C, D]: self.circles.append((B, self.dist(A, B)))
+            return [self.cong_diff(A, B, C, D)]
         elif pred == "cycl":
             cycl_ps = self.lookup_pts(ps)
             assert(len(ps) > 3)
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
+            self.circles.append((O, self.dist(O, cycl_ps[0])))
             return diffs
         elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(ps))]
         elif pred == "eqoangle":
@@ -449,6 +476,7 @@ class Optimizer(ABC):
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
         elif pred == "ibisector":
             X, B, A, C = self.lookup_pts(ps)
+            self.segments.extend([(B, A), (A, X), (A, C)])
             return [self.eqangle8_diff(B, A, A, X, X, A, A, C)]
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(ps)
@@ -603,8 +631,8 @@ class Optimizer(ABC):
         return self.gt(self.side_score_prod(a, b, x, y), 0.0)
 
     def inter_ll(self, sif1, sif2):
-        (m1, b1) = sif1
-        (m2, b2) = sif2
+        (m1, b1, _, _) = sif1
+        (m2, b2, _, _) = sif2
 
         px = (b2 - b1) / (m1 - m2)
         py = m1 * px + b1
@@ -647,11 +675,14 @@ class Optimizer(ABC):
     def inter_lc(self, l, c, root_select):
         p1, p2 = l.p1, l.p2
         I1, I2 = self.inter_pp_c(p1, p2, c)
+        self.circles.append(c)
         return self.process_rs(P1, P2, root_select)
 
     def inter_cc(self, cnf1, cnf2, root_select):
         l = self.radical_axis(cnf1, cnf2)
         result = self.inter_lc(l, cnf1, root_select)
+        self.circles.append(cnf1)
+        self.circles.append(cnf2)
         return result
 
     def make_lc_intersect(self, name, l, c):
@@ -666,7 +697,7 @@ class Optimizer(ABC):
         loss = self.cond(self.logical_or(self.less(self.dist(O, Operp), 1e-6),
                                          self.less(self.dist(A, B), 1e-6)),
                          self.const(0.0), f_val)
-        self.register_loss(f"interLC_{name}", [loss], weight=1e-1)
+        self.register_loss(f"interLC_{name}", loss, weight=1e-1)
 
     def second_meet_pp_c(self, A, B, O):
         P1, P2 = self.inter_pp_c(A, B, CircleNF(O, self.dist(O, A)))
@@ -715,13 +746,34 @@ class Optimizer(ABC):
         return self.eqangle6_diff(A, B, D, A, C, D)
 
     def eqangle8_diff(self, A, B1, B2, C, P, Q1, Q2, R):
-        return self, eqangle6_diff(A, B1, C - B2 + B1, P, Q1, R - Q2 + Q1)
+        return self.eqangle6_diff(A, B1, C - B2 + B1, P, Q1, R - Q2 + Q1)
+
+    def semiperimeter(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        return (a + b + c) / 2
+
+    def area(self, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        s = self.semiperimeter(A, B, C)
+        return self.sqrt(s * (s - a) * (s - b) * (s - c))
+
+    def inradius(self, A, B, C):
+        return self.area(A, B, C) / self.semiperimeter(A, B, C)
+
+    def exradius(self, A, B, C):
+        r = self.inradius(A, B, C)
+        a, b, c = self.side_lengths(A, B, C)
+        s = (a + b + c)/2
+        return r * s / (s - a)
+
 
     #####################
     ## Utilities
     ####################
 
-    def line2twoPts(pred, ps):
+    def line2twoPts(self, l):
+        pred = l.pred
+        ps = l.points
         if pred == "connecting":
             return self.lookup_pts(ps)
         elif pred == "paraAt":
@@ -751,11 +803,13 @@ class Optimizer(ABC):
             B, C, D, E, F = self.lookup_pts(ps)
             theta = self.angle(D, E, F)
             X = B + self.rotate_counterclockwise(theta, C - B)
+            self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
             return B, X
-        else: raise RuntimeException(f"[line2nf] Unexpected line pred: {pred}")
+        else:
+            raise RuntimeError(f"[line2sif] Unexpected line pred: {pred}")
 
     def line2sif(self, l):
-        p1, p2 = self.line2twoPts(l.pred, l.points)
+        p1, p2 = self.line2twoPts(l)
         return self.pp2sif(p1, p2)
 
     # Two points on a line to slope-intercept form (y = mx + b)
