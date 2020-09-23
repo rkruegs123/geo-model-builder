@@ -18,7 +18,8 @@ class Optimizer(ABC):
         self.has_loss = False
         self.opts = opts
         self.instructions = instructions
-        self.ndgs = list()
+        self.ndgs = dict()
+        self.goals = dict()
 
         self.circles = list()
         self.segments = list()
@@ -43,7 +44,7 @@ class Optimizer(ABC):
         elif isinstance(i, AssertNDG):
             self.addNDG(i)
         elif isinstance(i, Confirm):
-            print("WARNING: Confirm support not implemented yet")
+            self.confirm(i)
         else:
             raise NotImplementedError("FIXME: Finish process_instruction")
 
@@ -72,6 +73,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def register_ndg(self, key, var, weight=1.0):
+        pass
+
+    @abstractmethod
+    def register_goal(self, key, var):
         pass
 
     @abstractmethod
@@ -428,9 +433,9 @@ class Optimizer(ABC):
     ## Assert
     ####################
 
-    def add(self, i):
-        assertion = i.constraint
-        pred, ps, negate = assertion.pred, assertion.points, assertion.negate
+    def add(self, assertion):
+        cons = assertion.constraint
+        pred, ps, negate = cons.pred, cons.points, cons.negate
 
         if negate:
             raise RuntimeError("[add] Mishandled negation")
@@ -443,9 +448,9 @@ class Optimizer(ABC):
             loss_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
             self.register_loss(loss_str, val, weight=weight)
 
-    def addNDG(self, i):
-        assertion = i.constraint
-        pred, ps = assertion.pred, assertion.points
+    def addNDG(self, ndg):
+        ndg_cons = ndg.constraint
+        pred, ps = ndg_cons.pred, ndg_cons.points
 
         vals = self.assertion_vals(pred, ps)
 
@@ -455,6 +460,20 @@ class Optimizer(ABC):
         for i, val in enumerate(vals):
             ndg_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
             self.register_ndg(ndg_str, val, weight=weight)
+
+    def confirm(self, goal):
+        goal_cons = goal.constraint
+        pred, ps, negate = goal_cons.pred, goal_cons.points, goal_cons.negate
+
+        vals = self.assertion_vals(pred, ps)
+        g_str = f"{pred}_{'_'.join(ps)}"
+        if negate:
+            print("WARNING: Satisfied NDG goals will have non-zero values")
+            g_str = f"not_{g_str}"
+
+        for i, val in enumerate(vals):
+            goal_str = g_str if len(vals) == 1 else f"{g_str}_{i}"
+            self.register_goal(goal_str, val)
 
     def assertion_vals(self, pred, ps):
         if pred == "amidpOpp":

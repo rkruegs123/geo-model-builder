@@ -89,9 +89,11 @@ class ScipyOptimizer(Optimizer):
 
     def register_ndg(self, key, val, weight=1.0):
         assert(key not in self.ndgs)
-        self.ndgs[key] = err
+        self.ndgs[key] = val
 
-
+    def register_goal(self, key, val):
+        assert(key not in self.goals)
+        self.goals[key] = val
 
     def regularize_points(self):
         norms = [p.norm() for p in self.name2pt.values()]

@@ -52,7 +52,7 @@ class Problem:
                     elif cmd == "prove":
                         self.goals.append(Constraint(pred=pred, points=args, negate=negate))
                     elif cmd == "watch":
-                        print("TODO: Add support for watch cmd")
+                        print("WARNING: Watch command not currently supported")
                     else:
                         raise RuntimeError("Unrecognized command")
 

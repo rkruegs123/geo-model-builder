@@ -126,6 +126,10 @@ class TfOptimizer(Optimizer):
         if self.opts.ndg_loss > 0:
             self.register_loss(key, err, self.opts.ndg_loss)
 
+    def register_goal(self, key, val):
+        assert(key not in self.goals)
+        self.goals[key] = self.mk_zero(val)
+
     def regularize_points(self):
         norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
         self.register_loss("points", tf.reduce_mean(norms), self.opts.regularize_points)
