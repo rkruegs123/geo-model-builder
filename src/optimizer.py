@@ -161,9 +161,10 @@ class Optimizer(ABC):
     def exp(self, x):
         pass
 
-    @abstractmethod
     def softmax(self, xs):
-        pass
+        exps = [self.exp(x) for x in xs]
+        sum_exps = self.sum(exps)
+        return [e / sum_exps for e in exps]
 
     #####################
     ## Sample
@@ -526,6 +527,7 @@ class Optimizer(ABC):
         elif pred == "midp":
             M, A, B = self.lookup_pts(ps)
             return [self.dist(M, self.midp(A, B))]
+        elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(ps))] + self.onray_gap(*self.lookup_pts(ps))
         elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(ps))] + self.between_gap(*self.lookup_pts(ps))
         elif pred == "oppSides":
             A, B, X, Y = self.lookup_pts(ps)
@@ -647,13 +649,17 @@ class Optimizer(ABC):
     def between_gap(self, X, A, B):
         eps = 0.2
 
-        def diff_signs(x, y):
-            return self.max(self.const(0.0), x * y)
-
         A1 = self.get_point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
         B1 = self.get_point(B.x + eps * (A.x - B.x), B.y + eps * (A.y - B.y))
 
-        return [diff_signs(X.x - A1.x, X.x - B1.x), diff_signs(X.y - A1.y, X.y - B1.y)]
+        return [self.diff_signs(X.x - A1.x, X.x - B1.x), self.diff_signs(X.y - A1.y, X.y - B1.y)]
+
+    def onray_gap(self, X, A, B):
+        eps = 0.2
+        A1 = self.get_point(A.x + eps * (B.x - A.x), A.y + eps * (B.y - A.y))
+
+        # TODO: coll_phi causing NaNs when [X, A, B] are perfectly collinear by construction
+        return [self.diff_signs(X.x - A1.x, A1.x - B.x), self.diff_signs(X.y - A1.y, A1.y - B.y)]
 
     def det3(self, A, O, B):
         lhs = (A.x - O.x) * (B.y - O.y)
@@ -934,3 +940,6 @@ class Optimizer(ABC):
                 print(f"DUP: {a} {b}")
                 return False
         return True
+
+    def diff_signs(self, x, y):
+        return self.max(self.const(0.0), x * y)
