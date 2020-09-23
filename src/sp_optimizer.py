@@ -87,6 +87,12 @@ class ScipyOptimizer(Optimizer):
         self.losses[key] = val
         self.has_loss = True
 
+    def register_ndg(self, key, val, weight=1.0):
+        assert(key not in self.ndgs)
+        self.ndgs[key] = err
+
+
+
     def regularize_points(self):
         norms = [p.norm() for p in self.name2pt.values()]
         # summed_norms = self.sumVs(norms)
@@ -225,6 +231,16 @@ class ScipyOptimizer(Optimizer):
             for key, loss_expr in self.losses.items():
                 loss_lambda = sp.lambdify([x], loss_expr)
                 lambdified_losses[key] = { 'type': 'eq', 'fun': loss_lambda }
+
+            # Note that the actual ndg_loss value is ignored in this optimizer
+            if self.opts.ndg_loss > 0:
+                # Inequalitiy constraints in scipy are for non-negativity (val >= 0)
+                for key, ndg_expr in self.ndgs.items():
+                    ndg_expr = self.abs(ndg_expr) - 1e-2
+                    ndg_lambda = sp.lambdify([x], ndg_expr)
+                    lambdified_losses[key] = { 'type': 'ineq', 'fun': ndg_lambda }
+
+
             if not self.obj_fun:
                 self.obj_fun = sp.sympify(0)
             objective_fun = sp.lambdify([x], self.obj_fun)
@@ -248,5 +264,6 @@ class ScipyOptimizer(Optimizer):
                 if res.success:
                     solved_vals = [(init.name, val) for (init, val) in zip(self.params, res.x)]
                     model = self.get_model(solved_vals)
-                    models.append(model)
+                    if self.points_far_enough_away(model.points, self.opts.min_dist):
+                        models.append(model)
         return models

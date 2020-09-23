@@ -18,6 +18,7 @@ class Optimizer(ABC):
         self.has_loss = False
         self.opts = opts
         self.instructions = instructions
+        self.ndgs = list()
 
         self.circles = list()
         self.segments = list()
@@ -39,6 +40,8 @@ class Optimizer(ABC):
             self.parameterize(i)
         elif isinstance(i, Assert):
             self.add(i)
+        elif isinstance(i, AssertNDG):
+            self.addNDG(i)
         elif isinstance(i, Confirm):
             print("WARNING: Confirm support not implemented yet")
         else:
@@ -67,6 +70,9 @@ class Optimizer(ABC):
     def register_loss(self, key, var, weight=1.0):
         pass
 
+    @abstractmethod
+    def register_ndg(self, key, var, weight=1.0):
+        pass
 
     @abstractmethod
     def regularize_points(self):
@@ -362,7 +368,7 @@ class Optimizer(ABC):
         elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p, p_args[1])
         elif p_method == "onCirc": self.parameterize_on_circ(p, p_args[1])
         elif p_method == "inPoly": self.parameterize_in_poly(p, p_args[1])
-        else: raise NotImplementedError("FIXME: Finish parameterize")
+        else: raise NotImplementedError(f"FIXME: Finish parameterize: {i}")
 
     def parameterize_coords(self, p):
         self.sample_uniform([p])
@@ -436,6 +442,19 @@ class Optimizer(ABC):
         for i, val in enumerate(vals):
             loss_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
             self.register_loss(loss_str, val, weight=weight)
+
+    def addNDG(self, i):
+        assertion = i.constraint
+        pred, ps = assertion.pred, assertion.points
+
+        vals = self.assertion_vals(pred, ps)
+
+        a_str = f"not_{pred}_{'_'.join(ps)}"
+        weight = 1 / len(vals)
+
+        for i, val in enumerate(vals):
+            ndg_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
+            self.register_ndg(ndg_str, val, weight=weight)
 
     def assertion_vals(self, pred, ps):
         if pred == "amidpOpp":
@@ -886,3 +905,12 @@ class Optimizer(ABC):
             return P2
         else:
             raise NotImplementedError(f"[process_rs] NYI: {pred}")
+
+    def points_far_enough_away(self, name2pt, min_dist):
+        for a, b in itertools.combinations(name2pt.keys(), 2):
+            A, B = name2pt[a], name2pt[b]
+            d = self.dist(A, B)
+            if d < min_dist:
+                print(f"DUP: {a} {b}")
+                return False
+        return True

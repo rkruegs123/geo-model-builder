@@ -6,6 +6,7 @@ import scipy
 import os
 import matplotlib.pyplot as plt
 import pdb
+from tqdm import tqdm
 
 from problem import Problem
 from tf_optimizer import TfOptimizer
@@ -28,6 +29,8 @@ if __name__ == "__main__":
     parser.add_argument('--regularize_points', action='store', dest='regularize_points', type=float, default=1e-6)
     parser.add_argument('--make_distinct', action='store', dest='make_distinct', type=float, default=1e-2)
     parser.add_argument('--distinct_prob', action='store', dest='distinct_prob', type=float, default=0.2)
+    parser.add_argument('--min_dist', action='store', dest='min_dist', type=float, default=0.1)
+    parser.add_argument('--ndg_loss', action='store', dest='ndg_loss', type=float, default=1e-3)
 
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=1e-1)
@@ -51,7 +54,6 @@ if __name__ == "__main__":
     )
     print(instructions_str)
 
-
     # Solve the constraint problem with the chosen solving method
     if args.solver == "tensorflow":
 
@@ -60,18 +62,18 @@ if __name__ == "__main__":
 
             solver = TfOptimizer(problem.instructions, args, g)
             solver.preprocess()
-            unfiltered_models = solver.solve()
-            print(unfiltered_models)
+            filtered_models = solver.solve()
+            # print(filtered_models)
 
     elif args.solver == "scipy":
         solver = ScipyOptimizer(problem.instructions, args)
         solver.preprocess()
-        unfiltered_models = solver.solve()
-        print(unfiltered_models)
+        filtered_models = solver.solve()
+        # print(filtered_models)
 
     else:
         raise NotImplementedError(f"Solver not implemented: {args.solver}")
 
-
-    for m in unfiltered_models:
+    print(f"\n\nFound {len(filtered_models)} models")
+    for m in filtered_models:
         m.plot()

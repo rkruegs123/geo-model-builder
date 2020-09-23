@@ -119,6 +119,13 @@ class TfOptimizer(Optimizer):
         self.losses[key] = weight * self.mk_zero(val + 1e-6 * (random.random() / 2))
         self.has_loss = True
 
+    def register_ndg(self, key, val, weight=1.0):
+        assert(key not in self.ndgs)
+        err = weight * self.mk_non_zero(val)
+        self.ndgs[key] = err
+        if self.opts.ndg_loss > 0:
+            self.register_loss(key, err, self.opts.ndg_loss)
+
     def regularize_points(self):
         norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
         self.register_loss("points", tf.reduce_mean(norms), self.opts.regularize_points)
@@ -206,7 +213,9 @@ class TfOptimizer(Optimizer):
 
                 if loss is not None and loss < self.opts.eps:
                     pt_assn = self.run(self.name2pt)
-                    segments = self.run(self.segments)
-                    circles = self.run(self.circles)
-                    models.append(Model(points=pt_assn, segments=segments, circles=circles))
+                    if self.points_far_enough_away(pt_assn, self.opts.min_dist):
+                        segments = self.run(self.segments)
+                        circles = self.run(self.circles)
+                        model = Model(points=pt_assn, segments=segments, circles=circles)
+                        models.append(model)
         return models
