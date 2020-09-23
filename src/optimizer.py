@@ -491,7 +491,7 @@ class Optimizer(ABC):
             return [self.dist(O, self.circumcenter(A, B, C))]
         elif pred == "coll":
             coll_ps = self.lookup_pts(ps)
-            diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(ps, 3)]
+            diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(coll_ps, 3)]
             for i in range(len(coll_ps)-1):
                 self.segments.append((coll_ps[i], coll_ps[i+1]))
             return diffs
@@ -503,6 +503,7 @@ class Optimizer(ABC):
         elif pred == "cycl":
             cycl_ps = self.lookup_pts(ps)
             assert(len(ps) > 3)
+            O = self.circumcenter(*cycl_ps[:3])
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
             self.circles.append((O, self.dist(O, cycl_ps[0])))
             return diffs
@@ -767,6 +768,8 @@ class Optimizer(ABC):
         B = self.const(2.0) * (c2y - c1y)
         C = (r1**2 - r2**2) + (c2y**2 - c1y**2) + (c2x**2 - c1x**2)
 
+        # FIXME: Fails on EGMO 2.7 because we aren't passing around lambdas anymore
+        # pdb.set_trace()
         test = self.gt(self.abs(A), 1e-6)
         p1 = self.cond(test, self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=self.const(1.0), y=C/B))
         p2 = self.cond(test, self.get_point(x=C/A, y=self.const(0.0)), self.get_point(x=self.const(0.0), y=C/B))
@@ -880,7 +883,7 @@ class Optimizer(ABC):
             A, B, C = self.lookup_pts(ps)
             O = self.circumcenter(A, B, C)
             return CircleNF(center=O, radius=self.dist(O, A))
-        elif pred == "cOA":
+        elif pred == "coa":
             O, A = self.lookup_pts(ps)
             return CircleNF(center=O, radius=self.dist(O, A))
         elif pred == "cong":

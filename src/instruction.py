@@ -10,7 +10,9 @@ class Parameterize:
 
     def __str__(self):
 
-        if isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
+        if self.parameterization[0] == "coords":
+            param_str = "coords"
+        elif isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
             param_str = ' '.join(str(x) for x in self.parameterization)
         else:
             param_str = str(self.parameterization)

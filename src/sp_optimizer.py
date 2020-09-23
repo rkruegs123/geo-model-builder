@@ -141,13 +141,17 @@ class ScipyOptimizer(Optimizer):
         return sp.Max(x, y)
 
     def cond(self, cond, t_val, f_val):
+
         if isinstance(t_val, SpPoint):
             tx, ty = t_val
             fx, fy = f_val
+
             return self.get_point(
                 sp.Piecewise((tx, cond), (fx, True)),
                 sp.Piecewise((ty, cond), (fy, True))
             )
+        elif isinstance(t_val, list):
+            return [self.cond(cond, t, f) for (t, f) in zip(t_val, f_val)]
         return sp.Piecewise((t_val, cond), (f_val, True))
 
     def lt(self, x, y):
