@@ -638,7 +638,7 @@ class Optimizer(ABC):
         py = m1 * px + b1
         return self.get_point(px, py)
 
-    def inter_pp_c(self, p1, p2, cnf):
+    def inter_pp_c(self, P1, P2, cnf):
         # We follow http://mathworld.wolfram.com/Circle-LineIntersection.html
         O, r = cnf
         P1, P2 = self.shift(O, [P1, P2])
@@ -670,13 +670,13 @@ class Optimizer(ABC):
             Q = self.midp(F, X)
             return self.unshift(O, [Q, Q])
 
-        return self.cond(self.less(radicand, self.const(0.0)), on_neg(), on_nneg())
+        return self.cond(self.lt(radicand, self.const(0.0)), on_neg(), on_nneg())
 
     def inter_lc(self, l, c, root_select):
         p1, p2 = l.p1, l.p2
         I1, I2 = self.inter_pp_c(p1, p2, c)
         self.circles.append(c)
-        return self.process_rs(P1, P2, root_select)
+        return self.process_rs(I1, I2, root_select)
 
     def inter_cc(self, cnf1, cnf2, root_select):
         l = self.radical_axis(cnf1, cnf2)
@@ -686,22 +686,22 @@ class Optimizer(ABC):
         return result
 
     def make_lc_intersect(self, name, l, c):
-        A, B = l.pp()
+        _, _, A, B = l
         O, r = c
         Operp = self.rotate_counterclockwise_90(A - B) + O
 
         F = self.inter_ll(l, self.pp2sif(O, Operp))
         d = self.dist(O, F)
-        f_val = self.cond(self.less(r, d), d, self.const(0.0))
+        f_val = self.cond(self.lt(r, d), d, self.const(0.0))
 
-        loss = self.cond(self.logical_or(self.less(self.dist(O, Operp), 1e-6),
-                                         self.less(self.dist(A, B), 1e-6)),
+        loss = self.cond(self.logical_or(self.lt(self.dist(O, Operp), 1e-6),
+                                         self.lt(self.dist(A, B), 1e-6)),
                          self.const(0.0), f_val)
         self.register_loss(f"interLC_{name}", loss, weight=1e-1)
 
     def second_meet_pp_c(self, A, B, O):
         P1, P2 = self.inter_pp_c(A, B, CircleNF(O, self.dist(O, A)))
-        return self.cond(self.less(self.sqdist(A, P1), self.sqdist(A, P2)), P2, P1)
+        return self.cond(self.lt(self.sqdist(A, P1), self.sqdist(A, P2)), P2, P1)
 
     def amidp_opp(self, B, C, A):
         O = self.circumcenter(A, B, C)
@@ -722,9 +722,15 @@ class Optimizer(ABC):
         B = self.const(2.0) * (c2y - c1y)
         C = (r1**2 - r2**2) + (c2y**2 - c1y**2) + (c2x**2 - c1x**2)
 
-        p1, p2 = self.cond(self.greater(self.abs(A), 1e-6),
+        test = self.gt(self.abs(A), 1e-6)
+        p1 = self.cond(test, self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=self.const(1.0), y=C/B))
+        p2 = self.cond(test, self.get_point(x=C/A, y=self.const(0.0)), self.get_point(x=self.const(0.0), y=C/B))
+
+        '''
+        p1, p2 = self.cond(self.gt(self.abs(A), 1e-6),
                            (self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=C/A, y=self.const(0.0))),
                            (self.get_point(x=self.const(1.0), y=C/B), self.get_point(x=self.const(0.0), y=C/B)))
+        '''
         return p1, p2
 
     def radical_axis(self, cnf1, cnf2):
@@ -845,14 +851,14 @@ class Optimizer(ABC):
     def shift(self, O, Ps):
         return [self.get_point(P.x - O.x, P.y - O.y) for P in Ps]
 
-    def unshift(O, Ps):
+    def unshift(self, O, Ps):
         return [self.get_point(P.x + O.x, P.y + O.y) for P in Ps]
 
     def pt_eq(self, p1, p2):
-        return self.less(self.dist(p1, p2), 1e-6)
+        return self.lt(self.dist(p1, p2), 1e-6)
 
     def pt_neq(self, p1, p2):
-        return self.greater(self.dist(p1, p2), 1e-6)
+        return self.gt(self.dist(p1, p2), 1e-6)
 
     def process_rs(self, P1, P2, root_select):
         pred = root_select.pred

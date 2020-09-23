@@ -132,6 +132,13 @@ class ScipyOptimizer(Optimizer):
         return sp.Max(x, y)
 
     def cond(self, cond, t_val, f_val):
+        if isinstance(t_val, SpPoint):
+            tx, ty = t_val
+            fx, fy = f_val
+            return self.get_point(
+                sp.Piecewise((tx, cond), (fx, True)),
+                sp.Piecewise((ty, cond), (fy, True))
+            )
         return sp.Piecewise((t_val, cond), (f_val, True))
 
     def lt(self, x, y):
@@ -149,7 +156,7 @@ class ScipyOptimizer(Optimizer):
     def logical_or(self, x, y):
         return sp.Or(x, y)
 
-    def abs(self, x, y):
+    def abs(self, x):
         return sp.Abs(x)
 
     def exp(self, x):
