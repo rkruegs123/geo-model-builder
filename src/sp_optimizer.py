@@ -9,7 +9,7 @@ import signal
 import re
 
 from optimizer import Optimizer
-from model import Model
+from diagram import Diagram
 
 # Can we now get rid of simpliification given lambdify!?
 
@@ -87,6 +87,7 @@ class ScipyOptimizer(Optimizer):
         self.losses[key] = val
         self.has_loss = True
 
+    # Note that NDGs will have non-zero value in scipy whereas in tensorflow their losses will be 0 (for satisfied NDGs)
     def register_ndg(self, key, val, weight=1.0):
         assert(key not in self.ndgs)
         self.ndgs[key] = val
@@ -219,7 +220,9 @@ class ScipyOptimizer(Optimizer):
             pt_assn[pt_name] = self.params2point(pt, solved_params)
         segments = [(self.params2point(sa, solved_params), self.params2point(sb, solved_params)) for (sa, sb) in self.segments]
         circles = [(self.params2point(sO, solved_params), sr.subs(solved_params)) for (sO, sr) in self.circles]
-        return Model(points=pt_assn, segments=segments, circles=circles)
+        ndgs = { key: val.subs(solved_params) for key, val in self.ndgs.items()  }
+        goals = { key: val.subs(solved_params) for key, val in self.goals.items()  }
+        return Diagram(points=pt_assn, segments=segments, circles=circles, ndgs=ndgs, goals=goals)
 
     def solve(self):
 
@@ -253,7 +256,8 @@ class ScipyOptimizer(Optimizer):
             inits = self.sample_inits()
             if not self.has_loss:
                 model = self.get_model(inits)
-                models.append(model)
+                if self.points_far_enough_away(model.points, self.opts.min_dist):
+                    models.append(model)
             else:
                 init_vals = [x[1] for x in inits]
                 cons = [c for c in lambdified_losses.values()]

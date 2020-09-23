@@ -5,7 +5,7 @@ import random
 import itertools
 
 from optimizer import Optimizer
-from model import Model
+from diagram import Diagram
 
 class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
     def __add__(self, p):  return TfPoint(self.x + p.x, self.y + p.y)
@@ -192,6 +192,11 @@ class TfOptimizer(Optimizer):
     ## Core
     ####################
 
+    def get_model(self):
+        pt_assn, segments, circles, ndgs, goals = self.run([
+            self.name2pt, self.segments, self.circles, self.ndgs, self.goals])
+        return Diagram(points=pt_assn, segments=segments, circles=circles, ndgs=ndgs, goals=goals)
+
     def run(self, x):
         return self.sess.run(x)
 
@@ -205,9 +210,8 @@ class TfOptimizer(Optimizer):
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
                 pt_assn = self.run(self.name2pt)
-                segments = self.run(segments)
-                circles = self.run(circles)
-                models.append(Model(points=pt_assn, segments=segments, circles=circles))
+                if self.points_far_enough_away(pt_assn, self.opts.min_dist):
+                    models.append(self.get_model())
             else:
                 loss = None
                 try:
@@ -218,8 +222,5 @@ class TfOptimizer(Optimizer):
                 if loss is not None and loss < self.opts.eps:
                     pt_assn = self.run(self.name2pt)
                     if self.points_far_enough_away(pt_assn, self.opts.min_dist):
-                        segments = self.run(self.segments)
-                        circles = self.run(self.circles)
-                        model = Model(points=pt_assn, segments=segments, circles=circles)
-                        models.append(model)
+                        models.append(self.get_model())
         return models

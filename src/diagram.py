@@ -1,7 +1,7 @@
 import collections
 import matplotlib.pyplot as plt
 
-class Model(collections.namedtuple("Model", ["points", "segments", "circles"])):
+class Diagram(collections.namedtuple("Diagram", ["points", "segments", "circles", "ndgs", "goals"])):
     def plot(self):
         xs = [p.x for p in self.points.values()]
         ys = [p.y for p in self.points.values()]

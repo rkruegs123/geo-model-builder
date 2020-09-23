@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import math
 import pdb
 import collections
+import itertools
 
 from instruction import *
 
