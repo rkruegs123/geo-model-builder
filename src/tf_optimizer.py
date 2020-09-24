@@ -189,6 +189,7 @@ class TfOptimizer(Optimizer):
                 if opts.verbose: self.print_losses()
                 if opts.plot: self.plot()
                 '''
+                self.print_losses()
                 return loss_v
             else:
                 self.sess.run(self.apply_grads)
@@ -219,6 +220,7 @@ class TfOptimizer(Optimizer):
                 self.run(tf.compat.v1.global_variables_initializer())
                 pt_assn = self.run(self.name2pt)
                 if self.points_far_enough_away(pt_assn, self.opts.min_dist):
+                    self.print_losses()
                     models.append(self.get_model())
             else:
                 loss = None
