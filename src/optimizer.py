@@ -173,14 +173,14 @@ class Optimizer(ABC):
     def sample(self, i):
         s_method = i.sampler
         s_args = i.args
-        if s_method == "uniform": self.sample_uniform(i.points)
-        elif s_method == "polygon": self.sample_polygon(i.points)
-        elif s_method == "triangle": self.sample_triangle(i.points)
-        elif s_method == "isoTri": self.sample_triangle(i.points, iso=args[0])
+        if s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=args[0], acute=True)
         elif s_method == "acuteTri": self.sample_triangle(i.points, acute=True)
-        elif s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=args[0], acute=True)
-        elif s_method == "rightTri": self.sample_triangle(i.points, right=args[0])
         elif s_method == "equiTri": self.sample_triangle(i.points, equi=True)
+        elif s_method == "isoTri": self.sample_triangle(i.points, iso=args[0])
+        elif s_method == "polygon": self.sample_polygon(i.points)
+        elif s_method == "rightTri": self.sample_triangle(i.points, right=args[0])
+        elif s_method == "triangle": self.sample_triangle(i.points)
+        elif s_method == "uniform": self.sample_uniform(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
     def sample_uniform(self, ps):
@@ -274,18 +274,25 @@ class Optimizer(ABC):
         p = i.point
         c_method = i.computation[0]
         c_args = i.computation
-        if c_method == "midp": self.compute_midp(p, c_args[1])
-        elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
-        elif c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
+        if c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
         elif c_method == "amidpSame": self.compute_amidp_same(p, c_args[1])
-        elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
-        elif c_method == "incenter": self.compute_incenter(p, c_args[1])
-        elif c_method == "excenter": self.compute_excenter(p, c_args[1])
-        elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
         elif c_method == "centroid": self.compute_centroid(p, c_args[1])
+        elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
+        elif c_method == "excenter": self.compute_excenter(p, c_args[1])
+        elif c_method == "harmonicLConj": self.compute_harmonic_l_conj(p, c_args[1])
+        elif c_method == "incenter": self.compute_incenter(p, c_args[1])
         elif c_method == "interLL": self.compute_inter_ll(p, c_args[1], c_args[2])
         elif c_method == "interLC": self.compute_inter_lc(p, c_args[1], c_args[2], c_args[3])
         elif c_method == "interCC": self.compute_inter_cc(p, c_args[1], c_args[2], c_args[3])
+        elif c_method == "isogonal": self.compute_isogonal(p, c_args[1])
+        elif c_method == "isotomic": self.compute_isotomic(p, c_args[1])
+        elif c_method == "inverse": self.compute_inverse(p, c_args[1])
+        elif c_method == "midp": self.compute_midp(p, c_args[1])
+        elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
+        elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(p, c_args[1])
+        elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
+
+
         else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
@@ -359,6 +366,36 @@ class Optimizer(ABC):
         self.make_lc_intersect(p, self.radical_axis(cnf1, cnf2), cnf1)
         self.register_pt(p, P)
 
+    def compute_mixtilinear_incenter(self, i, ps):
+        A, B, C = self.lookup_pts(ps)
+        I = self.mixtilinear_incenter(A, B, C)
+        self.register_pt(i, I)
+        self.circles.append((I, self.mixtilinear_inradius(A, B, C)))
+
+
+    def compute_isogonal(self, y, ps):
+        X, A, B, C = self.lookup_pts(ps)
+        Y = self.isogonal(X, A, B, C)
+        self.register_pt(y, Y)
+
+    def compute_isotomic(self, y, ps):
+        X, A, B, C = self.lookup_pts(ps)
+        Y = self.isotomic(X, A, B, C)
+        self.register_pt(y, Y)
+
+    def compute_inverse(self, y, ps):
+        X, O, A = self.lookup_pts(ps)
+        Y = self.inverse(X, O, A)
+        self.register_pt(y, Y)
+        self.circles.append((O, self.dist(O, A)))
+
+    def compute_harmonic_l_conj(self, y, ps):
+        X, A, B = self.lookup_pts(ps)
+        Y = self.harmonic_l_conj(X, A, B)
+        self.register_pt(y, Y)
+        self.segments.append((A, B))
+        self.segments.append((X, Y))
+
     #####################
     ## Parameterize
     ####################
@@ -369,12 +406,12 @@ class Optimizer(ABC):
         p_args = i.parameterization
         param_method = i.parameterization
         if p_method == "coords": self.parameterize_coords(p)
-        elif p_method == "onSeg": self.parameterize_on_seg(p, p_args[1])
+        elif p_method == "inPoly": self.parameterize_in_poly(p, p_args[1])
+        elif p_method == "onCirc": self.parameterize_on_circ(p, p_args[1])
         elif p_method == "onLine": self.parameterize_on_line(p, p_args[1])
         elif p_method == "onRay": self.parameterize_on_ray(p, p_args[1])
         elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p, p_args[1])
-        elif p_method == "onCirc": self.parameterize_on_circ(p, p_args[1])
-        elif p_method == "inPoly": self.parameterize_in_poly(p, p_args[1])
+        elif p_method == "onSeg": self.parameterize_on_seg(p, p_args[1])
         else: raise NotImplementedError(f"FIXME: Finish parameterize: {i}")
 
     def parameterize_coords(self, p):
@@ -500,6 +537,15 @@ class Optimizer(ABC):
             if A in [C, D]: self.circles.append((A, self.dist(A, B)))
             elif B in [C, D]: self.circles.append((B, self.dist(A, B)))
             return [self.cong_diff(A, B, C, D)]
+        elif pred == "contri":
+            [A, B, C, P, Q, R] = self.lookup_pts(ps)
+            self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
+            return [self.eqangle6_diff(A, B, C, P, Q, R),
+                    self.eqangle6_diff(B, C, A, Q, R, P),
+                    self.eqangle6_diff(C, A, B, R, P, Q),
+                    self.cong_diff(A, B, P, Q),
+                    self.cong_diff(A, C, P, R),
+                    self.cong_diff(B, C, Q, R)]
         elif pred == "cycl":
             cycl_ps = self.lookup_pts(ps)
             assert(len(ps) > 3)
@@ -507,6 +553,12 @@ class Optimizer(ABC):
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
             self.circles.append((O, self.dist(O, cycl_ps[0])))
             return diffs
+        elif pred == "distLt":
+            X, Y, A, B = self.lookup_pts(ps)
+            return [self.max(self.const(0.0), self.dist(X, Y) - dist(A, B))]
+        elif pred == "distGt":
+            X, Y, A, B = self.lookup_pts(ps)
+            return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
         elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(ps))]
         elif pred == "eqoangle":
             A, B, C, P, Q, R = self.lookup_pts(ps)
@@ -522,9 +574,13 @@ class Optimizer(ABC):
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(ps)
             return [self.dist(I, self.incenter(A, B, C))]
+        elif pred == "insidePolygon": return self.in_poly_phis(*self.lookup_pts(ps))
         elif pred == "interLL":
             X, A, B, C, D = self.lookup_pts(ps)
             return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]
+        elif pred == "isogonal":
+            X, Y, A, B, C = self.lookup_pts(ps)
+            return [self.dist(X, self.isogonal(Y, A, B, C))]
         elif pred == "midp":
             M, A, B = self.lookup_pts(ps)
             return [self.dist(M, self.midp(A, B))]
@@ -538,9 +594,18 @@ class Optimizer(ABC):
             return [self.dist(H, self.orthocenter(A, B, C))]
         elif pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
         elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
+        elif pred == "reflectPL":
+            X, Y, A, B = self.lookup_pts(ps)
+            return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
         elif pred == "sameSide":
             A, B, X, Y = self.lookup_pts(ps)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
+        elif pred == "simtri":
+            [A, B, C, P, Q, R] = self.lookup_pts(ps)
+            self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
+            # this is *too* easy to optimize, eqangle properties don't end up holding
+            # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
+            return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 
@@ -820,6 +885,69 @@ class Optimizer(ABC):
         s = (a + b + c)/2
         return r * s / (s - a)
 
+    def mixtilinear_incenter(self, A, B, C):
+        ta, tb, tc = self.angle(C, A, B), self.angle(A, B, C), self.angle(B, C, A)
+        return self.trilinear(A, B, C, (1/2) * (1 + self.cos(ta) - self.cos(tb) - self.cos(tc)), 1, 1)
+
+    def mixtilinear_inradius(self, A, B, C):
+        r = self.inradius(A, B, C)
+        ta = self.angle(C, A, B)
+        return r * (1 / self.cos(ta / 2)**2)
+
+
+    def to_trilinear(self, P, A, B, C):
+        la = self.pp2sif(B, C)
+        lb = self.pp2sif(C, A)
+        lc = self.pp2sif(A, B)
+
+        ga = self.pp2sif(P, P + self.rotate_counterclockwise_90(C - B))
+        gb = self.pp2sif(P, P + self.rotate_counterclockwise_90(A - C))
+        gc = self.pp2sif(P, P + self.rotate_counterclockwise_90(B - A))
+
+        da = self.dist(P, self.inter_ll(la, ga))
+        db = self.dist(P, self.inter_ll(lb, gb))
+        dc = self.dist(P, self.inter_ll(lc, gc))
+
+        da = self.cond(self.opp_sides(P, A, B, C), -da, da)
+        db = self.cond(self.opp_sides(P, B, C, A), -db, db)
+        dc = self.cond(self.opp_sides(P, C, A, B), -dc, dc)
+        return da, db, dc
+
+    def invert_or_zero(self, x):
+        return self.cond(self.abs(x) < 1e-5, self.const(0.0), self.const(1) / x)
+
+    def isogonal(self, P, A, B, C):
+        x, y, z = self.to_trilinear(P, A, B, C)
+        return self.trilinear(A, B, C, self.invert_or_zero(x), self.invert_or_zero(y), self.invert_or_zero(z))
+
+    def isotomic(self, P, A, B, C):
+        a, b, c = self.side_lengths(A, B, C)
+        x, y, z = self.to_trilinear(P, A, B, C)
+        return self.trilinear(A, B, C, (a**2) * self.invert_or_zero(x), (b**2) * self.invert_or_zero(y), (c**2) * self.invert_or_zero(z))
+
+
+    def inverse(self, X, O, A):
+        return O + (X - O).smul(self.sqdist(O, A) / self.sqdist(O, X))
+
+    def harmonic_l_conj(self, X, A, B):
+        # see picture in https://en.wikipedia.org/wiki/Projective_harmonic_conjugate
+        # L is arbitrary here, not on the line X A B
+        # (could also do case analysis and cross-ratio)
+        L = A + self.rotate_counterclockwise(const(math.pi / 3), X - A).smul(0.5)
+        M = self.midp(A, L)
+        N = self.inter_ll(self.pp2sif(B, L), self.pp2sif(X, M))
+        K = self.inter_ll(self.pp2sif(A, N), self.pp2sif(B, M))
+        Y = self.inter_ll(self.pp2sif(L, K), self.pp2sif(A, X))
+        return Y
+
+    def in_poly_phis(self, X, *Ps):
+        phis = []
+        n = len(Ps)
+        for i in range(n):
+            A, B, C = Ps[i], Ps[(i+1) % n], Ps[(i+2) % n]
+            # X and C are on the same side of AB
+            phis.append(self.max(self.const(0.0), - self.side_score_prod(X, C, A, B)))
+        return phis
 
     #####################
     ## Utilities
