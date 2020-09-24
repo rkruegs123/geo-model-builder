@@ -193,7 +193,7 @@ class Optimizer(ABC):
         if len(ps) < 4:
             print("WARNING: sample_polygon expecting >3 points")
 
-        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-0.5, hi=0.5) for i in range(len(ps))]
+        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}") for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi + (math.pi / 3)
         angles = [multiplicand * self.tanh(0.2 * az) for az in angle_zs]
 
@@ -473,6 +473,7 @@ class Optimizer(ABC):
     ####################
 
     def add(self, assertion):
+        self.has_loss = True
         cons = assertion.constraint
         pred, ps, negate = cons.pred, cons.points, cons.negate
 
@@ -488,6 +489,7 @@ class Optimizer(ABC):
             self.register_loss(loss_str, val, weight=weight)
 
     def addNDG(self, ndg):
+        self.has_loss = True
         ndg_cons = ndg.constraint
         pred, ps = ndg_cons.pred, ndg_cons.points
 
@@ -548,7 +550,7 @@ class Optimizer(ABC):
                     self.cong_diff(B, C, Q, R)]
         elif pred == "cycl":
             cycl_ps = self.lookup_pts(ps)
-            assert(len(ps) > 3)
+            assert(len(cycl_ps) > 3)
             O = self.circumcenter(*cycl_ps[:3])
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
             self.circles.append((O, self.dist(O, cycl_ps[0])))

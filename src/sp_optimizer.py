@@ -85,7 +85,6 @@ class ScipyOptimizer(Optimizer):
     def register_loss(self, key, val, weight=1.0):
         assert(key not in self.losses)
         self.losses[key] = val
-        self.has_loss = True
 
     # Note that NDGs will have non-zero value in scipy whereas in tensorflow their losses will be 0 (for satisfied NDGs)
     def register_ndg(self, key, val, weight=1.0):
