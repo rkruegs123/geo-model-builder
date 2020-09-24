@@ -156,6 +156,16 @@ class TfOptimizer(Optimizer):
         self.apply_grads  = optimizer.apply_gradients(zip(gs, vs), name='apply_gradients', global_step=self.global_step)
         self.reset_step   = tf.assign(self.global_step, 0)
 
+    def print_losses(self):
+        print("======== Print losses ==========")
+        print("-- Losses --")
+        for k, x in self.run(self.losses).items(): print("  %-50s %.10f" % (k, x))
+        print("-- Goals --")
+        for k, x in self.run(self.goals).items(): print("  %-50s %.10f" % (k, x))
+        print("-- NDGs --")
+        for k, x in self.run(self.ndgs).items(): print("  %-50s %.10f" % (k, x))
+        print("================================")
+
     def train(self):
         opts = self.opts
         self.sess.run(self.reset_step)
@@ -171,6 +181,8 @@ class TfOptimizer(Optimizer):
                 if opts.verbose > 1: self.print_losses()
                 if opts.plot > 1: self.plot()
             '''
+            print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
+            self.print_losses()
             if loss_v < opts.eps:
                 '''
                 check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)
