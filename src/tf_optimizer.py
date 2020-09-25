@@ -182,6 +182,7 @@ class TfOptimizer(Optimizer):
             '''
             print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
             self.print_losses()
+            self.get_model().plot()
             if loss_v < opts.eps:
                 '''
                 check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)

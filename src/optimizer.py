@@ -552,6 +552,7 @@ class Optimizer(ABC):
             cycl_ps = self.lookup_pts(ps)
             assert(len(cycl_ps) > 3)
             O = self.circumcenter(*cycl_ps[:3])
+            diffs = list()
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
             self.circles.append((O, self.dist(O, cycl_ps[0])))
             return diffs
@@ -632,7 +633,7 @@ class Optimizer(ABC):
         b1, b2 = B
         return a1*b1 + a2*b2
 
-    def scalar_product(self, O, A, B):
+    def scalar_product(self, A, O, B):
         lhs = (A.x - O.x) * (B.x - O.x)
         rhs = (A.y - O.y) * (B.y - O.y)
         return lhs + rhs

@@ -6,12 +6,13 @@ from util import *
 from compile_state import CompileState
 from instruction import Assert, AssertNDG, Confirm, Sample
 
-class Problem:
+class PointCompiler:
     def __init__(self, filename):
         self.points = list()
         self.constraints = list()
         self.goals = list()
         self.filename = filename
+
 
         for l in open(filename).readlines():
             stripped_l = l.strip()
@@ -51,8 +52,6 @@ class Problem:
                         self.constraints.append(Constraint(pred=pred, points=args, negate=negate))
                     elif cmd == "prove":
                         self.goals.append(Constraint(pred=pred, points=args, negate=negate))
-                    elif cmd == "watch":
-                        print("WARNING: Watch command not currently supported")
                     else:
                         raise RuntimeError("Unrecognized command")
 
@@ -139,7 +138,10 @@ class Problem:
 
         return solve_compiler.solve_instructions
 
-    def gen_instructions(self):
+    def compile(self):
+        self.preprocess()
+        print(self)
+
         self.instructions = list()
 
         sample_instructions = self.sample_bucket_2_instructions()
@@ -151,8 +153,14 @@ class Problem:
         self.instructions += [AssertNDG(c) for c in self.ndgs]
         self.instructions += [Confirm(c) for c in self.goals]
 
+        instructions_str = "\nINSTRUCTIONS:\n{header}\n{i_strs}".format(
+            header="-" * 13,
+            i_strs = '\n'.join([str(i) for i in self.instructions])
+        )
+        print(instructions_str)
+
     def __str__(self):
-        return '\nPROBLEM: {f}\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
+        return '\nPOINTWISE PROBLEM: {f}\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
             f=self.filename,
             header='-' * (9 + len(self.filename)),
             pts=' '.join(self.points),
