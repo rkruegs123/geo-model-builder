@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Geometry Diagram Builder</title>
+  <meta name="description" content="Geometry Diagram Builder">
+  <script src="{{ url_for('static',filename='js/jquery-3.5.1.min.js') }}"></script>
+  <script src="{{ url_for('static',filename='js/jquery-ui.min.js') }}"></script>
+
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/jquery-ui.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
+
+
+  <script type="text/javascript">
+
+    window.onload = function () {
+        var cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: "text/x-common-lisp",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            keyMap: "emacs"
+        });
+        cm.setSize("100%", "100%");
+    };
+
+    $(document).ready(function() {
+        $('#solve-btn').click(function() {
+            $.ajax({
+                url: "{{ url_for ('get_img') }}",
+                type: "GET",
+                success: function(response) {
+                    $("#diagram-img").attr('src', '/static/img/' + response);
+                },
+                error: function(xhr) {
+                    console.log(xhr)
+                }
+            });
+        });
+    });
+
+  </script>
+
+</head>
+
+<body>
+
+  <link rel="stylesheet" href="{{ url_for('static',filename='plugin/codemirror/lib/codemirror.css') }}">
+  <script src="{{ url_for('static',filename='plugin/codemirror/lib/codemirror.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='plugin/codemirror/addon/edit/matchbrackets.js') }}"></script>
+  <script src="{{ url_for('static',filename='plugin/codemirror/addon/edit/closebrackets.js') }}"></script>
+  <script src="{{ url_for('static',filename='plugin/codemirror/keymap/emacs.js') }}"></script>
+  <script src="{{ url_for('static', filename='plugin/codemirror/mode/commonlisp/commonlisp.js') }}"></script>
+
+  <div id="header">
+    <p>Geometry Diagram Builder</p>
+  </div>
+  <div id="container">
+    <div id="first">
+      <textarea id="editor"></textarea>
+    </div>
+    <div id="second">
+      <img src="{{ url_for('static', filename='img/blank.jpeg') }}" id="diagram-img"/>
+    </div>
+    <div id="clear"/>
+  </div>
+  <div id="button-outer">
+    <div id="button-inner">
+      <button id="solve-btn">Solve!</button>
+    </div>
+  </div>
+</body>
+</html>
