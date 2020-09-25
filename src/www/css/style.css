@@ -1,0 +1,57 @@
+body {
+    background-color: #E2F1AF;
+}
+
+#header {
+    width: 100%;
+    background-color: #E2F1AF;
+    height: 30px;
+}
+
+#header p {
+    text-align: center;
+    vertical-align: middle;
+}
+
+#container {
+    width: 90%;
+    // background-color: black;
+    margin: auto;
+    padding-top: 20px;
+    height: 500px;
+}
+
+#first {
+    width: 45%;
+    float: left;
+    height: 100%;
+}
+
+#second {
+    width: 45%;
+    float: right;
+    height: 100%;
+}
+
+#second img {
+    height: 100%;
+    width: 100%;
+}
+
+#clear {
+    clear: both;
+}
+
+#button-outer {
+  height: 100px;
+  position: relative;
+}
+
+#button-inner {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+}

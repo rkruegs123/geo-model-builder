@@ -9,6 +9,7 @@
   <script src="js/jquery-ui.min.js"></script>
 
   <link rel="stylesheet" href="css/jquery-ui.css" />
+  <link rel="stylesheet" href="css/style.css" />
 
 
   <script type="text/javascript">
@@ -26,55 +27,6 @@
 
   </script>
 
-  <style>
-
-    body {
-        background-color: #E2F1AF;
-    }
-
-    #header {
-        width: 100%;
-        background-color: #E2F1AF;
-        height: 30px;
-    }
-
-    #header p {
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    #container {
-        width: 90%;
-        // background-color: black;
-        margin: auto;
-        padding-top: 20px;
-        height: 500px;
-    }
-
-    #first {
-        width: 45%;
-        float: left;
-        height: 100%;
-    }
-
-    #second {
-        width: 45%;
-        float: right;
-        height: 100%;
-    }
-
-    #second img {
-        height: 100%;
-        width: 100%;
-    }
-
-    #clear {
-        clear: both;
-    }
-
-  </style>
-
-
 </head>
 
 <body>
@@ -88,14 +40,19 @@
   <div id="header">
     <p>Geometry Diagram Builder</p>
   </div>
-  <div id="container" >
+  <div id="container">
     <div id="first">
       <textarea id="editor"></textarea>
     </div>
     <div id="second">
       <img src="img/blank.jpeg"/>
     </div>
-    <div id="clear">
+    <div id="clear"/>
+  </div>
+  <div id="button-outer">
+    <div id="button-inner">
+      <button>Solve!</button>
+    </div>
   </div>
 </body>
 </html>
