@@ -5,6 +5,7 @@ from constraint import Constraint
 from util import *
 from compile_state import CompileState
 from instruction import Assert, AssertNDG, Confirm, Sample
+from parse import parse_sexprs
 
 class PointCompiler:
     def __init__(self, filename):
@@ -13,7 +14,11 @@ class PointCompiler:
         self.goals = list()
         self.filename = filename
 
+        cmds = parse_sexprs(self.filename)
+        for cmd in cmds:
+            self.process_command(cmd)
 
+        '''
         for l in open(filename).readlines():
             stripped_l = l.strip()
             if stripped_l and l[0] != ';':
@@ -54,6 +59,41 @@ class PointCompiler:
                         self.goals.append(Constraint(pred=pred, points=args, negate=negate))
                     else:
                         raise RuntimeError("Unrecognized command")
+        '''
+
+    def process_command(self, cmd):
+        head = cmd[0]
+        if head == "declare-points":
+            if self.points:
+                raise RuntimeError("Duplicate declaration of points")
+            self.points = list(cmd[1:])
+        elif head == "declare-point":
+            if len(cmd) != 2:
+                raise RuntimeError(f"Mal-formed declare-point cmd: {cmd}")
+            p = cmd[1]
+            if p in self.points:
+                raise RuntimeError(f"Duplicate point encountered: {p}")
+            self.points.append(p)
+        else:
+            term = cmd[1]
+            if not isinstance(term, tuple):
+                raise RuntimeError(f"Malformed command: {cmd}")
+            negate = (term[0] == 'not')
+            if negate:
+                term = term[1]
+            pred = term[0]
+            ps = list(term[1:])
+            constraint = Constraint(pred=pred, points=ps, negate=negate)
+            if head == "assert":
+                self.constraints.append(constraint)
+            elif head == "prove":
+                self.goals.append(constraint)
+            else:
+                raise RuntimeError(f"Unrecognized command: {cmd}")
+
+
+
+
 
     def preprocess(self):
         sample_points = [p for c in self.constraints for p in c.points if is_sample_pred(c.pred)]
