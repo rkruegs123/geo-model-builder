@@ -14,12 +14,65 @@
   <script type="text/javascript">
 
     window.onload = function () {
-        var editableCodeMirror = CodeMirror.fromTextArea(document.getElementById('editor'), {
-            mode: "text/plain"
+        var cm = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: "text/x-common-lisp",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            keyMap: "emacs"
         });
+        cm.setSize("100%", "100%");
     };
 
   </script>
+
+  <style>
+
+    body {
+        background-color: #E2F1AF;
+    }
+
+    #header {
+        width: 100%;
+        background-color: #E2F1AF;
+        height: 30px;
+    }
+
+    #header p {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #container {
+        width: 90%;
+        // background-color: black;
+        margin: auto;
+        padding-top: 20px;
+        height: 500px;
+    }
+
+    #first {
+        width: 45%;
+        float: left;
+        height: 100%;
+    }
+
+    #second {
+        width: 45%;
+        float: right;
+        height: 100%;
+    }
+
+    #second img {
+        height: 100%;
+        width: 100%;
+    }
+
+    #clear {
+        clear: both;
+    }
+
+  </style>
 
 
 </head>
@@ -27,10 +80,22 @@
 <body>
   <link rel="stylesheet" href="plugin/codemirror/lib/codemirror.css">
   <script src="plugin/codemirror/lib/codemirror.js"></script>
+  <script src="plugin/codemirror/addon/edit/matchbrackets.js"></script>
+  <script src="plugin/codemirror/addon/edit/closebrackets.js"></script>
+  <script src="plugin/codemirror/keymap/emacs.js"></script>
   <script src="plugin/codemirror/mode/commonlisp/commonlisp.js"></script>
 
-  <div>
-    <textarea id="editor"></textarea>
+  <div id="header">
+    <p>Geometry Diagram Builder</p>
+  </div>
+  <div id="container" >
+    <div id="first">
+      <textarea id="editor"></textarea>
+    </div>
+    <div id="second">
+      <img src="img/blank.jpeg"/>
+    </div>
+    <div id="clear">
   </div>
 </body>
 </html>
