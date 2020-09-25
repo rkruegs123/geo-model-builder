@@ -491,7 +491,7 @@ class CompileState:
         k = (cl1, cl1) # key
         shared_points = list(set(cl1.pointsOn()).intersection(cl2.pointsOn()))
         oppCs = [c for c in cs if c.pred == "oppSides"]
-        sameCs = [c for c in cs if c.pred == "sameSides"]
+        sameCs = [c for c in cs if c.pred == "sameSide"]
 
         if k in self.open_roots: # rsNotPrevious
             root = Root("neq", [self.open_roots[k]]) # FIXME: Check that self.open_roots[k] is a point, not a list
@@ -510,9 +510,9 @@ class CompileState:
         elif sameCs and (sameCs[0].points[0] == p or sameCs[0].points[1] == p):
             a, b, c, d = sameCs[0].points[0], sameCs[0].points[1], sameCs[0].points[2], sameCs[0].points[3]
             if sameCs[0].points[0] == p:
-                root = Root("sameSides", [b, Line("connecting", [c, d])])
+                root = Root("sameSide", [b, Line("connecting", [c, d])])
             else: # sameCs[0].points[1] == p
-                root = Root("sameSides", [a, Line("connecting", [c, d])])
+                root = Root("sameSide", [a, Line("connecting", [c, d])])
             return (root, [sameCs[0]])
         else:
             # rsArbitrary

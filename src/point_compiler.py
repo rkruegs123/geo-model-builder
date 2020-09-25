@@ -92,9 +92,6 @@ class PointCompiler:
                 raise RuntimeError(f"Unrecognized command: {cmd}")
 
 
-
-
-
     def preprocess(self):
         sample_points = [p for c in self.constraints for p in c.points if is_sample_pred(c.pred)]
         cs_with_sampled_points = [c for c in self.constraints if not c.negate and set(c.points).issubset(set(sample_points))]
