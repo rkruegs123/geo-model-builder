@@ -26,6 +26,12 @@
     };
 
     $(document).ready(function() {
+        var dImg = document.getElementById('diagram-img');
+        $(document).ajaxStart(function() {
+            dImg.style.opacity = "0.5";
+        }).ajaxStop(function() {
+            dImg.style.opacity = "1.0";
+        });
 
         var cm = document.querySelector('.CodeMirror').CodeMirror;
 
@@ -33,6 +39,7 @@
             $.ajax({
                 url: "{{ url_for ('get_img') }}",
                 type: "GET",
+                // global: false,
                 success: function(response) {
                     $("#diagram-img").attr('src', '/static/img/' + response);
                 },
@@ -43,14 +50,15 @@
             $.ajax({
                 url: "{{ url_for ('solve') }}",
                 type: "POST",
+                // global: false,
                 data: { hi: cm.getValue() },
                 success: function(response) {
                     console.log(response);
                     document.getElementById("temp").innerHTML = response;
                 },
-                error: function(xhr) {
-                    console.log(xhr.responseText)
-                    document.getElementById("error").innerHTML = xhr.responseText;
+                error: function(err) {
+                    console.log(err.responseText)
+                    document.getElementById("error").innerHTML = err.responseText;
                 }
             });
         });
