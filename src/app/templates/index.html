@@ -37,6 +37,18 @@
                     console.log(xhr)
                 }
             });
+            $.ajax({
+                url: "{{ url_for ('solve') }}",
+                type: "POST",
+                data: { hi: "hello" },
+                success: function(response) {
+                    console.log(response);
+                    document.getElementById("temp").innerHTML = response;
+                },
+                error: function(xhr) {
+                    console.log(xhr)
+                }
+            });
         });
     });
 
@@ -70,6 +82,9 @@
     <div id="button-inner">
       <button id="solve-btn">Solve!</button>
     </div>
+  </div>
+  <div>
+    <p id="temp">Temporary!</p>
   </div>
 </body>
 </html>
