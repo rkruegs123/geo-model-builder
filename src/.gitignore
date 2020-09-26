@@ -1,3 +1,1 @@
-www/node_modules
-www/package.json
-www/package-lock.json
+app/static/img/diagram*

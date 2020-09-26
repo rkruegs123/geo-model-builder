@@ -59,7 +59,6 @@
                 success: function(response) {
                     console.log(response);
                     $("#diagram-img").attr('src', '/static/img/' + response + "?" + new Date().getTime());
-                    // document.getElementById("temp").innerHTML = response;
                 },
                 error: function(err) {
                     console.log(err.responseText)
@@ -100,9 +99,6 @@
       <button id="solve-btn">Solve!</button>
       <p id="error"></p>
     </div>
-  </div>
-  <div>
-    <p id="temp">Temporary!</p>
   </div>
 </body>
 </html>
