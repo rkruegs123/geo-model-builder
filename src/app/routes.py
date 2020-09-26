@@ -1,4 +1,4 @@
-from flask import render_template, request
+from flask import render_template, request, Response
 from app import app
 
 @app.route('/')
@@ -12,5 +12,13 @@ def get_img():
 
 @app.route('/solve', methods=['POST'])
 def solve():
-    jsdata = request.form['hi']
-    return jsdata + "xyz"
+    try:
+        jsdata = request.form['hi']
+        lines = str(jsdata).split('\n')
+        print(lines)
+        return jsdata + "xyz"
+    except:
+        return Response(
+            "Invalid input",
+            status=400
+        )
