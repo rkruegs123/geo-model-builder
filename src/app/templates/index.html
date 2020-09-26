@@ -51,7 +51,9 @@
                 url: "{{ url_for ('solve') }}",
                 type: "POST",
                 // global: false,
-                data: { hi: cm.getValue() },
+                data: {
+                    hi: cm.getValue()
+                },
                 success: function(response) {
                     console.log(response);
                     document.getElementById("temp").innerHTML = response;

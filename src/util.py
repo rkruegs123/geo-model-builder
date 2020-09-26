@@ -29,3 +29,19 @@ def match_in_first_2(p, ps):
     if p == y and p not in [x, a, b]:
         return True, (x, a, b)
     return (False, None)
+
+DEFALUTS = {
+    "decay_steps": 1e3,
+    "decay_rate": 0.7,
+    "distinct_prob": 0.2,
+    "eps": 1e-3,
+    "grammar": "pointwise",
+    "learning_rate": 1e-1,
+    "make_distinct": 1e-2,
+    "min_dist": 0.1,
+    "n_iterations": 5000,
+    "n_tries": 1,
+    "ndg_loss": 1e-3,
+    "regularize_points": 1e-6,
+    "solver": "tensorflow"
+}
