@@ -1,8 +1,9 @@
 import collections
 import matplotlib.pyplot as plt
+import os
 
 class Diagram(collections.namedtuple("Diagram", ["points", "segments", "circles", "ndgs", "goals"])):
-    def plot(self):
+    def plot(self, show=True, save=False, fname=None):
         xs = [p.x for p in self.points.values()]
         ys = [p.y for p in self.points.values()]
         names = [n for n in self.points.keys()]
@@ -22,4 +23,11 @@ class Diagram(collections.namedtuple("Diagram", ["points", "segments", "circles"
             ax.add_artist(circle)
 
         plt.axis('square')
-        plt.show()
+        if show:
+            plt.show()
+        if save:
+            if fname is None:
+                raise RuntimeError("Must supply filename if saving plot")
+            if os.path.isfile(fname):
+                os.remove(fname)
+            plt.savefig(fname)

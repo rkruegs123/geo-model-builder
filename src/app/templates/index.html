@@ -36,6 +36,7 @@
         var cm = document.querySelector('.CodeMirror').CodeMirror;
 
         $('#solve-btn').click(function() {
+            /*
             $.ajax({
                 url: "{{ url_for ('get_img') }}",
                 type: "GET",
@@ -47,6 +48,7 @@
                     console.log(xhr)
                 }
             });
+            */
             $.ajax({
                 url: "{{ url_for ('solve') }}",
                 type: "POST",
@@ -56,7 +58,8 @@
                 },
                 success: function(response) {
                     console.log(response);
-                    document.getElementById("temp").innerHTML = response;
+                    $("#diagram-img").attr('src', '/static/img/' + response + "?" + new Date().getTime());
+                    // document.getElementById("temp").innerHTML = response;
                 },
                 error: function(err) {
                     console.log(err.responseText)

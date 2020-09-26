@@ -12,7 +12,7 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 tf.disable_v2_behavior()
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-def build(opts):
+def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
     grammar = opts['grammar']
     lines = opts['lines']
     solver = opts['solver']
@@ -52,5 +52,5 @@ def build(opts):
         raise NotImplementedError(f"Solver not implemented: {solver}")
 
     print(f"\n\nFound {len(filtered_models)} models")
-    for m in filtered_models:
-        m.plot()
+    for i, m in enumerate(filtered_models):
+        m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png")

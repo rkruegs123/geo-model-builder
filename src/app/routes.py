@@ -22,8 +22,10 @@ def solve():
         args = DEFAULTS
         args['lines'] = lines
 
-        print(lines)
-        return jsdata + "xyz"
+        build(args, show_plot=False, save_plot=True, outf_prefix="app/static/img/diagram")
+
+        # print(lines)
+        return "diagram_0.png"
     except:
         return Response(
             "Invalid input",
