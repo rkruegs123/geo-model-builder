@@ -14,18 +14,18 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 def build(opts):
     grammar = opts['grammar']
-    problem = opts['problem']
+    lines = opts['lines']
     solver = opts['solver']
 
     if grammar == "pointwise":
         # Read the problem
-        compiler = PointCompiler(problem)
+        compiler = PointCompiler(lines)
 
         # Compile to instructions
         compiler.compile()
         instructions = compiler.instructions
     elif grammar == "multisorted":
-        cmds = parse_sexprs(problem)
+        cmds = parse_sexprs(lines)
         print(cmds)
         raise NotImplementedError("Still working on multisorted...")
     else:

@@ -29,5 +29,9 @@ if __name__ == "__main__":
     parser.add_argument('--eps', action='store', dest='eps', type=float, default=DEFAULTS["eps"])
 
     args = parser.parse_args()
+    args = vars(args)
 
-    build(vars(args))
+    lines = open(args['problem'], 'r').readlines()
+    args['lines'] = lines
+
+    build(args)

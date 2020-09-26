@@ -30,7 +30,7 @@ def match_in_first_2(p, ps):
         return True, (x, a, b)
     return (False, None)
 
-DEFALUTS = {
+DEFAULTS = {
     "decay_steps": 1e3,
     "decay_rate": 0.7,
     "distinct_prob": 0.2,

@@ -8,58 +8,15 @@ from instruction import Assert, AssertNDG, Confirm, Sample
 from parse import parse_sexprs
 
 class PointCompiler:
-    def __init__(self, filename):
+    def __init__(self, lines):
         self.points = list()
         self.constraints = list()
         self.goals = list()
-        self.filename = filename
+        self.lines = lines
 
-        cmds = parse_sexprs(self.filename)
+        cmds = parse_sexprs(self.lines)
         for cmd in cmds:
             self.process_command(cmd)
-
-        '''
-        for l in open(filename).readlines():
-            stripped_l = l.strip()
-            if stripped_l and l[0] != ';':
-                line_info = sexpdata.loads(stripped_l, true=None)
-                if not len(line_info):
-                    raise RuntimeError("Empty s-expressions encountered")
-
-                cmd = str(line_info[0]._val)
-                if cmd == "declare-points":
-                    if self.points:
-                        raise RuntimeError("Duplicate declaration of points")
-                    if not all(isinstance(p, sexpdata.Symbol) for p in line_info[1:]):
-                        raise RuntimeError("Unrecognized load type from sexpdata")
-                    self.points = [p._val for p in line_info[1:]]
-                elif cmd == "declare-point":
-                    if len(line_info) != 2:
-                        raise RuntimeError("Mal-formed declare-point")
-                    if not isinstance(line_info[1], sexpdata.Symbol):
-                        raise RuntimeError("Unrecognized load type from sexpdata")
-                    p = line_info[1]._val
-                    if p in self.points:
-                        raise RuntimeError(f"Duplicate point encountered: {p}")
-                    self.points.append(p)
-                else:
-                    # FIXME: This check won't handle negations
-                    # if not all(isinstance(x, sexpdata.Symbol) for x in line_info[1]):
-                        # raise RuntimeError("Unrecognized load type from sexpdata")
-
-                    negate = False
-                    if line_info[1][0]._val == "not":
-                        negate = True
-                        pred, args = line_info[1][1][0]._val, [x._val for x in line_info[1][1][1:]]
-                    else:
-                        pred, args = line_info[1][0]._val, [x._val for x in line_info[1][1:]]
-                    if cmd == "assert":
-                        self.constraints.append(Constraint(pred=pred, points=args, negate=negate))
-                    elif cmd == "prove":
-                        self.goals.append(Constraint(pred=pred, points=args, negate=negate))
-                    else:
-                        raise RuntimeError("Unrecognized command")
-        '''
 
     def process_command(self, cmd):
         head = cmd[0]
@@ -197,9 +154,8 @@ class PointCompiler:
         print(instructions_str)
 
     def __str__(self):
-        return '\nPOINTWISE PROBLEM: {f}\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
-            f=self.filename,
-            header='-' * (9 + len(self.filename)),
+        return '\nPOINTWISE PROBLEM:\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
+            header='-' * 9,
             pts=' '.join(self.points),
             cs='\n\t'.join([str(c) for c in self.constraints]),
             gs='\n\t'.join([str(g) for g in self.goals])

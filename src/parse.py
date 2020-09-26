@@ -1,7 +1,7 @@
 from typing import List
+import pdb
 
-
-def parse_sexprs(filename):
+def parse_sexprs(lines):
     def parse_sexpr(s :str):
         return read_from_tokens(tokenize(s))
 
@@ -31,6 +31,14 @@ def parse_sexprs(filename):
         else:
             return token
 
+    result = list()
+    for l in lines:
+        sexp = parse_sexpr(l)
+        if sexp:
+            result.append(sexp)
+    return result
+
+    '''
     with open(filename, 'r') as f:
       result = []
       for l in f.readlines():
@@ -38,6 +46,7 @@ def parse_sexprs(filename):
         if sexp:
           result.append(sexp)
       return result
+    '''
 
 if __name__ == "__main__":
   import argparse
