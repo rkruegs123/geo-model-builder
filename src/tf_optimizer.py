@@ -119,8 +119,8 @@ class TfOptimizer(Optimizer):
         assert(key not in self.ndgs)
         err = weight * self.mk_non_zero(val)
         self.ndgs[key] = err
-        if self.opts.ndg_loss > 0:
-            self.register_loss(key, err, self.opts.ndg_loss)
+        if self.opts['ndg_loss'] > 0:
+            self.register_loss(key, err, self.opts['ndg_loss'])
 
     def register_goal(self, key, val):
         assert(key not in self.goals)
@@ -128,14 +128,14 @@ class TfOptimizer(Optimizer):
 
     def regularize_points(self):
         norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
-        self.register_loss("points", tf.reduce_mean(norms), self.opts.regularize_points)
+        self.register_loss("points", tf.reduce_mean(norms), self.opts['regularize_points'])
         # self.losses["points"] = self.opts.regularize_points * tf.reduce_mean(norms)
 
     def make_points_distinct(self):
-        if random.random() < self.opts.distinct_prob:
+        if random.random() < self.opts['distinct_prob']:
             distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)], tf.float64)
             dloss     = tf.reduce_mean(self.mk_non_zero(distincts))
-            self.register_loss("distinct", dloss, self.opts.make_distinct)
+            self.register_loss("distinct", dloss, self.opts['make_distinct'])
             # self.losses["distinct"] = self.opts.make_distinct * dloss
 
     def freeze(self):
@@ -146,9 +146,9 @@ class TfOptimizer(Optimizer):
         self.global_step = tf.train.get_or_create_global_step()
         self.learning_rate = tf.train.exponential_decay(
             global_step=self.global_step,
-            learning_rate=opts.learning_rate,
-            decay_steps=opts.decay_steps,
-            decay_rate=opts.decay_rate,
+            learning_rate=opts['learning_rate'],
+            decay_steps=opts['decay_steps'],
+            decay_rate=opts['decay_rate'],
             staircase=False)
         optimizer         = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
         gs, vs            = zip(*optimizer.compute_gradients(self.loss))
@@ -172,7 +172,7 @@ class TfOptimizer(Optimizer):
 
         loss_v = None
 
-        for i in range(opts.n_iterations):
+        for i in range(opts['n_iterations']):
             loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
             '''
             if i > 0 and i % opts.print_freq == 0:
@@ -183,7 +183,7 @@ class TfOptimizer(Optimizer):
             print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
             self.print_losses()
             self.get_model().plot()
-            if loss_v < opts.eps:
+            if loss_v < opts['eps']:
                 '''
                 check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)
                 if opts.verbose: print("DONE: %f" % loss_v)
@@ -216,11 +216,11 @@ class TfOptimizer(Optimizer):
             # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         models = list()
-        for _ in range(self.opts.n_tries):
+        for _ in range(self.opts['n_tries']):
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
                 pt_assn = self.run(self.name2pt)
-                if self.points_far_enough_away(pt_assn, self.opts.min_dist):
+                if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
                     self.print_losses()
                     models.append(self.get_model())
             else:
@@ -230,8 +230,8 @@ class TfOptimizer(Optimizer):
                 except Exception as e:
                     print(f"ERROR: {e}")
 
-                if loss is not None and loss < self.opts.eps:
+                if loss is not None and loss < self.opts['eps']:
                     pt_assn = self.run(self.name2pt)
-                    if self.points_far_enough_away(pt_assn, self.opts.min_dist):
+                    if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
                         models.append(self.get_model())
         return models

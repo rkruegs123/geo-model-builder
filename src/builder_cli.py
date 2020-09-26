@@ -1,22 +1,8 @@
 import argparse
-import sexpdata
-import collections
-import tensorflow.compat.v1 as tf
-import scipy
-import os
-import matplotlib.pyplot as plt
 import pdb
-from tqdm import tqdm
 
-from point_compiler import PointCompiler
-from tf_optimizer import TfOptimizer
-from sp_optimizer import ScipyOptimizer
-from parse import parse_sexprs
+from builder import build
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.logging.set_verbosity(tf.logging.ERROR)
-tf.disable_v2_behavior()
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 if __name__ == "__main__":
 
@@ -43,42 +29,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
-
-    if args.grammar == "pointwise":
-        # Read the problem
-        compiler = PointCompiler(args.problem)
-
-        # Compile to instructions
-        compiler.compile()
-        instructions = compiler.instructions
-    elif args.grammar == "multisorted":
-        cmds = parse_sexprs(args.problem)
-        print(cmds)
-        raise NotImplementedError("Still working on multisorted...")
-    else:
-        raise RuntimeError(f"Invalid grammar: {args.grammar}")
-
-    # Solve the constraint problem with the chosen solving method
-    if args.solver == "tensorflow":
-
-        g = tf.Graph()
-        with g.as_default():
-
-            solver = TfOptimizer(instructions, args, g)
-            solver.preprocess()
-            filtered_models = solver.solve()
-            # print(filtered_models)
-
-    elif args.solver == "scipy":
-        solver = ScipyOptimizer(instructions, args)
-        solver.preprocess()
-        filtered_models = solver.solve()
-        # print(filtered_models)
-
-    else:
-        raise NotImplementedError(f"Solver not implemented: {args.solver}")
-
-    print(f"\n\nFound {len(filtered_models)} models")
-    for m in filtered_models:
-        m.plot()
+    build(vars(args))

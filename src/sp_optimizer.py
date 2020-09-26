@@ -99,14 +99,14 @@ class ScipyOptimizer(Optimizer):
         norms = [p.norm() for p in self.name2pt.values()]
         # summed_norms = self.sumVs(norms)
         mean_norm = self.sum(norms) / len(norms)
-        self.update_objective(self.opts.regularize_points * mean_norm)
+        self.update_objective(self.opts['regularize_points'] * mean_norm)
 
     def make_points_distinct(self):
-        if random.random() < self.opts.distinct_prob:
+        if random.random() < self.opts['distinct_prob']:
             sqdists = [self.sqdist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)]
             mean_sqdist = self.sum(sqdists) / len(sqdists)
             # summed_sqdists = self.sumVs(sqdists)
-            self.update_objective(self.opts.make_distinct * mean_sqdist)
+            self.update_objective(self.opts['make_distinct'] * mean_sqdist)
 
 
     #####################
@@ -236,7 +236,7 @@ class ScipyOptimizer(Optimizer):
                 lambdified_losses[key] = { 'type': 'eq', 'fun': loss_lambda }
 
             # Note that the actual ndg_loss value is ignored in this optimizer
-            if self.opts.ndg_loss > 0:
+            if self.opts['ndg_loss'] > 0:
                 # Inequalitiy constraints in scipy are for non-negativity (val >= 0)
                 for key, ndg_expr in self.ndgs.items():
                     ndg_expr = self.abs(ndg_expr) - 1e-2
@@ -250,11 +250,11 @@ class ScipyOptimizer(Optimizer):
 
 
         models = list()
-        for _ in range(self.opts.n_tries):
+        for _ in range(self.opts['n_tries']):
             inits = self.sample_inits()
             if not self.has_loss:
                 model = self.get_model(inits)
-                if self.points_far_enough_away(model.points, self.opts.min_dist):
+                if self.points_far_enough_away(model.points, self.opts['min_dist']):
                     models.append(model)
             else:
                 init_vals = [x[1] for x in inits]
@@ -268,6 +268,6 @@ class ScipyOptimizer(Optimizer):
                 if res.success:
                     solved_vals = [(init.name, val) for (init, val) in zip(self.params, res.x)]
                     model = self.get_model(solved_vals)
-                    if self.points_far_enough_away(model.points, self.opts.min_dist):
+                    if self.points_far_enough_away(model.points, self.opts['min_dist']):
                         models.append(model)
         return models
