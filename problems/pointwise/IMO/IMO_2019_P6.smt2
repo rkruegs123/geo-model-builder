@@ -1,6 +1,9 @@
 (declare-points A B C I D E F R P Q T)
 
 (assert (triangle A B C))
+(assert (acutes A B C))
+(assert (not (cong A B A C)))
+
 (assert (incenter I A B C))
 (assert (foot D I B C))
 (assert (foot E I A C))

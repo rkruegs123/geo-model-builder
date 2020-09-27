@@ -1,5 +1,6 @@
 import sexpdata
 import pdb
+import argparse
 
 from constraint import Constraint
 from util import *
@@ -160,3 +161,15 @@ class PointCompiler:
             cs='\n\t'.join([str(c) for c in self.constraints]),
             gs='\n\t'.join([str(g) for g in self.goals])
     )
+
+if __name__ == "__main__":
+    # Get problem to compile
+    parser = argparse.ArgumentParser(description='Arguments for compiling a problem in terms of points to an instruction set')
+    parser.add_argument('--problem', '-p', action='store', type=str, help='Name of the file defining the set of constraints')
+
+    args = parser.parse_args()
+    lines = open(args.problem, 'r').readlines()
+
+    compiler = PointCompiler(lines)
+    compiler.compile()
+    instructions = compiler.instructions
