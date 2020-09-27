@@ -67,9 +67,11 @@ class InstructionReader:
         c_args = cmd[2][1:]
 
         if c_method == "incenter":
+            assert(len(c_args) == 3)
+            assert(all([isinstance(arg, str) for arg in c_args]))
             c_instr = Compute(p, ("incenter", c_args))
             self.instructions.append(c_instr)
-        if c_method == "interLL":
+        elif c_method == "interLL":
             l1 = self.get_line(c_args[0])
             l2 = self.get_line(c_args[1])
             c_instr = Compute(p, ("interLL", l1, l2))
@@ -82,8 +84,10 @@ class InstructionReader:
         l_pred = l_info[0]
         ps = l_info[1:]
         if l_pred == "line":
+            assert(len(ps) == 2)
             return Line("connecting", ps)
         elif l_pred == "perpAt":
+            assert(len(ps) == 3)
             return Line("perpAt", ps)
         else:
             return NotImplementedError(f"[get_line] Unsupported line pred: {l_pred}")
