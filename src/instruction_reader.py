@@ -34,22 +34,30 @@ class InstructionReader:
 
 
     def sample(self, cmd):
-        assert(len(cmd) == 3 or len(cmd) == 4)
 
         ps = [self.process_term(p) for p in cmd[1]]
-        assert(all([isinstance(p.val, str) for p in ps]))
+        assert(all([isinstance(p, Point) and isinstance(p.val, str) for p in ps]))
 
         method = cmd[2]
 
-        if len(cmd) == 4:
-            args = cmd[3]
-
         if method in ["triangle", "acuteTri", "equiTri", "polygon"]:
+            assert(len(cmd) == 3)
             instr = Sample(ps, method) # No extra args here
+            self.instructions.append(instr)
+        elif method in ["rightTri", "isoTri", "acuteIsoTri"]:
+            assert(len(cmd) == 4)
+            args = cmd[3]
+            assert(len(args) == 1)
+            special_p = self.process_term(args[0])
+            assert(isinstance(special_p, Point) and isinstance(special_p.val, str))
+            instr = Sample(ps, method, (special_p))
+            self.instructions.append(instr)
         else:
             pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.sample] Sampling method not yet supported: {method}")
 
+    # FIXME: Shared code with compute, and not validating the arguments for the constraint pred
+    # THEN, look over everything, then update point compilatoina nd optimization with Point type
     def add(self, cmd):
         negate = (cmd[1][0] == "not")
         constraint = cmd[1][1] if negate else cmd[1]

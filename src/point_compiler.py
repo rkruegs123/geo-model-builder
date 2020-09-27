@@ -83,20 +83,20 @@ class PointCompiler:
 
             tri_points = sampler.points
             acute = any(c.pred == "acutes" and set(c.points) == set(tri_points) for c in aux_cs)
-            iso_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in aux_cs if c.pred == "cong"]))
-            right_points = list(set([collections.Counter(c.points).most_common(1)[0] for c in aux_cs if c.pred == "perp"]))
+            iso_points = list(set([collections.Counter(c.points).most_common(1)[0][0] for c in aux_cs if c.pred == "cong"]))
+            right_points = list(set([collections.Counter(c.points).most_common(1)[0][0] for c in aux_cs if c.pred == "perp"]))
 
             if not aux_cs:
                 sample_instructions.append(Sample(tri_points, "triangle"))
             elif len(aux_cs) == 1 and acute:
                 sample_instructions.append(Sample(tri_points, "acuteTri"))
-            elif len(aux_cs) == 1 and iso_points:
-                sample_instructions.append(Sample(tri_points, "isoTri", (iso_points[0])))
-            elif len(aux_cs) == 2 and acute and iso_points:
+            elif len(aux_cs) == 2 and acute and len(iso_points) == 1:
                 sample_instructions.append(Sample(tri_points, "acuteIsoTri", (iso_points[0])))
+            elif len(aux_cs) == 1 and len(iso_points) == 1:
+                sample_instructions.append(Sample(tri_points, "isoTri", (iso_points[0])))
             elif len(aux_cs) == 2 and len(iso_points) == 2:
                 sample_instructions.append(Sample(tri_points, "equiTri"))
-            elif len(aux_cs) == 1 and lenright_points:
+            elif len(aux_cs) == 1 and len(right_points) == 1:
                 sample_instructions.append(Sample(tri_points, "rightTri", (right_points[0])))
             else:
                 pdb.set_trace()
