@@ -526,10 +526,10 @@ class Optimizer(ABC):
             self.register_goal(goal_str, val)
 
     def assertion_vals(self, pred, args):
-        if pred == "amidpOpp":
+        if pred == "arcMidpOpp":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_opp(B, C, A))]
-        elif pred == "amidargsame":
+        elif pred == "arcMidpSame":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_same(B, C, A))]
         elif pred == "between": return self.between_gap(*self.lookup_pts(args))
@@ -603,7 +603,7 @@ class Optimizer(ABC):
             return [self.dist(O, X) - r]
         elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
         elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
-        elif pred == "opargsides":
+        elif pred == "oppSides":
             A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.side_score_prod(A, B, X, Y))]
         elif pred == "orthocenter":
