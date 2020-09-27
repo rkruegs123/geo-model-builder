@@ -28,6 +28,8 @@ class InstructionReader:
             self.compute(cmd)
         elif pred == "confirm":
             self.confirm(cmd)
+        elif pred == "param":
+            self.param(cmd)
         else:
             pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.process_command] Command not supported: {pred}")
@@ -56,21 +58,6 @@ class InstructionReader:
             pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.sample] Sampling method not yet supported: {method}")
 
-    # FIXME: Shared code with compute, and not validating the arguments for the constraint pred
-    # THEN, look over everything, then update point compilatoina nd optimization with Point type
-    def add(self, cmd):
-        negate = (cmd[1][0] == "not")
-        constraint = cmd[1][1] if negate else cmd[1]
-        cons_pred = constraint[0]
-        cons_args = constraint[1:]
-        cons_args = [self.process_term(t) for t in cons_args]
-
-        instr_cons = Constraint(cons_pred, cons_args, False)
-        if negate:
-            self.instructions.append(AssertNDG(instr_cons))
-        else:
-            self.instructions.append(Assert(instr_cons))
-
 
     def compute(self, cmd):
         if len(cmd) != 3:
@@ -82,15 +69,75 @@ class InstructionReader:
         c_instr = Compute(p, computation)
         self.instructions.append(c_instr)
 
-    def confirm(self, cmd):
-        negate = (cmd[1][0] == "not")
-        constraint = cmd[1][1] if negate else cmd[1]
-        cons_pred = constraint[0]
-        cons_args = constraint[1:]
-        cons_args = [self.process_term(t) for t in cons_args]
 
-        instr_cons = Constraint(cons_pred, cons_args, negate)
+    # THEN, look over everything, then update point compilatoina nd optimization with Point type
+    def add(self, cmd):
+        assert(len(cmd) == 2)
+        negate, pred, args = self.process_constraint(cmd[1])
+
+        instr_cons = Constraint(pred, args, False)
+        if negate:
+            self.instructions.append(AssertNDG(instr_cons))
+        else:
+            self.instructions.append(Assert(instr_cons))
+
+
+    def confirm(self, cmd):
+        assert(len(cmd) == 2)
+        negate, pred, args = self.process_constraint(cmd[1])
+        instr_cons = Constraint(pred, args, negate)
         self.instructions.append(Confirm(instr_cons))
+
+    def param(self, cmd):
+        assert(len(cmd) == 3)
+
+        p = self.process_term(cmd[1])
+        assert(isinstance(p, Point) and isinstance(p.val, str))
+
+        negate, pred, args = self.process_constraint(cmd[2])
+        assert(pred in ["onSeg", "onL", "onC", "onRay"])
+        assert(not negate)
+        p_instr = Parameterize(p, (pred, args))
+        self.instructions.append(p_instr)
+
+
+    def process_constraint(self, constraint):
+        negate = (constraint[0] == "not")
+        if negate:
+            constraint = constraint[1]
+
+        pred = constraint[0]
+        args = constraint[1:]
+        args = [self.process_term(t) for t in args]
+
+        ps = [t for t in args if isinstance(t, Point)]
+        ls = [t for t in args if isinstance(t, Line)]
+        cs = [t for t in args if isinstance(t, Circle)]
+
+        # Validate
+        if pred == "cong":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "onL":
+            assert(len(args) == 2)
+            assert(isinstance(args[0], Point) and isinstance(args[1], Line))
+        elif pred == "onSeg":
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "para":
+            if len(args) == 2:
+                assert(all([isinstance(t, Line) for t in args]))
+            elif len(args) == 4:
+                assert(all([isinstance(t, Point) for t in args]))
+                l1 = Line("connecting", [args[0], args[1]])
+                l2 = Line("connecting", [args[2], args[3]])
+                args = [l1, l2]
+            else:
+                raise RuntimeError(f"Invalid para constraint {constraint}")
+        else:
+            raise NotImplementedError(f"[process_constraint] Unsupported pred {pred}")
+
+        return negate, pred, args
 
     def process_term(self, term):
         try:
@@ -149,6 +196,9 @@ class InstructionReader:
         elif l_pred == "perpAt":
             assert(len(ps) == 3)
             return Line("perpAt", ps)
+        elif l_pred == "perpBis":
+            assert(len(ps) == 2)
+            return Line("perpBis", ps)
         else:
             pdb.set_trace()
             return NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")

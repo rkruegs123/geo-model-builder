@@ -1,7 +1,7 @@
 (sample (A B C) acuteTri)
 
-(param D (onSeg D (line A B)))
-(param E (onSeg E (line A C)))
+(param D (onSeg A B))
+(param E (onSeg A C))
 
 (assert (cong A D A E))
 
