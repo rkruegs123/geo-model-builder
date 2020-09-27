@@ -24,10 +24,10 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
         # Compile to instructions
         compiler.compile()
         instructions = compiler.instructions
-    elif grammar == "multisorted":
+    elif grammar == "instructions":
         cmds = parse_sexprs(lines)
         print(cmds)
-        raise NotImplementedError("Still working on multisorted...")
+        raise NotImplementedError("Still working on instructions grammar...")
     else:
         raise RuntimeError(f"Invalid grammar: {grammar}")
 
