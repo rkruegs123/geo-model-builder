@@ -4,6 +4,7 @@ import argparse
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
 from parse import parse_sexprs
+from cline import Line, Circle
 
 class InstructionReader:
     def __init__(self, lines):
@@ -68,9 +69,24 @@ class InstructionReader:
         if c_method == "incenter":
             c_instr = Compute(p, ("incenter", c_args))
             self.instructions.append(c_instr)
+        if c_method == "interLL":
+            l1 = self.get_line(c_args[0])
+            l2 = self.get_line(c_args[1])
+            c_instr = Compute(p, ("interLL", l1, l2))
+            self.instructions.append(c_instr)
         else:
             pdb.set_trace()
             raise NotImplementedError(f"[compute] Do not yet support method {c_method}")
+
+    def get_line(self, l_info):
+        l_pred = l_info[0]
+        ps = l_info[1:]
+        if l_pred == "line":
+            return Line("connecting", ps)
+        elif l_pred == "perpAt":
+            return Line("perpAt", ps)
+        else:
+            return NotImplementedError(f"[get_line] Unsupported line pred: {l_pred}")
 
 if __name__ == "__main__":
     # Get problem to compile
