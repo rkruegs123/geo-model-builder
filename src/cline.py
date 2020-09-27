@@ -1,4 +1,8 @@
 from abc import ABC, abstractmethod
+import collections
+
+
+Point = collections.namedtuple("Point", ["val"])
 
 class Cline(ABC):
     def __init__(self, pred, points):

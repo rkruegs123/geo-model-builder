@@ -1,14 +1,12 @@
 import pdb
 import argparse
-import collections
 
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
 from parse import parse_sexprs
-from cline import Line, Circle
+from cline import Point, Line, Circle
 from util import Root
 
-Point = collections.namedtuple("Point", ["val"])
 
 class InstructionReader:
     def __init__(self, lines):
@@ -64,13 +62,13 @@ class InstructionReader:
             self.instructions.append(Assert(instr_cons))
 
 
-    # TODO: All this should move to process_point, and we should check that the value is NOT a string!
     def compute(self, cmd):
         if len(cmd) != 3:
             raise RuntimeError(f"Malformed compute command: {cmd}")
 
         p = cmd[1]
         computation = self.process_point(cmd[2])
+        assert(not isinstance(computation.val, str))
         c_instr = Compute(p, computation)
         self.instructions.append(c_instr)
 
