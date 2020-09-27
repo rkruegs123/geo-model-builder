@@ -34,16 +34,18 @@ class InstructionReader:
 
 
     def sample(self, cmd):
+        assert(len(cmd) == 3 or len(cmd) == 4)
+
         ps = [self.process_term(p) for p in cmd[1]]
         assert(all([isinstance(p.val, str) for p in ps]))
 
         method = cmd[2]
-        if len(cmd) > 3:
+
+        if len(cmd) == 4:
             args = cmd[3]
 
-        if method == "acuteTri":
-            instr = Sample(ps, method, list())
-            self.instructions.append(instr)
+        if method in ["triangle", "acuteTri", "equiTri", "polygon"]:
+            instr = Sample(ps, method) # No extra args here
         else:
             pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.sample] Sampling method not yet supported: {method}")
