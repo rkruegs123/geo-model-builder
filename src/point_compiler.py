@@ -42,7 +42,7 @@ class PointCompiler:
                 term = term[1]
             pred = term[0]
             ps = [Point(p) for p in list(term[1:])]
-            constraint = Constraint(pred=pred, points=ps, negate=negate)
+            constraint = Constraint(pred=pred, args=ps, negate=negate)
             if head == "assert":
                 self.constraints.append(constraint)
             elif head == "prove":
@@ -52,15 +52,15 @@ class PointCompiler:
 
 
     def preprocess(self):
-        sample_points = [p for c in self.constraints for p in c.points if is_sample_pred(c.pred)]
-        cs_with_sampled_points = [c for c in self.constraints if not c.negate and set(c.points).issubset(set(sample_points))]
+        sample_points = [p for c in self.constraints for p in c.args if is_sample_pred(c.pred)]
+        cs_with_sampled_points = [c for c in self.constraints if not c.negate and set(c.args).issubset(set(sample_points))]
         self.sample_bucket = Bucket(points=sample_points, assertions=cs_with_sampled_points)
 
         solve_points = [p for p in self.points if p not in sample_points] # maintain order
-        cs_to_solve = [c for c in self.constraints if not set(c.points).issubset(set(sample_points)) and not c.negate]
+        cs_to_solve = [c for c in self.constraints if not set(c.args).issubset(set(sample_points)) and not c.negate]
         self.solve_bucket = Bucket(points=solve_points, assertions=cs_to_solve)
 
-        self.ndgs = [Constraint(c.pred, c.points, False) for c in self.constraints if c.negate]
+        self.ndgs = [Constraint(c.pred, c.args, False) for c in self.constraints if c.negate]
 
 
     def sample_bucket_2_instructions(self):
@@ -83,9 +83,9 @@ class PointCompiler:
         if sampler.pred == "triangle":  # We know len(sample_cs) == 1
 
             tri_points = sampler.points
-            acute = any(c.pred == "acutes" and set(c.points) == set(tri_points) for c in aux_cs)
-            iso_points = list(set([collections.Counter(c.points).most_common(1)[0][0] for c in aux_cs if c.pred == "cong"]))
-            right_points = list(set([collections.Counter(c.points).most_common(1)[0][0] for c in aux_cs if c.pred == "perp"]))
+            acute = any(c.pred == "acutes" and set(c.args) == set(tri_points) for c in aux_cs)
+            iso_points = list(set([collections.Counter(c.args).most_common(1)[0][0] for c in aux_cs if c.pred == "cong"]))
+            right_points = list(set([collections.Counter(c.args).most_common(1)[0][0] for c in aux_cs if c.pred == "perp"]))
 
             if not aux_cs:
                 sample_instructions.append(Sample(tri_points, "triangle"))
@@ -120,7 +120,7 @@ class PointCompiler:
         all_bucketed_points = self.sample_bucket.points + self.solve_bucket.points
 
         for c in self.solve_bucket.assertions:
-            for p in (c.points):
+            for p in (c.args):
                 if p not in all_bucketed_points:
                     raise RuntimeException("unexpected point " ++ str(p))
         return

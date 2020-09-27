@@ -26,7 +26,7 @@ def solve():
 
         # print(lines)
         return "diagram_0.png"
-    except:
+    except Exception as e:
         return Response(
             "Invalid input",
             status=400

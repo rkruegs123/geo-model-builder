@@ -82,7 +82,7 @@ class CompileState:
         # Get all constraints to process for point p
         cs_for_p = list()
         for c in self.cs:
-            if p in c.points and all(p1 == p or p1 in self.visited for p1 in c.points):
+            if p in c.args and all(p1 == p or p1 in self.visited for p1 in c.args):
                 cs_for_p.append(c)
 
         for trick in (self.compute_tricks + self.param_tricks):
@@ -95,8 +95,8 @@ class CompileState:
     def computeCircumcenter(self, p, cs):
         ccCs = [c for c in cs if c.pred == "circumcenter"]
         for c in ccCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("circumcenter", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("circumcenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -104,8 +104,8 @@ class CompileState:
     def computeOrthocenter(self, p, cs):
         orthocenterCs = [c for c in cs if c.pred == "orthocenter"]
         for c in orthocenterCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("orthocenter", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("orthocenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -113,8 +113,8 @@ class CompileState:
     def computeCentroid(self, p, cs):
         centroidCs = [c for c in cs if c.pred == "centroid"]
         for c in centroidCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("centroid", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("centroid", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -122,7 +122,7 @@ class CompileState:
     def computeIsogonal(self, p, cs):
         isogonalCs = [c for c in cs if c.pred == "isogonal"]
         for c in isogonalCs:
-            x, y, a, b, c = c.points
+            x, y, a, b, c = c.args
             if x == p:
                 self.solve_instructions.append(Compute(p, Point(("isogonal", [y, a, b, c]))))
                 self.cs.remove(c)
@@ -136,7 +136,7 @@ class CompileState:
     def computeIsotomic(self, p, cs):
         isotomicCs = [c for c in cs if c.pred == "isotomic"]
         for c in isotomicCs:
-            x, y, a, b, c = c.points
+            x, y, a, b, c = c.args
             if x == p:
                 self.solve_instructions.append(Compute(p, Point(("isotomic", [y, a, b, c]))))
                 self.cs.remove(c)
@@ -150,8 +150,8 @@ class CompileState:
     def computeArcMidpOpp(self, p, cs):
         aMidpOppCs = [c for c in cs if c.pred == "arcMidpOpp"]
         for c in aMidpOppCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("arcMidpOpp", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("arcMidpOpp", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -159,8 +159,8 @@ class CompileState:
     def computeArcMidpSame(self, p, cs):
         aMidpSameCs = [c for c in cs if c.pred == "arcMidpSame"]
         for c in aMidpSameCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("arcMidpSame", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("arcMidpSame", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -169,7 +169,7 @@ class CompileState:
         # TODO: allow newer point to come second
         inverseCs = [c for c in cs if c.pred == "inverse"]
         for c in inverseCs:
-            match_success, match = match_in_first_2(p, c.points)
+            match_success, match = match_in_first_2(p, c.args)
             if match_success:
                 y, o, a = match
                 self.solve_instructions.append(Compute(p, Point(("inverse", [y, o, a]))))
@@ -201,8 +201,8 @@ class CompileState:
     def computeMidp(self, p, cs):
         midpCs = [c for c in cs if c.pred == "midp"]
         for c in midpCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("midp", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("midp", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -210,7 +210,7 @@ class CompileState:
     def computeFromMidp(self, p, cs):
         midpCs = [c for c in cs if c.pred == "midp"]
         for c in midpCs:
-            m, a, b = c.points
+            m, a, b = c.args
             if m != p:
                 x = a
                 if a == p:
@@ -223,7 +223,7 @@ class CompileState:
     def computeReflectPL(self, p, cs):
         reflectPLCs = [c for c in cs if c.pred == "reflectPL"]
         for c in reflectPLCs:
-            match_success, match = match_in_first_2(p, c.points)
+            match_success, match = match_in_first_2(p, c.args)
             if match_success:
                 x, a, b = match
                 self.solve_instructions.append(
@@ -236,7 +236,7 @@ class CompileState:
     def computeFoot(self, p, cs):
         footCs = [c for c in cs if c.pred == "foot"]
         for c in footCs:
-            p1, x, a, b = c.points
+            p1, x, a, b = c.args
             if p1 == p:
                 self.solve_instructions.append(Compute(p, Point(("interLL", [Line("perpAt", [x, a, b]), Line("connecting", [a, b])]))))
                 self.cs.remove(c)
@@ -246,8 +246,8 @@ class CompileState:
     def computeIncenter(self, p, cs):
         incenterCs = [c for c in cs if c.pred == "incenter"]
         for c in incenterCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("incenter", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("incenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -255,8 +255,8 @@ class CompileState:
     def computeMixIncenter(self, p, cs):
         mixIncenterCs = [c for c in cs if c.pred == "mixtilinearIncenter"]
         for c in mixIncenterCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("mixtilinearIncenter", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("mixtilinearIncenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -264,8 +264,8 @@ class CompileState:
     def computeExcenter(self, p, cs):
         excenterCs = [c for c in cs if c.pred == "excenter"]
         for c in excenterCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("excenter", c.points[1:]))))
+            if c.args[0] == p:
+                self.solve_instructions.append(Compute(p, Point(("excenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -273,8 +273,8 @@ class CompileState:
     def computeInterLL(self, p, cs):
         interllCs = [c for c in cs if c.pred == "interLL"]
         for c in interllCs:
-            if c.points[0] == p:
-                w, x, y, z = c.points[1:]
+            if c.args[0] == p:
+                w, x, y, z = c.args[1:]
                 l1 = Line("connecting", [w, x])
                 l2 = Line("connecting", [y, z])
                 self.solve_instructions.append(Compute(p, Point(("interLL", [l1, l2]))))
@@ -328,8 +328,8 @@ class CompileState:
     def paramOnSeg(self, p, cs):
         onSegCs = [c for c in cs if c.pred == "onSeg"]
         for c in onSegCs:
-            if c.points[0] == p:
-                _, a, b = c.points
+            if c.args[0] == p:
+                _, a, b = c.args
                 self.solve_instructions.append(Parameterize(p, ("onSeg", [a, b])))
                 self.cs.remove(c)
                 return True
@@ -338,8 +338,8 @@ class CompileState:
     def paramOnRay(self, p, cs):
         onRayCs = [c for c in cs if c.pred == "onRay"]
         for c in onRayCs:
-            if c.points[0] == p:
-                _, a, b = c.points
+            if c.args[0] == p:
+                _, a, b = c.args
                 self.solve_instructions.append(Parameterize(p, ("onRay", [a, b])))
                 self.cs.remove(c)
                 return True
@@ -348,8 +348,8 @@ class CompileState:
     def paramInPoly(self, p, cs):
         inPolyCs = [c for c in cs if c.pred == "insidePolygon"]
         for c in inPolyCs:
-            if c.points[0] == p:
-                self.solve_instructions.append(Parameterize(p, ("inPoly", c.points[1:])))
+            if c.args[0] == p:
+                self.solve_instructions.append(Parameterize(p, ("inPoly", c.args[1:])))
                 self.cs.remove(c)
                 return True
         return False
@@ -393,7 +393,7 @@ class CompileState:
 
         for c in cs:
             pred = c.pred
-            ps = c.points
+            ps = c.args
             if pred == "coll":
                 other_ps = [p1 for p1 in ps if p1 != p]
                 lines.append(([c], Line("connecting", other_ps), list()))
@@ -406,7 +406,7 @@ class CompileState:
                 if x is not None:
                     lines.append(([c], Line("perpAt", [x, y, z]), list()))
             elif pred == "cong":
-                w, x, y, z = c.points
+                w, x, y, z = c.args
                 if p == w and p == y:
                     lines.append(([c], Line("mediator", [x, z]), list()))
                 elif p == w and p == z:
@@ -417,17 +417,17 @@ class CompileState:
                     lines.append(([c], Line("mediator", [w, y]), list()))
             elif pred == "ibisector":
                 # FIXME: Missing extra sameside constraints (the ndgs)
-                p1, x, y, z = c.points
+                p1, x, y, z = c.args
                 if p == p1:
                     extra_c1 = Constraint("sameSide", [p1, x, y, z], False)
                     extra_c2 = Constraint("sameSide", [p1, z, y, x], False)
                     lines.append(([c], Line("ibisector", [x, y, z]), [extra_c1, extra_c2]))
             elif pred == "ebisector":
-                p1, x, y, z = c.points
+                p1, x, y, z = c.args
                 if p == p1:
                     lines.append(([c], Line("ebisector", [x, y, z]), list()))
             elif pred == "eqOAngle":
-                u, v, w, x, y, z = c.points
+                u, v, w, x, y, z = c.args
                 if u == p and p not in [v, w, x, y, z]:
                     lines.append(([c], Line("eqOAngle", [v, w, x, y, z]), list()))
                 elif w == p and p not in [u, v, x, y, z]:
@@ -437,7 +437,7 @@ class CompileState:
                 elif z == p and p not in [u, v, w, x, y]:
                     lines.append(([c], Line("eqOAngle", [u, v, w, x, y]), list()))
             elif pred == "onSeg":
-                x, y, z = c.points
+                x, y, z = c.args
                 extra_c = Constraint("between", [x, y, z], False)
                 if p == x:
                     lines.append(([c], Line("connecting", [y, z]), [extra_c]))
@@ -453,7 +453,7 @@ class CompileState:
 
         for c in cs:
             pred = c.pred
-            ps = c.points
+            ps = c.args
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
                 circles.append(([c], Circle("c3", other_ps), list()))
