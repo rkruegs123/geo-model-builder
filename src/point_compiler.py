@@ -7,6 +7,7 @@ from util import *
 from compile_state import CompileState
 from instruction import Assert, AssertNDG, Confirm, Sample
 from parse import parse_sexprs
+from cline import Point
 
 class PointCompiler:
     def __init__(self, lines):
@@ -24,11 +25,11 @@ class PointCompiler:
         if head == "declare-points":
             if self.points:
                 raise RuntimeError("Duplicate declaration of points")
-            self.points = list(cmd[1:])
+            self.points = [Point(p) for p in cmd[1:]]
         elif head == "declare-point":
             if len(cmd) != 2:
                 raise RuntimeError(f"Mal-formed declare-point cmd: {cmd}")
-            p = cmd[1]
+            p = Point(cmd[1])
             if p in self.points:
                 raise RuntimeError(f"Duplicate point encountered: {p}")
             self.points.append(p)
@@ -40,7 +41,7 @@ class PointCompiler:
             if negate:
                 term = term[1]
             pred = term[0]
-            ps = list(term[1:])
+            ps = [Point(p) for p in list(term[1:])]
             constraint = Constraint(pred=pred, points=ps, negate=negate)
             if head == "assert":
                 self.constraints.append(constraint)
@@ -91,13 +92,13 @@ class PointCompiler:
             elif len(aux_cs) == 1 and acute:
                 sample_instructions.append(Sample(tri_points, "acuteTri"))
             elif len(aux_cs) == 2 and acute and len(iso_points) == 1:
-                sample_instructions.append(Sample(tri_points, "acuteIsoTri", (iso_points[0])))
+                sample_instructions.append(Sample(tri_points, "acuteIsoTri", [iso_points[0]]))
             elif len(aux_cs) == 1 and len(iso_points) == 1:
-                sample_instructions.append(Sample(tri_points, "isoTri", (iso_points[0])))
+                sample_instructions.append(Sample(tri_points, "isoTri", [iso_points[0]]))
             elif len(aux_cs) == 2 and len(iso_points) == 2:
                 sample_instructions.append(Sample(tri_points, "equiTri"))
             elif len(aux_cs) == 1 and len(right_points) == 1:
-                sample_instructions.append(Sample(tri_points, "rightTri", (right_points[0])))
+                sample_instructions.append(Sample(tri_points, "rightTri", [right_points[0]]))
             else:
                 pdb.set_trace()
                 raise RuntimeError("Unhandled triangle sampling")
@@ -157,7 +158,7 @@ class PointCompiler:
     def __str__(self):
         return '\nPOINTWISE PROBLEM:\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
             header='-' * 9,
-            pts=' '.join(self.points),
+            pts=' '.join([str(p) for p in self.points]),
             cs='\n\t'.join([str(c) for c in self.constraints]),
             gs='\n\t'.join([str(g) for g in self.goals])
     )

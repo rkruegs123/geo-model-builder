@@ -1,5 +1,6 @@
 import tensorflow.compat.v1 as tf
 import os
+import pdb
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer

@@ -173,19 +173,19 @@ class Optimizer(ABC):
     def sample(self, i):
         s_method = i.sampler
         s_args = i.args
-        if s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=args[0], acute=True)
+        if s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=s_args[0], acute=True)
         elif s_method == "acuteTri": self.sample_triangle(i.points, acute=True)
         elif s_method == "equiTri": self.sample_triangle(i.points, equi=True)
-        elif s_method == "isoTri": self.sample_triangle(i.points, iso=args[0])
+        elif s_method == "isoTri": self.sample_triangle(i.points, iso=s_args[0])
         elif s_method == "polygon": self.sample_polygon(i.points)
-        elif s_method == "rightTri": self.sample_triangle(i.points, right=args[0])
+        elif s_method == "rightTri": self.sample_triangle(i.points, right=s_args[0])
         elif s_method == "triangle": self.sample_triangle(i.points)
         elif s_method == "uniform": self.sample_uniform(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
     def sample_uniform(self, ps):
         [p] = ps
-        P   = self.get_point(x=self.mkvar(p+"x"), y=self.mkvar(p+"y"))
+        P   = self.get_point(x=self.mkvar(str(p)+"x"), y=self.mkvar(str(p)+"y"))
         self.register_pt(p, P)
 
 
@@ -272,8 +272,8 @@ class Optimizer(ABC):
 
     def compute(self, i):
         p = i.point
-        c_method = i.computation[0]
-        c_args = i.computation
+        c_method = i.computation.val[0]
+        c_args = i.computation.val
         if c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
         elif c_method == "amidpSame": self.compute_amidp_same(p, c_args[1])
         elif c_method == "centroid": self.compute_centroid(p, c_args[1])
@@ -281,9 +281,9 @@ class Optimizer(ABC):
         elif c_method == "excenter": self.compute_excenter(p, c_args[1])
         elif c_method == "harmonicLConj": self.compute_harmonic_l_conj(p, c_args[1])
         elif c_method == "incenter": self.compute_incenter(p, c_args[1])
-        elif c_method == "interLL": self.compute_inter_ll(p, c_args[1], c_args[2])
-        elif c_method == "interLC": self.compute_inter_lc(p, c_args[1], c_args[2], c_args[3])
-        elif c_method == "interCC": self.compute_inter_cc(p, c_args[1], c_args[2], c_args[3])
+        elif c_method == "interLL": self.compute_inter_ll(p, *c_args[1])
+        elif c_method == "interLC": self.compute_inter_lc(p, *c_args[1])
+        elif c_method == "interCC": self.compute_inter_cc(p, *c_args[1])
         elif c_method == "isogonal": self.compute_isogonal(p, c_args[1])
         elif c_method == "isotomic": self.compute_isotomic(p, c_args[1])
         elif c_method == "inverse": self.compute_inverse(p, c_args[1])
@@ -291,8 +291,6 @@ class Optimizer(ABC):
         elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
         elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(p, c_args[1])
         elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
-
-
         else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
@@ -425,7 +423,8 @@ class Optimizer(ABC):
         self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
         self.segments.append((A, B))
 
-    def parameterize_on_line(self, p, l):
+    def parameterize_on_line(self, p, p_args):
+        [l] = p_args
         A, B = self.line2twoPts(l)
         z = self.mkvar(name=f"{p}_line")
         z = 0.2 * z
@@ -482,7 +481,7 @@ class Optimizer(ABC):
 
         vals = self.assertion_vals(pred, ps)
 
-        a_str = f"{pred}_{'_'.join(ps)}"
+        a_str = f"{pred}_{'_'.join([str(p) for p in ps])}"
         weight = 1 / len(vals)
         for i, val in enumerate(vals):
             loss_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
@@ -495,7 +494,7 @@ class Optimizer(ABC):
 
         vals = self.assertion_vals(pred, ps)
 
-        a_str = f"not_{pred}_{'_'.join(ps)}"
+        a_str = f"not_{pred}_{'_'.join([str(p) for p in ps])}"
         weight = 1 / len(vals)
 
         for i, val in enumerate(vals):
@@ -507,7 +506,7 @@ class Optimizer(ABC):
         pred, ps, negate = goal_cons.pred, goal_cons.points, goal_cons.negate
 
         vals = self.assertion_vals(pred, ps)
-        g_str = f"{pred}_{'_'.join(ps)}"
+        g_str = f"{pred}_{'_'.join([str(p) for p in ps])}"
         if negate:
             print("WARNING: Satisfied NDG goals will have non-zero values")
             g_str = f"not_{g_str}"

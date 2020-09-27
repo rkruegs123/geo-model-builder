@@ -63,9 +63,12 @@ class InstructionReader:
         if len(cmd) != 3:
             raise RuntimeError(f"Malformed compute command: {cmd}")
 
-        p = cmd[1]
+        p = self.process_point(cmd[1])
+        assert(isinstance(p.val, str))
+
         computation = self.process_point(cmd[2])
         assert(not isinstance(computation.val, str))
+
         c_instr = Compute(p, computation)
         self.instructions.append(c_instr)
 
@@ -94,11 +97,34 @@ class InstructionReader:
         p = self.process_term(cmd[1])
         assert(isinstance(p, Point) and isinstance(p.val, str))
 
-        negate, pred, args = self.process_constraint(cmd[2])
-        assert(pred in ["onSeg", "onL", "onC", "onRay"])
-        assert(not negate)
+        pred, args = self.process_param(cmd[2])
         p_instr = Parameterize(p, (pred, args))
         self.instructions.append(p_instr)
+
+    def process_param(self, param):
+        pred = param[0]
+        args = param[1:]
+        args = [self.process_term(t) for t in args]
+
+        ps = [t for t in args if isinstance(t, Point)]
+        ls = [t for t in args if isinstance(t, Line)]
+        cs = [t for t in args if isinstance(t, Circle)]
+
+        if pred == "onSeg":
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "onLine":
+            assert(len(args) == 1)
+            assert(all([isinstance(t, Line) for t in args]))
+        elif pred == "onRay":
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "onCirc":
+            assert(len(args) == 1)
+            assert(all([isinstance(t, Circ) for t in args]))
+        else:
+            raise NotImplementedError(f"[process_param] unrecognized param {param}")
+        return pred, args
 
 
     def process_constraint(self, constraint):
@@ -118,11 +144,11 @@ class InstructionReader:
         if pred == "cong":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "onL":
+        elif pred == "onLine":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Line))
         elif pred == "onSeg":
-            assert(len(args) == 2)
+            assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "para":
             if len(args) == 2:
@@ -163,7 +189,7 @@ class InstructionReader:
             assert(len(p_args) == 2)
             l1 = self.process_line(p_args[0])
             l2 = self.process_line(p_args[1])
-            p_val = ("interLL", l1, l2)
+            p_val = ("interLL", [l1, l2])
             return Point(p_val)
         elif p_pred == "incenter":
             assert(len(p_args) == 3)

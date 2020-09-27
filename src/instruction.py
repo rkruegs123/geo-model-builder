@@ -66,4 +66,4 @@ class Sample:
         self.args = args
 
     def __str__(self):
-        return f"sample ({' '.join([str(p) for p in self.points])}) {self.sampler} ({' '.join(self.args)})"
+        return f"sample ({' '.join([str(p) for p in self.points])}) {self.sampler} ({' '.join([str(a) for a in self.args])})"

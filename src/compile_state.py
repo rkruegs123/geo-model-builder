@@ -1,7 +1,7 @@
 import pdb
 import copy
 
-from cline import Line, Circle
+from cline import Line, Circle, Point
 from instruction import Compute, Parameterize, Assert, AssertNDG
 from util import *
 from constraint import Constraint
@@ -96,7 +96,7 @@ class CompileState:
         ccCs = [c for c in cs if c.pred == "circumcenter"]
         for c in ccCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("circumcenter", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("circumcenter", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -105,7 +105,7 @@ class CompileState:
         orthocenterCs = [c for c in cs if c.pred == "orthocenter"]
         for c in orthocenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("orthocenter", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("orthocenter", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -114,7 +114,7 @@ class CompileState:
         centroidCs = [c for c in cs if c.pred == "centroid"]
         for c in centroidCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("centroid", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("centroid", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -124,11 +124,11 @@ class CompileState:
         for c in isogonalCs:
             x, y, a, b, c = c.points
             if x == p:
-                self.solve_instructions.append(Compute(p, ("isogonal", [y, a, b, c])))
+                self.solve_instructions.append(Compute(p, Point(("isogonal", [y, a, b, c]))))
                 self.cs.remove(c)
                 return True
             elif y == p:
-                self.solve_instructions.append(Compute(p, ("isogonal", [x, a, b, c])))
+                self.solve_instructions.append(Compute(p, Point(("isogonal", [x, a, b, c]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -138,11 +138,11 @@ class CompileState:
         for c in isotomicCs:
             x, y, a, b, c = c.points
             if x == p:
-                self.solve_instructions.append(Compute(p, ("isotomic", [y, a, b, c])))
+                self.solve_instructions.append(Compute(p, Point(("isotomic", [y, a, b, c]))))
                 self.cs.remove(c)
                 return True
             elif y == p:
-                self.solve_instructions.append(Compute(p, ("isotomic", [x, a, b, c])))
+                self.solve_instructions.append(Compute(p, Point(("isotomic", [x, a, b, c]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -151,7 +151,7 @@ class CompileState:
         aMidpOppCs = [c for c in cs if c.pred == "arcMidpOpp"]
         for c in aMidpOppCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("arcMidpOpp", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("arcMidpOpp", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -160,7 +160,7 @@ class CompileState:
         aMidpSameCs = [c for c in cs if c.pred == "arcMidpSame"]
         for c in aMidpSameCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("arcMidpSame", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("arcMidpSame", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -172,7 +172,7 @@ class CompileState:
             match_success, match = match_in_first_2(p, c.points)
             if match_success:
                 y, o, a = match
-                self.solve_instructions.append(Compute(p, ("inverse", [y, o, a])))
+                self.solve_instructions.append(Compute(p, Point(("inverse", [y, o, a]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -182,7 +182,7 @@ class CompileState:
         for c in harmonicLCs:
             (y, (a, b)) = group_pairs(p, ps)
             if y is not None:
-                self.solve_instructions.append(Compute(p, ("harmonicLConj", [y, a, b])))
+                self.solve_instructions.append(Compute(p, Point(("harmonicLConj", [y, a, b]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -192,7 +192,7 @@ class CompileState:
         for c in harmonicCCs:
             (y, (a, b)) = group_pairs(p, ps)
             if y is not None:
-                self.solve_instructions.append(Compute(p, ("harmonicCConj", [y, a, b])))
+                self.solve_instructions.append(Compute(p, Point(("harmonicCConj", [y, a, b]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -202,7 +202,7 @@ class CompileState:
         midpCs = [c for c in cs if c.pred == "midp"]
         for c in midpCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("midp", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("midp", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -215,7 +215,7 @@ class CompileState:
                 x = a
                 if a == p:
                     x = b
-                self.solve_instructions.append(Compute(p, ("midpFrom", [m, x])))
+                self.solve_instructions.append(Compute(p, Point(("midpFrom", [m, x]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -227,7 +227,7 @@ class CompileState:
             if match_success:
                 x, a, b = match
                 self.solve_instructions.append(
-                    Compute(p, ("interLC", Line("perpAt", [x, a, b]), Circle("coa", [a, x]), Root("neq", [x])))
+                    Compute(p, Point(("interLC", [Line("perpAt", [x, a, b]), Circle("coa", [a, x]), Root("neq", [x])])))
                 )
                 self.cs.remove(c)
                 return True
@@ -238,7 +238,7 @@ class CompileState:
         for c in footCs:
             p1, x, a, b = c.points
             if p1 == p:
-                self.solve_instructions.append(Compute(p, ("interLL", Line("perpAt", [x, a, b]), Line("connecting", [a, b]))))
+                self.solve_instructions.append(Compute(p, Point(("interLL", [Line("perpAt", [x, a, b]), Line("connecting", [a, b])]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -247,7 +247,7 @@ class CompileState:
         incenterCs = [c for c in cs if c.pred == "incenter"]
         for c in incenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("incenter", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("incenter", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -256,7 +256,7 @@ class CompileState:
         mixIncenterCs = [c for c in cs if c.pred == "mixtilinearIncenter"]
         for c in mixIncenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("mixtilinearIncenter", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("mixtilinearIncenter", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -265,7 +265,7 @@ class CompileState:
         excenterCs = [c for c in cs if c.pred == "excenter"]
         for c in excenterCs:
             if c.points[0] == p:
-                self.solve_instructions.append(Compute(p, ("excenter", c.points[1:])))
+                self.solve_instructions.append(Compute(p, Point(("excenter", c.points[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -277,7 +277,7 @@ class CompileState:
                 w, x, y, z = c.points[1:]
                 l1 = Line("connecting", [w, x])
                 l2 = Line("connecting", [y, z])
-                self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
+                self.solve_instructions.append(Compute(p, Point(("interLL", [l1, l2]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -289,7 +289,7 @@ class CompileState:
         if len(lines) >= 2:
             cs1, l1, extra_cs1 = lines[0]
             cs2, l2, extra_cs2 = lines[1]
-            self.solve_instructions.append(Compute(p, ("interLL", l1, l2)))
+            self.solve_instructions.append(Compute(p, Point(("interLL", [l1, l2]))))
             for c in cs1 + cs2:
                 self.cs.remove(c)
             self.cs += extra_cs1 + extra_cs2
@@ -301,7 +301,7 @@ class CompileState:
             root, rcs = self.determine_root(p, l, circ, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, ("interLC", l, circ, root)))
+            self.solve_instructions.append(Compute(p, Point(("interLC", [l, circ, root]))))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             self.cs += extra_cs_l + extra_cs_c
@@ -313,7 +313,7 @@ class CompileState:
             root, rcs = self.determine_root(p, c1, c2, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, ("interCC", c1, c2, root)))
+            self.solve_instructions.append(Compute(p, Point(("interCC", [c1, c2, root]))))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             self.cs += extra_cs1 + extra_cs2
@@ -358,7 +358,7 @@ class CompileState:
         lines = self.linesFor(p, cs)
         if lines:
             lcs, l, extra_cs = lines[0]
-            self.solve_instructions.append(Parameterize(p, ("onLine", l)))
+            self.solve_instructions.append(Parameterize(p, ("onLine", [l])))
             for c in lcs:
                 self.cs.remove(c)
             self.cs += extra_cs
@@ -369,7 +369,7 @@ class CompileState:
         circles = self.circlesFor(p, cs)
         if circles:
             ccs, circ, extra_cs = circles[0]
-            self.solve_instructions.append(Parameterize(p, ("onCirc", circ)))
+            self.solve_instructions.append(Parameterize(p, ("onCirc", [circ])))
             for c in ccs:
                 self.cs.remove(c)
             self.cs += extra_cs
