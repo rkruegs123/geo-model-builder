@@ -106,6 +106,7 @@ class TfOptimizer(Optimizer):
 
     def register_pt(self, p, P):
         assert(p not in self.name2pt)
+        assert(isinstance(p.val, str))
         Px = tf.debugging.check_numerics(P.x, message=str(p))
         Py = tf.debugging.check_numerics(P.y, message=str(p))
         self.name2pt[p] = self.get_point(Px, Py)

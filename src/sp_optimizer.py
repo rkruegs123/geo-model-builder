@@ -77,9 +77,9 @@ class ScipyOptimizer(Optimizer):
 
     def register_pt(self, p, P):
         assert(p not in self.name2pt)
+        assert(isinstance(p.val, str))
         # self.name2pt[p] = P.simplify()
         self.name2pt[p] = P
-
 
     # Note that weight not relevant for scipy
     def register_loss(self, key, val, weight=1.0):

@@ -31,7 +31,6 @@ class InstructionReader:
         elif pred == "param":
             self.param(cmd)
         else:
-            pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.process_command] Command not supported: {pred}")
 
 
@@ -55,7 +54,6 @@ class InstructionReader:
             instr = Sample(ps, method, (special_p))
             self.instructions.append(instr)
         else:
-            pdb.set_trace()
             raise NotImplementedError(f"[InstructionReader.sample] Sampling method not yet supported: {method}")
 
 
@@ -150,6 +148,9 @@ class InstructionReader:
         elif pred == "onSeg":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "onCirc":
+            assert(len(args) == 2)
+            assert(isinstance(args[0], Point) and isinstance(args[1], Circle))
         elif pred == "para":
             if len(args) == 2:
                 assert(all([isinstance(t, Line) for t in args]))
@@ -231,8 +232,7 @@ class InstructionReader:
             assert(len(ps) == 2)
             return Line("perpBis", ps)
         else:
-            pdb.set_trace()
-            return NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
+            raise NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
 
     def process_circle(self, c_info):
         c_pred = c_info[0]
@@ -241,8 +241,7 @@ class InstructionReader:
             assert(len(ps) == 3)
             return Circle("c3", ps)
         else:
-            pdb.set_trace()
-            return NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
+            raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 
     def process_rs(self, rs_info):
         rs_pred = rs_info[0]
@@ -252,8 +251,7 @@ class InstructionReader:
             p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
         else:
-            pdb.set_trace()
-            return NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
+            raise NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
 
 if __name__ == "__main__":
     # Get problem to compile

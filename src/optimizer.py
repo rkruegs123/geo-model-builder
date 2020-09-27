@@ -484,14 +484,14 @@ class Optimizer(ABC):
     def add(self, assertion):
         self.has_loss = True
         cons = assertion.constraint
-        pred, ps, negate = cons.pred, cons.points, cons.negate
+        pred, args, negate = cons.pred, cons.args, cons.negate
 
         if negate:
             raise RuntimeError("[add] Mishandled negation")
 
-        vals = self.assertion_vals(pred, ps)
+        vals = self.assertion_vals(pred, args)
 
-        a_str = f"{pred}_{'_'.join([str(p) for p in ps])}"
+        a_str = f"{pred}_{'_'.join([str(a) for a in args])}"
         weight = 1 / len(vals)
         for i, val in enumerate(vals):
             loss_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
@@ -500,11 +500,11 @@ class Optimizer(ABC):
     def addNDG(self, ndg):
         self.has_loss = True
         ndg_cons = ndg.constraint
-        pred, ps = ndg_cons.pred, ndg_cons.points
+        pred, args = ndg_cons.pred, ndg_cons.args
 
-        vals = self.assertion_vals(pred, ps)
+        vals = self.assertion_vals(pred, args)
 
-        a_str = f"not_{pred}_{'_'.join([str(p) for p in ps])}"
+        a_str = f"not_{pred}_{'_'.join([str(a) for a in args])}"
         weight = 1 / len(vals)
 
         for i, val in enumerate(vals):
@@ -513,10 +513,10 @@ class Optimizer(ABC):
 
     def confirm(self, goal):
         goal_cons = goal.constraint
-        pred, ps, negate = goal_cons.pred, goal_cons.points, goal_cons.negate
+        pred, args, negate = goal_cons.pred, goal_cons.args, goal_cons.negate
 
-        vals = self.assertion_vals(pred, ps)
-        g_str = f"{pred}_{'_'.join([str(p) for p in ps])}"
+        vals = self.assertion_vals(pred, args)
+        g_str = f"{pred}_{'_'.join([str(a) for a in args])}"
         if negate:
             print("WARNING: Satisfied NDG goals will have non-zero values")
             g_str = f"not_{g_str}"
@@ -525,31 +525,31 @@ class Optimizer(ABC):
             goal_str = g_str if len(vals) == 1 else f"{g_str}_{i}"
             self.register_goal(goal_str, val)
 
-    def assertion_vals(self, pred, ps):
+    def assertion_vals(self, pred, args):
         if pred == "amidpOpp":
-            M, B, C, A = self.lookup_pts(ps)
+            M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_opp(B, C, A))]
-        elif pred == "amidpSame":
-            M, B, C, A = self.lookup_pts(ps)
+        elif pred == "amidargsame":
+            M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_same(B, C, A))]
-        elif pred == "between": return self.between_gap(*self.lookup_pts(ps))
+        elif pred == "between": return self.between_gap(*self.lookup_pts(args))
         elif pred == "circumcenter":
-            O, A, B, C = self.lookup_pts(ps)
+            O, A, B, C = self.lookup_pts(args)
             self.circles.append((O, self.dist(O, A)))
             return [self.dist(O, self.circumcenter(A, B, C))]
         elif pred == "coll":
-            coll_ps = self.lookup_pts(ps)
-            diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(coll_ps, 3)]
-            for i in range(len(coll_ps)-1):
-                self.segments.append((coll_ps[i], coll_ps[i+1]))
+            coll_args = self.lookup_pts(args)
+            diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(coll_args, 3)]
+            for i in range(len(coll_args)-1):
+                self.segments.append((coll_args[i], coll_args[i+1]))
             return diffs
         elif pred == "cong":
-            A, B, C, D = self.lookup_pts(ps)
+            A, B, C, D = self.lookup_pts(args)
             if A in [C, D]: self.circles.append((A, self.dist(A, B)))
             elif B in [C, D]: self.circles.append((B, self.dist(A, B)))
             return [self.cong_diff(A, B, C, D)]
         elif pred == "contri":
-            [A, B, C, P, Q, R] = self.lookup_pts(ps)
+            [A, B, C, P, Q, R] = self.lookup_pts(args)
             self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             return [self.eqangle6_diff(A, B, C, P, Q, R),
                     self.eqangle6_diff(B, C, A, Q, R, P),
@@ -558,62 +558,67 @@ class Optimizer(ABC):
                     self.cong_diff(A, C, P, R),
                     self.cong_diff(B, C, Q, R)]
         elif pred == "cycl":
-            cycl_ps = self.lookup_pts(ps)
-            assert(len(cycl_ps) > 3)
-            O = self.circumcenter(*cycl_ps[:3])
+            cycl_args = self.lookup_pts(args)
+            assert(len(cycl_args) > 3)
+            O = self.circumcenter(*cycl_args[:3])
             diffs = list()
-            diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_ps, 4)]
-            self.circles.append((O, self.dist(O, cycl_ps[0])))
+            diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_args, 4)]
+            self.circles.append((O, self.dist(O, cycl_args[0])))
             return diffs
         elif pred == "distLt":
-            X, Y, A, B = self.lookup_pts(ps)
+            X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(X, Y) - dist(A, B))]
         elif pred == "distGt":
-            X, Y, A, B = self.lookup_pts(ps)
+            X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
-        elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(ps))]
+        elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(args))]
         elif pred == "eqoangle":
-            A, B, C, P, Q, R = self.lookup_pts(ps)
+            A, B, C, P, Q, R = self.lookup_pts(args)
             return [self.angle(A, B, C) - self.angle(P, Q, R)]
-        elif pred == "eqratio": return [self.eqratio_diff(*self.lookup_pts(ps))]
+        elif pred == "eqratio": return [self.eqratio_diff(*self.lookup_pts(args))]
         elif pred == "foot":
-            F, X, A, B = self.lookup_pts(ps)
+            F, X, A, B = self.lookup_pts(args)
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
         elif pred == "ibisector":
-            X, B, A, C = self.lookup_pts(ps)
+            X, B, A, C = self.lookup_pts(args)
             self.segments.extend([(B, A), (A, X), (A, C)])
             return [self.eqangle8_diff(B, A, A, X, X, A, A, C)]
         elif pred == "incenter":
-            I, A, B, C = self.lookup_pts(ps)
+            I, A, B, C = self.lookup_pts(args)
             return [self.dist(I, self.incenter(A, B, C))]
-        elif pred == "insidePolygon": return self.in_poly_phis(*self.lookup_pts(ps))
+        elif pred == "insidePolygon": return self.in_poly_phis(*self.lookup_pts(args))
         elif pred == "interLL":
-            X, A, B, C, D = self.lookup_pts(ps)
+            X, A, B, C, D = self.lookup_pts(args)
             return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]
         elif pred == "isogonal":
-            X, Y, A, B, C = self.lookup_pts(ps)
+            X, Y, A, B, C = self.lookup_pts(args)
             return [self.dist(X, self.isogonal(Y, A, B, C))]
         elif pred == "midp":
-            M, A, B = self.lookup_pts(ps)
+            M, A, B = self.lookup_pts(args)
             return [self.dist(M, self.midp(A, B))]
-        elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(ps))] + self.onray_gap(*self.lookup_pts(ps))
-        elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(ps))] + self.between_gap(*self.lookup_pts(ps))
-        elif pred == "oppSides":
-            A, B, X, Y = self.lookup_pts(ps)
+        elif pred == "onCirc":
+            X, C = args
+            [X] = self.lookup_pts([X])
+            (O, r) = self.circ2nf(C)
+            return [self.dist(O, X) - r]
+        elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
+        elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
+        elif pred == "opargsides":
+            A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.side_score_prod(A, B, X, Y))]
         elif pred == "orthocenter":
-            H, A, B, C = self.lookup_pts(ps)
+            H, A, B, C = self.lookup_pts(args)
             return [self.dist(H, self.orthocenter(A, B, C))]
-        elif pred == "perp": return [self.perp_phi(*self.lookup_pts(ps))]
-        elif pred == "para": return [self.para_phi(*self.lookup_pts(ps))]
+        elif pred == "perp": return [self.perp_phi(*self.lookup_pts(args))]
+        elif pred == "para": return [self.para_phi(*self.lookup_pts(args))]
         elif pred == "reflectPL":
-            X, Y, A, B = self.lookup_pts(ps)
+            X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
         elif pred == "sameSide":
-            A, B, X, Y = self.lookup_pts(ps)
+            A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
         elif pred == "simtri":
-            [A, B, C, P, Q, R] = self.lookup_pts(ps)
+            [A, B, C, P, Q, R] = self.lookup_pts(args)
             self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
