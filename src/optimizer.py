@@ -58,7 +58,17 @@ class Optimizer(ABC):
         pass
 
     def lookup_pts(self, ps):
-        return [self.name2pt[p] for p in ps]
+        p_vals = list()
+        for p in ps:
+            if isinstance(p.val, str):
+                p_vals.append(self.name2pt[p])
+            else:
+                head, args = p.val[0], p.val[1]
+                if head == "midp":
+                    p_vals.append(self.midp(*self.lookup_pts(args)))
+                else:
+                    raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
+        return p_vals
 
     @abstractmethod
     def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):

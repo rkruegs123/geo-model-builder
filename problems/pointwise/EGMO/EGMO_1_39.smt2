@@ -7,7 +7,3 @@
 (assert (circumcenter O B C I))
 
 (prove (eqangle O D D B C E E O))
-
-(watch (coll O A I))
-(watch (ibisector I B A C))
-(watch (cong A D A E))

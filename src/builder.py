@@ -6,6 +6,7 @@ from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
 from sp_optimizer import ScipyOptimizer
 from parse import parse_sexprs
+from instruction_reader import InstructionReader
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -27,8 +28,10 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
         instructions = compiler.instructions
     elif grammar == "instructions":
         cmds = parse_sexprs(lines)
-        print(cmds)
-        raise NotImplementedError("Still working on instructions grammar...")
+        reader = InstructionReader(lines)
+        instructions = reader.instructions
+        for instr in instructions:
+            print(instr)
     else:
         raise RuntimeError(f"Invalid grammar: {grammar}")
 
