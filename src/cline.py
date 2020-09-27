@@ -2,7 +2,13 @@ from abc import ABC, abstractmethod
 import collections
 
 
-Point = collections.namedtuple("Point", ["val"])
+class Point(collections.namedtuple("Point", ["val"])):
+    def __str__(self):
+        if isinstance(self.val, str):
+            return self.val
+        else:
+            return f"({self.val[0]} {' '.join([str(v) for v in self.val[1]])})"
+
 
 class Cline(ABC):
     def __init__(self, pred, points):
@@ -30,7 +36,7 @@ class Circle(Cline):
             raise RuntimeError("[Circle.pointsOn] Invalid circle pred")
 
     def __str__(self):
-        return f"(circle {self.pred} {self.points})"
+        return f"({self.pred} {' '.join([p.val for p in self.points])})"
 
 class Line(Cline):
     def pointsOn(self):
@@ -52,4 +58,4 @@ class Line(Cline):
             raise RuntimeError("[Line.pointsOn] Invalid line pred")
 
     def __str__(self):
-        return f"(line {self.pred} {self.points})"
+        return f"({self.pred} {' '.join([p.val for p in self.points])})"

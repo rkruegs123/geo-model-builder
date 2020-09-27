@@ -23,7 +23,8 @@ class Compute:
 
     def __str__(self):
         if isinstance(self.computation, collections.abc.Iterable) and type(self.computation) != str:
-            comp_str = ' '.join(str(x) for x in self.computation)
+            comp_str = f"{self.computation.val[0]} {' '.join(str(x) for x in self.computation.val[1])}"
+            # comp_str = ' '.join(str(x) for x in self.computation)
         else:
             comp_str = str(self.computation)
         return "compute {p} ({computation_str})".format(
@@ -48,7 +49,8 @@ class Parameterize:
         if self.parameterization[0] == "coords":
             param_str = "coords"
         elif isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
-            param_str = ' '.join(str(x) for x in self.parameterization)
+            assert(len(self.parameterization) == 2)
+            param_str = f"({self.parameterization[0]} {' '.join(str(x) for x in self.parameterization[1])})"
         else:
             param_str = str(self.parameterization)
 
@@ -64,4 +66,4 @@ class Sample:
         self.args = args
 
     def __str__(self):
-        return f"sample [{' '.join(self.points)}] {self.sampler} [{' '.join(self.args)}]"
+        return f"sample ({' '.join([str(p) for p in self.points])}) {self.sampler} ({' '.join(self.args)})"

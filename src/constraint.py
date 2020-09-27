@@ -21,7 +21,7 @@ class Constraint:
 
 
     def __str__(self):
-        c_str = ' '.join([self.pred] + self.points)
+        c_str = ' '.join([self.pred] + [str(p) for p in self.points])
         if self.negate:
             return (f"not ({c_str})")
         else:

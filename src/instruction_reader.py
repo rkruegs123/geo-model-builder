@@ -70,7 +70,7 @@ class InstructionReader:
         self.instructions.append(c_instr)
 
 
-    # THEN, look over everything, then update point compilatoina nd optimization with Point type
+    # FIXME, look over everything, then update point compilatoina nd optimization with Point type
     def add(self, cmd):
         assert(len(cmd) == 2)
         negate, pred, args = self.process_constraint(cmd[1])
@@ -175,14 +175,19 @@ class InstructionReader:
             l = self.process_line(p_args[0])
             c = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = ("interLC", l, c, rs)
+            p_val = ("interLC", [l, c, rs])
             return Point(p_val)
         elif p_pred == "interCC":
             assert(len(p_args) == 3)
             c1 = self.process_circle(p_args[0])
             c2 = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = ("interCC", c1, c2, rs)
+            p_val = ("interCC", [c1, c2, rs])
+            return Point(p_val)
+        elif p_pred == "midp":
+            assert(len(p_args) == 2)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = ("midp", ps)
             return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
@@ -218,7 +223,7 @@ class InstructionReader:
         rs_args = rs_info[1:]
         if rs_pred == "rsNeq":
             assert(len(rs_args) == 1)
-            p_neq = self.process_point(rs_info[0])
+            p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
         else:
             pdb.set_trace()
@@ -234,3 +239,6 @@ if __name__ == "__main__":
 
     reader = InstructionReader(lines)
     instructions = reader.instructions
+
+    for instr in instructions:
+        print(instr)
