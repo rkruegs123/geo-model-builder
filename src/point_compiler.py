@@ -82,7 +82,7 @@ class PointCompiler:
 
         if sampler.pred == "triangle":  # We know len(sample_cs) == 1
 
-            tri_points = sampler.points
+            tri_points = sampler.args
             acute = any(c.pred == "acutes" and set(c.args) == set(tri_points) for c in aux_cs)
             iso_points = list(set([collections.Counter(c.args).most_common(1)[0][0] for c in aux_cs if c.pred == "cong"]))
             right_points = list(set([collections.Counter(c.args).most_common(1)[0][0] for c in aux_cs if c.pred == "perp"]))
@@ -103,7 +103,7 @@ class PointCompiler:
                 pdb.set_trace()
                 raise RuntimeError("Unhandled triangle sampling")
         elif sampler.pred == "polygon":
-            poly_points = sampler.points
+            poly_points = sampler.args
 
             if not aux_cs:
                 sample_instructions.append(Sample(poly_points, "polygon"))

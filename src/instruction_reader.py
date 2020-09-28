@@ -192,10 +192,10 @@ class InstructionReader:
             l2 = self.process_line(p_args[1])
             p_val = ("interLL", [l1, l2])
             return Point(p_val)
-        elif p_pred == "incenter":
+        elif p_pred in ["incenter", "excenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
-            p_val = ("incenter", ps)
+            p_val = (p_pred, ps)
             return Point(p_val)
         elif p_pred == "interLC":
             assert(len(p_args) == 3)

@@ -6,6 +6,4 @@
 (assert (foot F C A B))
 (assert (orthocenter H A B C))
 
-(prove (incenter H D E F))
-;;(watch (perp B F F H))
-;; (prove (perp B F F H))
+(confirm (incenter H D E F))
