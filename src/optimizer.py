@@ -68,6 +68,12 @@ class Optimizer(ABC):
                     p_vals.append(self.midp(*self.lookup_pts(args)))
                 elif head == "circumcenter":
                     p_vals.append(self.circumcenter(*self.lookup_pts(args)))
+                elif head == "orthocenter":
+                    p_vals.append(self.orthocenter(*self.lookup_pts(args)))
+                elif head == "incenter":
+                    p_vals.append(self.incenter(*self.lookup_pts(args)))
+                elif head == "centroid":
+                    p_vals.append(self.centroid(*self.lookup_pts(args)))
                 else:
                     raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
         return p_vals
