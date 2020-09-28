@@ -254,6 +254,9 @@ class InstructionReader:
         elif c_pred == "coa":
             assert(len(ps) == 2)
             return Circle("coa", ps)
+        elif c_pred == "diam":
+            assert(len(ps) == 2)
+            return Circle("diam", ps)
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 
@@ -264,6 +267,9 @@ class InstructionReader:
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
+        elif rs_pred == "rsArbitrary":
+            assert(not rs_args)
+            return Root("arbitrary", list())
         else:
             raise NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
 

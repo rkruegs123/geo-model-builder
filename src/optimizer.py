@@ -1052,7 +1052,7 @@ class Optimizer(ABC):
         elif pred == "diam":
             B, C = self.lookup_pts(ps)
             O = self.midp(B, C)
-            return CircleNF(center=O, radius=dist(O, B))
+            return CircleNF(center=O, radius=self.dist(O, B))
         else:
             raise RuntimeError(f"[circ2nf] NYI: {pred}")
 
