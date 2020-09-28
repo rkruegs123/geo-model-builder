@@ -636,7 +636,14 @@ class Optimizer(ABC):
             H, A, B, C = self.lookup_pts(args)
             return [self.dist(H, self.orthocenter(A, B, C))]
         elif pred == "perp": return [self.perp_phi(*self.lookup_pts(args))]
-        elif pred == "para": return [self.para_phi(*self.lookup_pts(args))]
+        elif pred == "para":
+            if len(args) == 4: # four points
+                return [self.para_phi(*self.lookup_pts(args))]
+            else: # two lines
+                l1, l2 = args
+                m1, b1, _, _ = self.line2sif(l1)
+                m2, b2, _, _ = self.line2sif(l2)
+                return [m2 - m1]
         elif pred == "reflectPL":
             X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
