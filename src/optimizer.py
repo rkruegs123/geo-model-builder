@@ -66,6 +66,8 @@ class Optimizer(ABC):
                 head, args = p.val[0], p.val[1]
                 if head == "midp":
                     p_vals.append(self.midp(*self.lookup_pts(args)))
+                elif head == "circumcenter":
+                    p_vals.append(self.circumcenter(*self.lookup_pts(args)))
                 else:
                     raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
         return p_vals
@@ -460,7 +462,8 @@ class Optimizer(ABC):
         self.register_pt(p, P)
         self.segments.extend([(A, B), (A, P)])
 
-    def parameterize_on_circ(self, p, circ):
+    def parameterize_on_circ(self, p, p_args):
+        [circ] = p_args
         O, r = self.circ2nf(circ)
         rot = self.mkvar(name=f"{p}_rot")
         theta = rot * 2 * self.const(math.pi)
@@ -601,6 +604,12 @@ class Optimizer(ABC):
             [X] = self.lookup_pts([X])
             (O, r) = self.circ2nf(C)
             return [self.dist(O, X) - r]
+        elif pred == "onLine":
+            pdb.set_trace()
+            [X, l] = args
+            [X] = self.lookup_pts([X])
+            lp1, lp2 = self.line2twoPts(l)
+            return [self.coll_phi(X, lp1, lp2)]
         elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
         elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
         elif pred == "oppSides":

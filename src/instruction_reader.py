@@ -100,6 +100,9 @@ class InstructionReader:
         self.instructions.append(p_instr)
 
     def process_param(self, param):
+        if param == "coords":
+            return "coords", None
+
         pred = param[0]
         args = param[1:]
         args = [self.process_term(t) for t in args]
@@ -119,7 +122,7 @@ class InstructionReader:
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onCirc":
             assert(len(args) == 1)
-            assert(all([isinstance(t, Circ) for t in args]))
+            assert(all([isinstance(t, Circle) for t in args]))
         else:
             raise NotImplementedError(f"[process_param] unrecognized param {param}")
         return pred, args
@@ -141,6 +144,9 @@ class InstructionReader:
         # Validate
         if pred == "cong":
             assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "cycl":
+            assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onLine":
             assert(len(args) == 2)
@@ -216,6 +222,11 @@ class InstructionReader:
             ps = [self.process_point(p) for p in p_args]
             p_val = ("midp", ps)
             return Point(p_val)
+        elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter"]:
+            assert(len(p_args) == 3)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = (p_pred, ps)
+            return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
 
@@ -240,6 +251,9 @@ class InstructionReader:
         if c_pred == "circ":
             assert(len(ps) == 3)
             return Circle("c3", ps)
+        elif c_pred == "coa":
+            assert(len(ps) == 2)
+            return Circle("coa", ps)
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 
