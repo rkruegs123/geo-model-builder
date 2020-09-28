@@ -5,9 +5,17 @@ import collections
 import itertools
 
 from instruction import *
+from cline import Line, Point
 
 # Also stores the points used to compute it
-SlopeInterceptForm = collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])
+class SlopeInterceptForm(collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])):
+    # Note: Coefficients likely reals, not ints
+    def standard_form(self):
+        a = -1
+        b = 1 / self.m
+        c = (1 / self.m) * self.b
+        return (a, b, c)
+
 
 CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
 
@@ -552,6 +560,9 @@ class Optimizer(ABC):
             for i in range(len(coll_args)-1):
                 self.segments.append((coll_args[i], coll_args[i+1]))
             return diffs
+        elif pred == "concur":
+            l1, l2, l3 = args
+            return [self.concur_phi(l1, l2, l3)]
         elif pred == "cong":
             A, B, C, D = self.lookup_pts(args)
             if A in [C, D]: self.circles.append((A, self.dist(A, B)))
@@ -743,6 +754,22 @@ class Optimizer(ABC):
 
     def coll_phi(self, A, B, C):
         return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
+
+    def concur_phi(self, l1, l2, l3):
+        a1, b1, c1 = self.line2sif(l1).standard_form()
+        a2, b2, c2 = self.line2sif(l2).standard_form()
+        a3, b3, c3 = self.line2sif(l3).standard_form()
+
+        # [[a, b], [c, d]]
+        def det2x2(a, b, c, d):
+            return a * d - c * b
+
+        # [[a, b, c], [d, e, f], [g, h, i]]
+        def det3x3(a, b, c, d, e, f, g, h, i):
+            return a * det2x2(e, f, h, i) - b * det2x2(d, f, g, i) + c * det2x2(d, e, g, h)
+
+        return det3x3(a1, b1, c1, a2, b2, c2, a3, b3, c3)
+
 
     def between_gap(self, X, A, B):
         eps = 0.2
@@ -996,6 +1023,10 @@ class Optimizer(ABC):
         elif pred == "perpAt":
             X, A, B = self.lookup_pts(ps)
             return X, X + self.rotate_counterclockwise_90(A - B)
+        elif pred == "perpBis":
+            a, b = ps
+            m_ab = Point(("midp", [a, b]))
+            return self.line2twoPts(Line("perpAt", [m_ab, a, b]))
         elif pred == "mediator":
             A, B = self.lookup_pts(ps)
             M = self.midp(A, B)

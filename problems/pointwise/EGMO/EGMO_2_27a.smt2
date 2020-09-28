@@ -15,4 +15,4 @@
 (assert (cycl N B M D))
 
 ;; Prove that AD and BC pass through point N
-(prove (interLL N A D B C))
+(confirm (interLL N A D B C))
