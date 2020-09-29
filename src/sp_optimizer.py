@@ -150,12 +150,17 @@ class ScipyOptimizer(Optimizer):
             fx, fy = f_val
 
             return self.get_point(
-                sp.UnevaluatedExpr(sp.Piecewise((tx, cond), (fx, True))),
-                sp.UnevaluatedExpr(sp.Piecewise((ty, cond), (fy, True)))
+                sp.Piecewise((tx, cond), (fx, True)),
+                sp.Piecewise((ty, cond), (fy, True))
             )
         elif isinstance(t_val, list):
             return [self.cond(cond, lambda: t, lambda: f) for (t, f) in zip(t_val, f_val)]
-        return sp.UnevaluatedExpr(sp.Piecewise((t_val, cond), (f_val, True)))
+        elif type(t_val) == tuple:
+            return tuple([self.cond(cond, lambda: t, lambda: f) for (t, f) in zip(t_val, f_val)])
+        elif isinstance(t_val, tuple): # a named tuple
+            return type(t_val)(*[self.cond(cond, lambda: t, lambda: f) for (t, f) in zip(t_val, f_val)])
+        return sp.Piecewise((t_val, cond), (f_val, True))
+        # return sp.UnevaluatedExpr(sp.Piecewise((t_val, cond), (f_val, True)))
 
     def lt(self, x, y):
         return x < y
@@ -168,6 +173,9 @@ class ScipyOptimizer(Optimizer):
 
     def gte(self, x, y):
         return x >= y
+
+    def eq(self, x, y):
+        return sp.Eq(x, y)
 
     def logical_or(self, x, y):
         return sp.Or(x, y)
@@ -207,12 +215,14 @@ class ScipyOptimizer(Optimizer):
         return inits
 
     def params2point(self, p, solved_params):
-        px = p.x if isinstance(p.x, float) else p.x.subs(solved_params)
-        py = p.y if isinstance(p.y, float) else p.y.subs(solved_params)
+        px = p.x if isinstance(p.x, float) else p.x.subs(solved_params).doit()
+        py = p.y if isinstance(p.y, float) else p.y.subs(solved_params).doit()
 
         if not (isinstance(px, sp.Number) or type(px) == float) or not (isinstance(py, sp.Number) or type(py) == float):
             raise RuntimeError("[params2point] Failed evaluation")
         return self.get_point(float(px), float(py))
+
+
 
     def get_model(self, solved_params):
         # FIXME: Make cleaner -- shouldn't have to convert to dict here

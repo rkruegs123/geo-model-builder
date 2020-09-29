@@ -17,6 +17,8 @@ class SlopeInterceptForm(collections.namedtuple("SlopeInterceptForm", ["m", "b",
         return (a, b, c)
 
 
+LineSF = collections.namedtuple("LineSF", ["a", "b", "c", "p1", "p2"])
+
 CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
 
 class Optimizer(ABC):
@@ -42,6 +44,14 @@ class Optimizer(ABC):
             self.process_instruction(i)
 
     def process_instruction(self, i):
+
+        '''
+        for p_name, p_val in self.name2pt.items():
+            if not p_val.x.is_real or not p_val.y.is_real:
+                pdb.set_trace()
+        pdb.set_trace()
+        '''
+
         if isinstance(i, Sample):
             self.sample(i)
         elif isinstance(i, Compute):
@@ -173,6 +183,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def gte(self, x, y):
+        pass
+
+    @abstractmethod
+    def eq(self, x, y):
         pass
 
     @abstractmethod
@@ -371,16 +385,16 @@ class Optimizer(ABC):
         self.circles.append((I, self.exradius(A, B, C)))
 
     def compute_inter_ll(self, p, l1, l2):
-        sif1 = self.line2sif(l1)
-        sif2 = self.line2sif(l2)
-        P = self.inter_ll(sif1, sif2)
+        sf1 = self.line2sf(l1)
+        sf2 = self.line2sf(l2)
+        P = self.inter_ll(sf1, sf2)
         self.register_pt(p, P)
 
     def compute_inter_lc(self, p, l, c, root_select):
-        l_sif = self.line2sif(l)
+        l_sf = self.line2sf(l)
         cnf = self.circ2nf(c)
-        P = self.inter_lc(l_sif, cnf, root_select)
-        self.make_lc_intersect(p, l_sif, cnf)
+        P = self.inter_lc(l_sf, cnf, root_select)
+        self.make_lc_intersect(p, l_sf, cnf)
         self.register_pt(p, P)
 
     def compute_inter_cc(self, p, c1, c2, root_select):
@@ -622,7 +636,6 @@ class Optimizer(ABC):
             (O, r) = self.circ2nf(C)
             return [self.dist(O, X) - r]
         elif pred == "onLine":
-            pdb.set_trace()
             [X, l] = args
             [X] = self.lookup_pts([X])
             lp1, lp2 = self.line2twoPts(l)
@@ -640,10 +653,13 @@ class Optimizer(ABC):
             if len(args) == 4: # four points
                 return [self.para_phi(*self.lookup_pts(args))]
             else: # two lines
+                raise NotImplementedError("Fix now that we are using standard form")
+                '''
                 l1, l2 = args
                 m1, b1, _, _ = self.line2sif(l1)
                 m2, b2, _, _ = self.line2sif(l2)
                 return [m2 - m1]
+                '''
         elif pred == "reflectPL":
             X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
@@ -763,9 +779,9 @@ class Optimizer(ABC):
         return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
 
     def concur_phi(self, l1, l2, l3):
-        a1, b1, c1 = self.line2sif(l1).standard_form()
-        a2, b2, c2 = self.line2sif(l2).standard_form()
-        a3, b3, c3 = self.line2sif(l3).standard_form()
+        a1, b1, c1, _, _ = self.line2sf(l1)
+        a2, b2, c2, _, _ = self.line2sf(l2)
+        a3, b3, c3, _, _ = self.line2sf(l3)
 
         # [[a, b], [c, d]]
         def det2x2(a, b, c, d):
@@ -807,13 +823,35 @@ class Optimizer(ABC):
     def same_side(self, a, b, x, y):
         return self.gt(self.side_score_prod(a, b, x, y), 0.0)
 
-    def inter_ll(self, sif1, sif2):
-        (m1, b1, _, _) = sif1
-        (m2, b2, _, _) = sif2
+    def inter_ll(self, sf1, sf2):
+        (a1, b1, c1, _, _) = sf1
+        (a2, b2, c2, _, _) = sf2
 
-        px = (b2 - b1) / (m1 - m2)
-        py = m1 * px + b1
-        return self.get_point(px, py)
+        def intersect_vert_l1_with_l2():
+            const_x = c1
+            py = (c2 - a2 * const_x) / b2 # will fail if line 2 is vertical as well (b2 == 0)
+            return self.get_point(const_x, py)
+
+        def intersect_vert_l2_with_l1():
+            const_x = c2
+            py = (c1 - a1 * const_x) / b1 # will fail if line 1 is vertical as well (b1 == 0)
+            return self.get_point(const_x, py)
+
+        def intersect_non_vert_lines():
+            # ax + by = c --> y = (-ax + c) / b --> y = (-a / b)x + (c / b)
+            m1, int1 = (-a1 / b1), (c1 / b1)
+            m2, int2 = (-a2 / b2), (c2 / b2)
+            # If both lines are horizontal, denominator will be 0
+            px = (int2 - int1) / (m1 - m2)
+            py = m1 * px + int1
+            return self.get_point(px, py)
+
+        return self.cond(self.eq(b1, self.const(0)), # sf1 is vertical
+                         intersect_vert_l1_with_l2,
+                         lambda: self.cond(self.eq(b2, self.const(0)), # sf2 is vertical
+                                           intersect_vert_l2_with_l1,
+                                           intersect_non_vert_lines))
+
 
     def inter_pp_c(self, P1, P2, cnf):
         # We follow http://mathworld.wolfram.com/Circle-LineIntersection.html
@@ -842,7 +880,7 @@ class Optimizer(ABC):
 
         def on_neg():
             Operp = self.rotate_counterclockwise_90(P1 - P2) + O
-            F = self.inter_ll(self.pp2sif(P1, P2), self.pp2sif(O, Operp))
+            F = self.inter_ll(self.pp2sf(P1, P2), self.pp2sf(O, Operp))
             X = O + (F - O).smul(r / self.dist(O, F))
             Q = self.midp(F, X)
             return self.unshift(O, [Q, Q])
@@ -867,7 +905,7 @@ class Optimizer(ABC):
         O, r = c
         Operp = self.rotate_counterclockwise_90(A - B) + O
 
-        F = self.inter_ll(l, self.pp2sif(O, Operp))
+        F = self.inter_ll(l, self.pp2sf(O, Operp))
         d = lambda: self.dist(O, F)
         f_val = self.cond(self.lt(r, d), d, lambda: self.const(0.0))
 
@@ -913,7 +951,7 @@ class Optimizer(ABC):
 
     def radical_axis(self, cnf1, cnf2):
         p1, p2 = self.radical_axis_pts(cnf1, cnf2)
-        return self.pp2sif(p1, p2)
+        return self.pp2sf(p1, p2)
 
     def eqangle6_diff(self, A, B, C, P, Q, R):
         s1 = self.det3(A, B, C)
@@ -961,13 +999,13 @@ class Optimizer(ABC):
 
 
     def to_trilinear(self, P, A, B, C):
-        la = self.pp2sif(B, C)
-        lb = self.pp2sif(C, A)
-        lc = self.pp2sif(A, B)
+        la = self.pp2sf(B, C)
+        lb = self.pp2sf(C, A)
+        lc = self.pp2sf(A, B)
 
-        ga = self.pp2sif(P, P + self.rotate_counterclockwise_90(C - B))
-        gb = self.pp2sif(P, P + self.rotate_counterclockwise_90(A - C))
-        gc = self.pp2sif(P, P + self.rotate_counterclockwise_90(B - A))
+        ga = self.pp2sf(P, P + self.rotate_counterclockwise_90(C - B))
+        gb = self.pp2sf(P, P + self.rotate_counterclockwise_90(A - C))
+        gc = self.pp2sf(P, P + self.rotate_counterclockwise_90(B - A))
 
         da = self.dist(P, self.inter_ll(la, ga))
         db = self.dist(P, self.inter_ll(lb, gb))
@@ -1000,9 +1038,9 @@ class Optimizer(ABC):
         # (could also do case analysis and cross-ratio)
         L = A + self.rotate_counterclockwise(const(math.pi / 3), X - A).smul(0.5)
         M = self.midp(A, L)
-        N = self.inter_ll(self.pp2sif(B, L), self.pp2sif(X, M))
-        K = self.inter_ll(self.pp2sif(A, N), self.pp2sif(B, M))
-        Y = self.inter_ll(self.pp2sif(L, K), self.pp2sif(A, X))
+        N = self.inter_ll(self.pp2sf(B, L), self.pp2sf(X, M))
+        K = self.inter_ll(self.pp2sf(A, N), self.pp2sf(B, M))
+        Y = self.inter_ll(self.pp2sf(L, K), self.pp2sf(A, X))
         return Y
 
     def in_poly_phis(self, X, *Ps):
@@ -1057,20 +1095,33 @@ class Optimizer(ABC):
             self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
             return B, X
         else:
-            raise RuntimeError(f"[line2sif] Unexpected line pred: {pred}")
+            raise RuntimeError(f"[line2twoPts] Unexpected line pred: {pred}")
 
-    def line2sif(self, l):
+    def line2sf(self, l):
         p1, p2 = self.line2twoPts(l)
-        return self.pp2sif(p1, p2)
+        return self.pp2sf(p1, p2)
 
-    # Two points on a line to slope-intercept form (y = mx + b)
-    def pp2sif(self, p1, p2):
-        (x1, y1) = p1
-        (x2, y2) = p2
+    def pp2sf(self, p1, p2):
+        def vert_line():
+            return LineSF(self.const(1.0), self.const(0.0), p1.x, p1, p2)
 
-        m = (y2 - y1) / (x2 - x1)
-        b = y1 - m * x1
-        return SlopeInterceptForm(m=m, b=b, p1=p1, p2=p2)
+        def horiz_line():
+            return LineSF(self.const(0.0), self.const(1.0), p1.y, p1, p2)
+
+        def calc_sf_from_slope_intercept():
+            (x1, y1) = p1
+            (x2, y2) = p2
+
+            m = (y2 - y1) / (x2 - x1)
+            b = y1 - m * x1
+            # y = mx + b ---> -mx + (1)y = b
+            return LineSF(-m, self.const(1.0), b, p1, p2)
+
+        return self.cond(self.eq(p1.x, p2.x),
+                         vert_line,
+                         lambda: self.cond(self.eq(p1.y, p2.y),
+                                           horiz_line,
+                                           calc_sf_from_slope_intercept))
 
     def circ2nf(self, circ):
         pred = circ.pred
