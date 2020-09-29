@@ -28,4 +28,4 @@
 
 ;; The common chords AB, CD, and EF are concurrent
 (assert (interLL X A B C D))
-(prove (coll X E F))
+(confirm (coll X E F))

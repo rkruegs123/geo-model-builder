@@ -901,13 +901,13 @@ class Optimizer(ABC):
         return result
 
     def make_lc_intersect(self, name, l, c):
-        _, _, A, B = l
+        _, _, _, A, B = l
         O, r = c
         Operp = self.rotate_counterclockwise_90(A - B) + O
 
         F = self.inter_ll(l, self.pp2sf(O, Operp))
-        d = lambda: self.dist(O, F)
-        f_val = self.cond(self.lt(r, d), d, lambda: self.const(0.0))
+        d = self.dist(O, F)
+        f_val = self.cond(self.lt(r, d), lambda: d, lambda: self.const(0.0))
 
         loss = self.cond(self.logical_or(self.lt(self.dist(O, Operp), 1e-6),
                                          self.lt(self.dist(A, B), 1e-6)),
