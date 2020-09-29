@@ -47,9 +47,12 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
             # print(filtered_models)
 
     elif solver == "scipy":
+        raise NotImplementedError("Scipy solver is deprecated")
+        '''
         solver = ScipyOptimizer(instructions, opts)
         solver.preprocess()
         filtered_models = solver.solve()
+        '''
         # print(filtered_models)
 
     else:
