@@ -45,7 +45,7 @@ class PointCompiler:
             constraint = Constraint(pred=pred, args=ps, negate=negate)
             if head == "assert":
                 self.constraints.append(constraint)
-            elif head == "prove":
+            elif head == "confirm":
                 self.goals.append(constraint)
             else:
                 raise RuntimeError(f"Unrecognized command: {cmd}")

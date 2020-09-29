@@ -6,4 +6,4 @@
 (assert (foot E B A C))
 (assert (foot F C A B))
 
-(prove (cycl A E H F))
+(confirm (cycl A E H F))

@@ -12,4 +12,4 @@
 (assert (perp K C C B))
 
 ;; Prove that KD1 || AB
-(prove (para K D1 A B))
+(confirm (para K D1 A B))

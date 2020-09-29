@@ -14,7 +14,7 @@
 (assert (onRay K B I))
 
 ;; Show that BK is perp to CK
-(prove (perp B K C K))
+(confirm (perp B K C K))
 
 ;; Then show K lies on line MN
-(prove (coll K M N))
+(confirm (coll K M N))

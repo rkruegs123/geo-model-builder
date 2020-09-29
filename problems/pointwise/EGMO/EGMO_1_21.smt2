@@ -2,4 +2,4 @@
 
 (assert (triangle A B C))
 (assert (orthocenter H A B C))
-(prove (orthocenter A H B C))
+(confirm (orthocenter A H B C))

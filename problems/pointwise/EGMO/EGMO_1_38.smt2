@@ -6,4 +6,4 @@
 (assert (incenter I1 A B C))
 (assert (incenter I2 D B C))
 
-(prove (cycl I1 I2 B C))
+(confirm (cycl I1 I2 B C))

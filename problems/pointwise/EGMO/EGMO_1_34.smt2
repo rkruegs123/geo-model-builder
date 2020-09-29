@@ -11,4 +11,4 @@
 (assert (perp K Mbc B C))
 (assert (ibisector K C A B))
 
-(prove (cycl A B C K))
+(confirm (cycl A B C K))

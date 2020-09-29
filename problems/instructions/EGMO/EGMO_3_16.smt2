@@ -1,0 +1,6 @@
+(sample (A B C) triangle)
+(compute I (incenter A B C))
+(compute D (interLL (perpAt I B C) (line B C)))
+(compute E (interLL (perpAt I C A) (line C A)))
+(compute F (interLL (perpAt I A B) (line A B)))
+(confirm (concur (line A D) (line B E) (line C F)))

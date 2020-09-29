@@ -543,10 +543,10 @@ class Optimizer(ABC):
             self.register_goal(goal_str, val)
 
     def assertion_vals(self, pred, args):
-        if pred == "arcMidpOpp":
+        if pred == "amidpOpp":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_opp(B, C, A))]
-        elif pred == "arcMidpSame":
+        elif pred == "amidpSame":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_same(B, C, A))]
         elif pred == "between": return self.between_gap(*self.lookup_pts(args))

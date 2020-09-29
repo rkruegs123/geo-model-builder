@@ -21,4 +21,4 @@
 
 ;; Prove that BE bisects AC
 (assert (interLL M B E A C))
-(prove (midp M A C))
+(confirm (midp M A C))

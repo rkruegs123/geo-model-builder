@@ -6,4 +6,4 @@
 (assert (foot E I A C))
 (assert (circumcenter O B C I))
 
-(prove (eqangle O D D B C E E O))
+(confirm (eqangle O D D B C E E O))

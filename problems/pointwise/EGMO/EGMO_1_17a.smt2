@@ -12,4 +12,4 @@
 (assert (midp Mbc H Y))
 
 ;; Prove that X lies on (ABC)
-(prove (cycl X A B C))
+(confirm (cycl X A B C))

@@ -13,4 +13,4 @@
 
 ;; Prove that the points I, B, C and Ia lie on a circle with diameter IIa and center L
 ;; Note: We already know (coll I Ia L)
-(prove (cycl I B C Ia))
+(confirm (cycl I B C Ia))

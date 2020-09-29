@@ -12,4 +12,4 @@
 (assert (foot Z P A B))
 
 ;; Prove that X, Y, and Z are collinear
-(prove (coll X Y Z))
+(confirm (coll X Y Z))

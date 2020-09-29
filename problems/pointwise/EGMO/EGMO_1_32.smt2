@@ -10,4 +10,4 @@
 (assert (onSeg D B C))
 (assert (para K D A B))
 
-(prove (coll A D O))
+(confirm (coll A D O))

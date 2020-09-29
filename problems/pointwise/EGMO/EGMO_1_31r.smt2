@@ -5,4 +5,4 @@
 
 ;; If <PAB = <ACB, then OA is perp to AP
 (assert (eqangle P A A B A C C B))
-(prove (perp O A A P))
+(confirm (perp O A A P))

@@ -7,6 +7,4 @@
 (assert (amidpOpp Y A C B))
 (assert (amidpOpp Z A B C))
 
-(prove (orthocenter I X Y Z))
-
-;; (watch (coll A I X))
+(confirm (orthocenter I X Y Z))

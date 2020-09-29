@@ -11,7 +11,7 @@
 (assert (orthocenter H A B C))
 
 ;; Prove that points A, E, F, H lie on a circle with diameter AH
-(prove (cycl A E F H))
+(confirm (cycl A E F H))
 
 (assert (circumcenter Oaef A E F))
-(prove (coll Oaef A H))
+(confirm (coll Oaef A H))
