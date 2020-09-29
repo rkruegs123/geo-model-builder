@@ -12,7 +12,7 @@ import re
 from optimizer import Optimizer
 from diagram import Diagram
 
-# Can we now get rid of simpliification given lambdify!?
+# FIXME: Can we now get rid of simpliification given lambdify!?
 
 def handler(signum, frame):
     print("Simplification failed!")
@@ -20,7 +20,6 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGALRM, handler)
 
-# FIXME: Could call simplify in __init__
 class SpPoint(collections.namedtuple("SpPoint", ["x", "y"])):
     def __add__(self, p):
         return SpPoint(self.x + p.x, self.y + p.y)
