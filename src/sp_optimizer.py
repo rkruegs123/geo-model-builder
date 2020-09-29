@@ -2,6 +2,7 @@ import pdb
 import collections
 import random
 import sympy as sp
+from sympy.core.evaluate import evaluate
 import itertools
 from scipy.optimize import minimize
 from math import tanh, cos, sin, acos, sqrt, exp
@@ -134,24 +135,28 @@ class ScipyOptimizer(Optimizer):
         return 1 / (1 + sp.exp(-x))
 
     def const(self, x):
-        return x
+        return sp.Number(x)
 
     def max(self, x, y):
         return sp.Max(x, y)
 
-    def cond(self, cond, t_val, f_val):
+    def cond(self, cond, t_lam, f_lam):
+
+        with evaluate(False):
+            t_val = t_lam()
+            f_val = f_lam()
 
         if isinstance(t_val, SpPoint):
             tx, ty = t_val
             fx, fy = f_val
 
             return self.get_point(
-                sp.Piecewise((tx, cond), (fx, True)),
-                sp.Piecewise((ty, cond), (fy, True))
+                sp.UnevaluatedExpr(sp.Piecewise((tx, cond), (fx, True))),
+                sp.UnevaluatedExpr(sp.Piecewise((ty, cond), (fy, True)))
             )
         elif isinstance(t_val, list):
-            return [self.cond(cond, t, f) for (t, f) in zip(t_val, f_val)]
-        return sp.Piecewise((t_val, cond), (f_val, True))
+            return [self.cond(cond, lambda: t, lambda: f) for (t, f) in zip(t_val, f_val)]
+        return sp.UnevaluatedExpr(sp.Piecewise((t_val, cond), (f_val, True)))
 
     def lt(self, x, y):
         return x < y

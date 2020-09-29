@@ -66,8 +66,8 @@ class TfOptimizer(Optimizer):
     def max(self, x, y):
         return tf.maximum(x, y)
 
-    def cond(self, cond, t_val, f_val):
-        return tf.cond(cond, lambda: t_val, lambda: f_val)
+    def cond(self, cond, t_lam, f_lam):
+        return tf.cond(cond, t_lam, f_lam)
 
     def lt(self, x, y):
         return tf.less(x, y)

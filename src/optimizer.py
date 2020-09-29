@@ -156,7 +156,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def cond(self, cond, t_val, f_val):
+    def cond(self, cond, t_lam, f_lam):
         pass
 
     @abstractmethod
@@ -830,7 +830,7 @@ class Optimizer(ABC):
 
         def on_nneg():
             def sgnstar(x):
-                return self.cond(self.lt(x, self.const(0.0)), self.const(-1.0), self.const(1.0))
+                return self.cond(self.lt(x, self.const(0.0)), lambda: self.const(-1.0), lambda: self.const(1.0))
 
             # NEXT: Change to self....
             Q1 = self.get_point((D * dy + sgnstar(dy) * dx * self.sqrt(radicand)) / (dr**2),
@@ -847,7 +847,7 @@ class Optimizer(ABC):
             Q = self.midp(F, X)
             return self.unshift(O, [Q, Q])
 
-        return self.cond(self.lt(radicand, self.const(0.0)), on_neg(), on_nneg())
+        return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
 
     def inter_lc(self, l, c, root_select):
         p1, p2 = l.p1, l.p2
@@ -868,17 +868,17 @@ class Optimizer(ABC):
         Operp = self.rotate_counterclockwise_90(A - B) + O
 
         F = self.inter_ll(l, self.pp2sif(O, Operp))
-        d = self.dist(O, F)
-        f_val = self.cond(self.lt(r, d), d, self.const(0.0))
+        d = lambda: self.dist(O, F)
+        f_val = self.cond(self.lt(r, d), d, lambda: self.const(0.0))
 
         loss = self.cond(self.logical_or(self.lt(self.dist(O, Operp), 1e-6),
                                          self.lt(self.dist(A, B), 1e-6)),
-                         self.const(0.0), f_val)
+                         lambda: self.const(0.0), lambda: f_val)
         self.register_loss(f"interLC_{name}", loss, weight=1e-1)
 
     def second_meet_pp_c(self, A, B, O):
         P1, P2 = self.inter_pp_c(A, B, CircleNF(O, self.dist(O, A)))
-        return self.cond(self.lt(self.sqdist(A, P1), self.sqdist(A, P2)), P2, P1)
+        return self.cond(self.lt(self.sqdist(A, P1), self.sqdist(A, P2)), lambda: P2, lambda: P1)
 
     def amidp_opp(self, B, C, A):
         O = self.circumcenter(A, B, C)
@@ -902,14 +902,13 @@ class Optimizer(ABC):
         # FIXME: Fails on EGMO 2.7 because we aren't passing around lambdas anymore
         # pdb.set_trace()
         test = self.gt(self.abs(A), 1e-6)
-        p1 = self.cond(test, self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=self.const(1.0), y=C/B))
-        p2 = self.cond(test, self.get_point(x=C/A, y=self.const(0.0)), self.get_point(x=self.const(0.0), y=C/B))
+        p1 = self.cond(test,
+                       lambda: self.get_point(x=(C-B)/A, y=self.const(1.0)),
+                       lambda: self.get_point(x=self.const(1.0), y=C/B))
+        p2 = self.cond(test,
+                       lambda: self.get_point(x=C/A, y=self.const(0.0)),
+                       lambda: self.get_point(x=self.const(0.0), y=C/B))
 
-        '''
-        p1, p2 = self.cond(self.gt(self.abs(A), 1e-6),
-                           (self.get_point(x=(C-B)/A, y=self.const(1.0)), self.get_point(x=C/A, y=self.const(0.0))),
-                           (self.get_point(x=self.const(1.0), y=C/B), self.get_point(x=self.const(0.0), y=C/B)))
-        '''
         return p1, p2
 
     def radical_axis(self, cnf1, cnf2):
@@ -974,13 +973,13 @@ class Optimizer(ABC):
         db = self.dist(P, self.inter_ll(lb, gb))
         dc = self.dist(P, self.inter_ll(lc, gc))
 
-        da = self.cond(self.opp_sides(P, A, B, C), -da, da)
-        db = self.cond(self.opp_sides(P, B, C, A), -db, db)
-        dc = self.cond(self.opp_sides(P, C, A, B), -dc, dc)
+        da = self.cond(self.opp_sides(P, A, B, C), lambda: -da, lambda: da)
+        db = self.cond(self.opp_sides(P, B, C, A), lambda: -db, lambda: db)
+        dc = self.cond(self.opp_sides(P, C, A, B), lambda: -dc, lambda: dc)
         return da, db, dc
 
     def invert_or_zero(self, x):
-        return self.cond(self.abs(x) < 1e-5, self.const(0.0), self.const(1) / x)
+        return self.cond(self.abs(x) < 1e-5, lambda: self.const(0.0), lambda: self.const(1) / x)
 
     def isogonal(self, P, A, B, C):
         x, y, z = self.to_trilinear(P, A, B, C)
@@ -1111,23 +1110,23 @@ class Optimizer(ABC):
         rs_args = root_select.vars
         if pred == "neq":
             [pt] = self.lookup_pts(rs_args)
-            return self.cond(self.pt_neq(P1, pt), P1, P2)
+            return self.cond(self.pt_neq(P1, pt), lambda: P1, lambda: P2)
         elif pred == "closerTo":
             [pt] = self.lookup_pts(rs_args)
             test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
-            return self.cond(test, P1, P2)
+            return self.cond(test, lambda: P1, lambda: P2)
         elif pred == "furtherFrom":
             [pt] = self.lookup_pts(rs_args)
             test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
-            return self.cond(test, P1, P2)
+            return self.cond(test, lambda: P1, lambda: P2)
         elif pred == "oppSides":
             [pt] = self.lookup_pts(rs_args[0])
             a, b = self.line2twoPts(rs_args[1])
-            return self.cond(self.opp_sides(P1, pt, a, b), P1, P2)
+            return self.cond(self.opp_sides(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "sameSide":
             [pt] = self.lookup_pts(rs_args[0])
             a, b = self.line2twoPts(rs_args[1])
-            return self.cond(self.same_side(P1, pt, a, b), P1, P2)
+            return self.cond(self.same_side(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "arbitrary":
             return P2
         else:
