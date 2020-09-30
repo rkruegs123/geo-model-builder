@@ -261,6 +261,26 @@
 
       <h2>Commands</h2>
       <p>GeoBuilder generates models by translating a geometric constraint problem into a numerical optimization problem and solving it with off-the-shelf optimizers. The following (FIXME #) commands reflect this, and comprise the primary grammar of the DSL</p>
+      <!--
+
+          LOOK AT JESSES PROCESS_COMMAND
+
+           Compute: (compute NAME VAL). Introduces a geometric object called NAME and assigns it value VAL. VAL cannot be a string (as duplicate objects are not allowed), and the type of NAME and VAL must be the same (e.g., (compute POINT-NAME POINT-VAL) is accepted while (compute POINT-NAME CIRCLE-VAL) is not).
+
+           Param: (param NAME TYPE OPTIONAL-REPARAM). Introduces a geometric object that is parameterized either by it's types default parameterization or the reparameterization. Certain reparameterizations are allowed for each type (see below). See the default parameterizations below.
+
+           Note: You cannot introduce the same object twice. (examples of allowed/not-allowed. allowed is compute one thing, compute another, or param another. Not-allowed is compute one thing then param it)
+
+           Assert: (assert PRED). Introduces an additional constraint on the system. All NAMEs used when constructing a PRED for assert have to refer to geometric objects that have already been introduced. (show allowed and not allowed). Also show NOT example.
+
+           Confirm: (confirm PRED). Introduces a constraint to filter final solutions, but a constraint that is not optimized over.
+
+           Note: Confirm may only be useful to people interested in automated theorem proving for problems of the form "Given a system that satisfies X constraints, prove Y". They may want to have X constraints and not optimize Y, but be assured Y holds in the model.
+
+           Note to Ryan: In prelminaries, state the PREDICATE is often short-handed to PRED and FUNCTION is often short-handed to FUNC.
+
+
+      -->
 
       <h2>Functions and Predicates</h2>
       <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, and numerical values as arguments. The following functions and predicates are the operations by which a user can define such objects for use in the above commands</p>
