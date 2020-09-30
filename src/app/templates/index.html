@@ -271,20 +271,24 @@
       <h2>Commands</h2>
       <p>GeoBuilder generates models by translating a geometric constraint problem into a <strong>numerical optimization problem</strong> and solving it with off-the-shelf optimizers. The following (FIXME #) commands reflect this, and comprise the primary component of the DSL</p>
       <ul>
+        <!-- COMPUTE -->
         <li>
           <code>COMPUTE</code>: Introduces a geometric object called <code>NAME</code> of type <code>TYPE</code> and assigns it value <code>VAL</code>.
+          <br>
+          <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
                 <p class="mb-0"><code>(COMPUTE NAME TYPE VAL)</code></p>
               </blockquote>
             </div>
+            <br>
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
                   <div class="card border-success mb-3 mx-auto" style="max-width: 25rem;">
                     <div class="card-header text-success">Valid Usage</div>
-                    <div class="card-body text-success">
+                    <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
                           <code>(COMPUTE P POINT (INCENTER A B C))</code>
@@ -295,11 +299,11 @@
                         <li>
                           <code>(COMPUTE L LINE (PERPBIS B C))</code>
                         </li>
+                        <ul>
+                          <li>The <code>TYPE</code> and <code>VAL</code> match in all above commands</li>
+                        </ul>
                       </ul>
-                      <!--
-                      <h5 class="card-title">Success card title</h5>
-                      <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                      -->
+
                     </div>
                   </div>
                 </div>
@@ -335,7 +339,123 @@
           </div>
           <p>Note that detail on functions used in the above examples (e.g., <code>INCENTER</code>, <code>DIST</code>) is provided in the next section</p>
         </li>
-        <li><code>PARAM</code>:</li>
+        <!-- PARAM -->
+        <li>
+          <code>PARAM</code>: Introduces a geometric object called <code>NAME</code> of type <code>TYPE</code> and parameterizes it either by the default parameterization for <code>TYPE</code> or by a supplied parameterization
+          <br>
+          <br>
+          <div class="container-fluid">
+            <div class="container-fluid">
+              <blockquote class="blockquote text-center">
+                <p class="mb-0"><code>(PARAM NAME TYPE OPTIONAL-PARAMETERIZATION)</code></p>
+              </blockquote>
+              <span>Each type has the following default parameterization:</span>
+              <ul>
+                <li><code>POINT</code>: Parameterized by it's x- and y-coordinates</li>
+                <li><code>LINE</code>: Parameterized by it's coefficients in standard form (<var>ax + by = c</var>)</li>
+                <li><code>CIRCLE</code>: Parameterized by it's origin and radius (where the origin is parameterized as a point)</li>
+              </ul>
+              <br>
+              <!-- FIXME: Shouldn't we be able to parameterize the origin/radius of a circle? -->
+              <span><code>LINE</code> and <code>CIRCLE</code> have no additional parameterizations, while one of the following optional parameterizations can be supplied for a <code>POINT P</code>:</span>
+              <ul>
+                <li>
+                  <code>ONLINE P LINE-VAL</code>: Parameterize <code>P</code> on a line
+                </li>
+                <li>
+                  <code>ONSEG P POINT-VAL POINT-VAL</code>: Parameterize <code>P</code> on the segment connecting two points
+                </li>
+                <li>
+                  <code>ONCIRC P CIRC-VAL</code>: Parameterize <code>P</code> on a circle
+                </li>
+                <!-- FIXME: Add parameterizations like insidePolygon -->
+              </ul>
+            </div>
+            <br><br>
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 25rem;">
+                    <div class="card-header text-success">Valid Usage</div>
+                    <div class="card-body">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(PARAM P POINT)</code>
+                          <ul>
+                            <li>Introduces a point <code>P</code> parameterized by its coordinates</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM P POINT (ONLINE P (LINE A B)))</code>
+                          <ul>
+                            <li>Introduces a point <code>P</code> parameterized on the line connecting <code>A</code> and <code>B</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM P POINT (ONCIRC (C3 A B C)))</code>
+                          <ul>
+                            <li>Introduces a point <code>P</code> parameterized on the circumcircle of <code>A</code>, <code>B</code>, and <code>C</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM GAMMA CIRCLE)</code>
+                          <ul>
+                            <li>Introduces a circle <code>GAMMA</code> parameterized by its origin and radius</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM L LINE)</code>
+                          <ul>
+                            <li>Introduces a line <code>L</code> parameterized by it's coefficients in standard form</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 25rem;">
+                    <div class="card-header text-danger">Invalid Usage</div>
+                    <div class="card-body">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(PARAM X NUMBER)</code>
+                          <ul>
+                            <li>Numerical values cannot be named</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM P POINT (INCIRCLE A B C))</code>
+                          <ul>
+                            <li><code>INCIRCLE A B C</code> is not a valid parameterization of a point</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM L LINE (ANYTHING))</code>
+                          <ul>
+                            <li><code>LINE</code> has no optional parameterizations</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(PARAM L CIRCLE (ANYTHING))</code>
+                          <ul>
+                            <li><code>CIRCLE</code> has no optional parameterizations</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE P POINT (MIDP A B))</code><br><code>(PARAM P POINT)</code>
+                          <ul>
+                            <li>Cannot introduce the same object twice</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
       </ul>
 
       <!--
@@ -367,7 +487,7 @@
 
     <div class="container-fluid">
       <h1>Contact</h1>
-      <p>GeoBuilder is extensible in nature. Should you have any feature suggestions (e.g., new function symbols or predicates) or encounter any bugs, please open an issue on <a href="">Github</a>. For other inquiries, please contact <a href="mailto:ryankrue@umich.edu">ryankrue@umich.edu</a></p>
+      <p>GeoBuilder is extensible in nature. Should you have any feature suggestions (e.g., new function symbols or predicates) or encounter any bugs, please open an issue on <a href="">GitHub</a>. For other inquiries, please contact <a href="mailto:ryankrue@umich.edu">ryankrue@umich.edu</a></p>
     </div>
 
     <!-- Footer -->
