@@ -360,13 +360,13 @@
               <span><code>LINE</code> and <code>CIRCLE</code> have no additional parameterizations, while one of the following optional parameterizations can be supplied for a <code>POINT P</code>:</span>
               <ul>
                 <li>
-                  <code>ONLINE P LINE-VAL</code>: Parameterize <code>P</code> on a line
+                  <code>(ONLINE P LINE-VAL)</code>: Parameterize <code>P</code> on a line
                 </li>
                 <li>
-                  <code>ONSEG P POINT-VAL POINT-VAL</code>: Parameterize <code>P</code> on the segment connecting two points
+                  <code>(ONSEG P POINT-VAL POINT-VAL)</code>: Parameterize <code>P</code> on the segment connecting two points
                 </li>
                 <li>
-                  <code>ONCIRC P CIRC-VAL</code>: Parameterize <code>P</code> on a circle
+                  <code>(ONCIRC P CIRC-VAL)</code>: Parameterize <code>P</code> on a circle
                 </li>
                 <!-- FIXME: Add parameterizations like insidePolygon -->
               </ul>
@@ -455,6 +455,36 @@
               </div>
             </div>
           </div>
+          <br>
+          <br>
+          <p>In addition to the standard grammar for parameterizations outlined above, there is an important variation of <code>PARAM</code> to introduce sets of points that form triangles and polygons. These variations take the following form:</p>
+          <br>
+          <blockquote class="blockquote text-center">
+            <p class="mb-0"><code>(PARAM (NAME, NAME, ..., NAME) PARAMETERIZATION)</code></p>
+          </blockquote>
+          <p>Note the ommission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to always infer the <code>TYPE</code> in a <code>COMPUTE</code> or <code>PARAM</code> command, it is generally enforced to improve readability.</p>
+          <span>The following values of <code>PARAMETERIZATION</code> are available:</span>
+          <ul>
+            <li>
+              <code>TRIANGLE</code>: Parameterize a list of three points as a triangle
+            </li>
+            <li>
+              <code>ACUTETRI</code>: Parameterize a list of three points as an acute triangle
+            </li>
+            <li>
+              <code>(ISOTRI NAME)</code>: Parameterize a list of three points as an isosceles triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (ISOTRI A))</code> introduces an isosceles triangle with <var>AB = AC</var>
+            </li>
+            <li>
+              <code>(ACUTEISOTRI NAME)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
+            </li>
+            <li>
+              <code>(RIGHTTRI NAME)</code>: Parameterize a list of three points as a right triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (RIGHTTRI A))</code> introduces an RIGHT triangle with a right angle at <var>&lt;BAC</var>
+            </li>
+            <li>
+              <code>POLYGON</code>: Parameterize a list of <var>n</var> points as a convex polygon
+            </li>
+          </ul>
+
         </li>
       </ul>
 
