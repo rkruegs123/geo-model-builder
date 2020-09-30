@@ -20,4 +20,4 @@
 (assert (perp G mCE C E))
 (assert (oppSides G B A C))
 
-(prove (para D E F G))
+(confirm (para D E F G))
