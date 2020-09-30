@@ -267,7 +267,7 @@
       <p><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</p>.
 
       <h2>Commands</h2>
-      <p>GeoBuilder generates models by translating a geometric constraint problem into a <strong>numerical optimization problem</strong> and solving it with off-the-shelf optimizers. The following (FIXME #) commands reflect this, and comprise the primary component of the DSL</p>
+      <p>GeoBuilder generates models by translating a geometric constraint problem into a <strong>numerical optimization problem</strong> and solving it with off-the-shelf optimizers. The following four commands reflect this, and comprise the primary component of the DSL</p>
       <ul>
         <!-- COMPUTE -->
         <li>
@@ -614,7 +614,21 @@
             </div>
           </div>
           <br>
-          <p>Detail on supported predicates (e.g., <code>PARA</code>, <code>COLL</code>) is provided in the following section</p>
+          <p>Detail on supported predicates (e.g., <code>PARA</code>, <code>COLL</code>) is provided in the following section</p>.
+        </li>
+        <!-- CONFIRM -->
+        <li>
+          <code>CONFIRM</code>: Filter final solutions by those in which <code>PRED</code> is satisfied. Like <code>ASSERT</code>, this command does not introduce any new geometric objects.
+          <br>
+          <br>
+          <div class="container-fluid">
+            <div class="container-fluid">
+              <blockquote class="blockquote text-center">
+                <p class="mb-0"><code>(CONFIRM PRED)</code></p>
+              </blockquote>
+            </div>
+          </div>
+          <p>Usage for <code>CONFIRM</code> is the same as that for <code>ASSERT</code>. The key distinction between <code>ASSERT</code> and <code>CONFIRM</code> is that <strong><code>CONFIRM</code> does not enforce <code>PRED</code> via numerical optimization</strong>. This command is most useful for those interested in integrating GeoBuilder with automated theorem provers. As many problem statements are of the form "If P, prove Q," one may wish to optimize directly for P while only confirming that Q holds in the model.</p>
         </li>
       </ul>
 
