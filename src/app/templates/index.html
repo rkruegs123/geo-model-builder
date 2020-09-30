@@ -57,17 +57,13 @@
 
           document.getElementById('upload-problem').addEventListener('change', handleFileSelect, false);
 
-      };
 
-      $(document).ready(function() {
           var dImg = document.getElementById('diagram-img');
           $(document).ajaxStart(function() {
               dImg.style.opacity = "0.5";
           }).ajaxStop(function() {
               dImg.style.opacity = "1.0";
           });
-
-          var cm = document.querySelector('.CodeMirror').CodeMirror;
 
           $('#solve-btn').click(function() {
               /*
@@ -100,7 +96,9 @@
                   }
               });
           });
-      });
+
+      };
+
 
     </script>
 
