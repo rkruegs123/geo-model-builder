@@ -264,6 +264,7 @@
       <ul>
         <li><code>NAME</code>: A string value that refers to the name of a geometric object (i.e., point, line, or circle). Refers to the name of an object of any type unless specified (e.g., <code>POINT-NAME</code>)</li>
         <li><code>VAL</code>: The value of a geometric object or numerical value. A value is denoted either by a <code>NAME</code> or a function (see <a href="">Functions and Predicates</a>). Like <code>NAME</code>, <code>VAL</code> is used in this tutorial to refer to a value of any type unless specified (e.g., <code>LINE-VAL</code>). Note that names cannot be given to numerical values</li>
+        <li><code>TYPE</code>: Can take one of three string values: <code>POINT</code>, <code>LINE</code>, or <code>CIRCLE</code></li>
       </ul>
       <p><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</p>.
 
@@ -282,26 +283,57 @@
               <div class="row">
                 <div class="col">
                   <div class="card border-success mb-3 mx-auto" style="max-width: 25rem;">
-                    <div class="card-header">Valid Usage</div>
+                    <div class="card-header text-success">Valid Usage</div>
                     <div class="card-body text-success">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(COMPUTE P POINT (INCENTER A B C))</code>
+                        </li>
+                        <li>
+                          <code>(COMPUTE GAMMA CIRCLE (INCIRCLE A B C))</code>
+                        </li>
+                        <li>
+                          <code>(COMPUTE L LINE (PERPBIS B C))</code>
+                        </li>
+                      </ul>
+                      <!--
                       <h5 class="card-title">Success card title</h5>
                       <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                      -->
                     </div>
                   </div>
                 </div>
                 <div class="col">
                   <div class="card border-danger mb-3 mx-auto" style="max-width: 25rem;">
-                    <div class="card-header">Invalid Usage</div>
-                    <div class="card-body text-danger">
-                      <h5 class="card-title">Danger card title</h5>
-                      <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                    <div class="card-header text-danger">Invalid Usage</div>
+                    <div class="card-body">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(COMPUTE X NUMBER (DIST A B))</code>
+                          <ul>
+                            <li>Numerical values cannot be named</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE P POINT (INCIRCLE A B C))</code>
+                          <ul>
+                            <li>The type of <code>VAL</code> must match <code>TYPE</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE P POINT A)</code>
+                          <ul>
+                            <li><code>VAL</code> cannot be a name (i.e., a string) as duplicate objects are not permitted</li>
+                          </ul>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
+          <p>Note that detail on functions used in the above examples (e.g., <code>INCENTER</code>, <code>DIST</code>) is provided in the next section</p>
         </li>
         <li><code>PARAM</code>:</li>
       </ul>
@@ -309,8 +341,6 @@
       <!--
 
           LOOK AT JESSES PROCESS_COMMAND
-
-           Compute: (compute NAME TYPE VAL). Introduces a geometric object called NAME and assigns it value VAL. VAL cannot be a string (as duplicate objects are not allowed), and the type of NAME and VAL must be the same (e.g., (compute POINT-NAME POINT POINT-VAL) is accepted while (compute POINT-NAME POINT CIRCLE-VAL) is not).
 
            Param: (param NAME TYPE OPTIONAL-REPARAM). Introduces a geometric object that is parameterized either by it's types default parameterization or the reparameterization. Certain reparameterizations are allowed for each type (see below). See the default parameterizations below.
 
@@ -339,6 +369,20 @@
       <h1>Contact</h1>
       <p>GeoBuilder is extensible in nature. Should you have any feature suggestions (e.g., new function symbols or predicates) or encounter any bugs, please open an issue on <a href="">Github</a>. For other inquiries, please contact <a href="mailto:ryankrue@umich.edu">ryankrue@umich.edu</a></p>
     </div>
+
+    <!-- Footer -->
+    <footer class="page-footer font-small bg-light">
+      <br>
+      <br>
+      <!--
+      <div class="footer-copyright text-center py-3">© 2020 Copyright:
+        <a href="https://mdbootstrap.com/"> MDBootstrap.com</a>
+      </div>
+      -->
+
+
+    </footer>
+    <!-- Footer -->
 
   </body>
 </html>
