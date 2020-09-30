@@ -227,6 +227,14 @@
                 <input class="form-control" type="number" value="1" id="example-number-input" disabled>
               </div>
             </div>
+            <!--
+            <div class="form-group">
+              <label for="point-distance">Min. Point Distance</label>
+              <div>
+                <input class="form-control" type="number" value="{{ FIXME default size}}" step="0.01" disabled>
+              </div>
+            </div>
+            -->
             <div class="form-group">
               <label for="upload-problem">Upload File</label>
               <input type="file" class="form-control-file" id="upload-problem">
@@ -252,12 +260,12 @@
       <p>All commands, predicates, and function symbols follow Lisp-style <a href="https://en.wikipedia.org/wiki/S-expression">s-expression</a> format.</p>
 
       <h2>Preliminaries</h2>
-      <p>This tutorial makes common use of the following notation</p>
+      <p>This tutorial makes common use of the following notation:</p>
       <ul>
         <li><code>NAME</code>: A string value that refers to the name of a geometric object (i.e., point, line, or circle). Refers to the name of an object of any type unless specified (e.g., <code>POINT-NAME</code>)</li>
         <li><code>VAL</code>: The value of a geometric object or numerical value. A value is denoted either by a <code>NAME</code> or a function (see <a href="">Functions and Predicates</a>). Like <code>NAME</code>, <code>VAL</code> is used in this tutorial to refer to a value of any type unless specified (e.g., <code>LINE-VAL</code>). Note that names cannot be given to numerical values</li>
       </ul>
-
+      <p><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</p>.
 
       <h2>Commands</h2>
       <p>GeoBuilder generates models by translating a geometric constraint problem into a numerical optimization problem and solving it with off-the-shelf optimizers. The following (FIXME #) commands reflect this, and comprise the primary grammar of the DSL</p>
@@ -279,16 +287,15 @@
 
            Note to Ryan: In prelminaries, state the PREDICATE is often short-handed to PRED and FUNCTION is often short-handed to FUNC.
 
-
       -->
 
       <h2>Functions and Predicates</h2>
-      <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, and numerical values as arguments. The following functions and predicates are the operations by which a user can define such objects for use in the above commands</p>
+      <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, numerical values, and predicates as arguments. The following functions and predicates are the operations by which a user can define such arguments for use in the above commands</p>
     </div>
 
     <div class="container-fluid">
       <h1>Examples</h1>
-      <p>The following examples are adapted from <a href="">previous IMO problems</a>, as well as problems found in <a href="">Evan Chen's "Euclidean Geometry in Mathematical Olympiads" (EGMO)</a>.</p>
+      <p>The following examples are adapted from <a href="">previous IMO problems</a>, as well as problems found in <a href="">Evan Chen&#39;s "Euclidean Geometry in Mathematical Olympiads" (EGMO)</a>.</p>
     </div>
 
     <div class="container-fluid">
