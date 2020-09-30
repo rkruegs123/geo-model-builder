@@ -284,7 +284,7 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  <div class="card border-success mb-3 mx-auto" style="max-width: 25rem;">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
                     <div class="card-header text-success">Valid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -298,7 +298,7 @@
                           <code>(COMPUTE L LINE (PERPBIS B C))</code>
                         </li>
                         <ul>
-                          <li>The <code>TYPE</code> and <code>VAL</code> match in all above commands</li>
+                          <li>The type of <code>VAL</code> is consistent with <code>TYPE</code> in all above commands</li>
                         </ul>
                       </ul>
 
@@ -306,7 +306,7 @@
                   </div>
                 </div>
                 <div class="col">
-                  <div class="card border-danger mb-3 mx-auto" style="max-width: 25rem;">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
                     <div class="card-header text-danger">Invalid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -373,7 +373,7 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  <div class="card border-success mb-3 mx-auto" style="max-width: 25rem;">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
                     <div class="card-header text-success">Valid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -412,7 +412,7 @@
                   </div>
                 </div>
                 <div class="col">
-                  <div class="card border-danger mb-3 mx-auto" style="max-width: 25rem;">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
                     <div class="card-header text-danger">Invalid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -476,12 +476,79 @@
               <code>(ACUTEISOTRI NAME)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
             </li>
             <li>
-              <code>(RIGHTTRI NAME)</code>: Parameterize a list of three points as a right triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (RIGHTTRI A))</code> introduces an RIGHT triangle with a right angle at <var>&lt;BAC</var>
+              <code>(RIGHTTRI NAME)</code>: Parameterize a list of three points as a right triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (RIGHTTRI A))</code> introduces a triangle with a right angle at <var>&lt;BAC</var>
             </li>
             <li>
               <code>POLYGON</code>: Parameterize a list of <var>n</var> points as a convex polygon
             </li>
           </ul>
+          <br>
+          <br>
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col">
+                <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card-header text-success">Valid Usage</div>
+                  <div class="card-body">
+                    <ul class="list-unstyled">
+                      <li>
+                        <code>(PARAM (A B C) TRIANGLE)</code>
+                        <ul>
+                          <li>Introduces three points, <code>A</code>, <code>B</code>, and <code>C</code> that form a triangle</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (A B C) (ISOTRI B))</code>
+                        <ul>
+                          <li>Introduce three points that form an isosceles triangle with <var>BA = BC</var></li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (A B C D E) POLYGON)</code>
+                        <ul>
+                          <li>Introduces five points, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, and <code>E</code>, that form a convex pentagon</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card-header text-danger">Invalid Usage</div>
+                  <div class="card-body">
+                    <ul class="list-unstyled">
+                      <li>
+                        <code>(PARAM (A B C D) TRIANGLE)</code>
+                        <ul>
+                          <li>Only lists of points of length three can be parameterized as a triangle</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (A B C) (ISOTRI D))</code>
+                        <ul>
+                          <li>The argument to <code>ISOTRI</code> must be a point in the isosceles triangle (i.e., a point being introduced)</li>
+                        </ul>
+                      </li>
+
+                      <li>
+                        <code>(PARAM (A, B) POLYGON)</code>
+                        <ul>
+                          <li>A polygon has at least three vertices</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (A B C) (POINT POINT POINT) TRIANGLE)</code>
+                        <ul>
+                          <li>Type information should not be included for commands introducing lists of points that form triangles/polygons</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
         </li>
       </ul>
