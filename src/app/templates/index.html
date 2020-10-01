@@ -257,96 +257,41 @@
       </ol>
       <p>All commands, predicates, and function symbols follow Lisp-style <a href="https://en.wikipedia.org/wiki/S-expression">s-expression</a> format.</p>
 
-      <h2>Preliminaries</h2>
-      <p>This tutorial makes common use of the following notation:</p>
-      <ul>
-        <li><code>NAME</code>: A string value that refers to the name of a geometric object (i.e., point, line, or circle). Refers to the name of an object of any type unless specified (e.g., <code>POINT-NAME</code>)</li>
-        <li><code>VAL</code>: The value of a geometric object or numerical value. A value is denoted either by a <code>NAME</code> or a function (see <a href="">Functions and Predicates</a>). Like <code>NAME</code>, <code>VAL</code> is used in this tutorial to refer to a value of any type unless specified (e.g., <code>LINE-VAL</code>). Note that names cannot be given to numerical values</li>
-        <li><code>TYPE</code>: Can take one of three string values: <code>POINT</code>, <code>LINE</code>, or <code>CIRCLE</code></li>
+      <h2 id="preliminaries">Preliminaries</h2>
+      <span>This tutorial makes use of the following notation:</span>
+      <ul class="mb-0">
+        <!-- <li><code>VAL</code>: The value of a geometric object or numerical value. A value is denoted either by a <code>NAME</code> or a function (see <a href="">Functions and Predicates</a>). Like <code>NAME</code>, <code>VAL</code> is used in this tutorial to refer to a value of any type unless specified (e.g., <code>LINE-VAL</code>). Note that names cannot be given to numerical values</li> -->
+        <li>The <code>TYPE</code> of a geometric object can take one of three values: <code>POINT</code>, <code>LINE</code>, or <code>CIRCLE</code></li>
+        <li>We use <code>&lt;&gt;</code> to denote an instance of a type. For example, <code>POINT</code> is an instance of <code>TYPE</code> while <code>&lt;POINT&gt;</code> is an instance of <code>POINT</code></li>
+        <li>
+          A <code>NAME</code> is a string value that refers to a geometric object
+          <ul>
+            <li><code>NAME</code>s are assigned to geometric objects with the <code>COMPUTE</code> and <code>PARAM</code> commands (see <a href="#commands">Commands</a>)</li>
+          </ul>
+          <span>Example: If the name <code>P</code> is assigned to the midpoint of two points <code>A</code> and <code>B</code> (e.g., with <code>(COMPUTE P POINT (MIDP A B))</code>), <code>P</code> is an instance of <code>POINT</code></span>
+        </li>
+        <li><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</li>.
       </ul>
-      <p><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</p>.
+      <span>Throughout the tutorial, we also refer to the following geometric objects:</span>
+      <ul class="mt-0">
+        <li><code>A</code>, <code>B</code>, and <code>C</code> are instances of <code>POINT</code></li>
+        <li><code>L1</code> and <code>L2</code> are instances of <code>LINE</code></li>
+        <li><code>C1</code> and <code>C2</code> are instances of <code>CIRCLE</code></li>
+      </ul>
 
-      <h2>Commands</h2>
+      <h2 id="commands">Commands</h2>
       <p>GeoBuilder generates models by translating a geometric constraint problem into a <strong>numerical optimization problem</strong> and solving it with off-the-shelf optimizers. The following four commands reflect this, and comprise the primary component of the DSL</p>
       <ul>
-        <!-- COMPUTE -->
-        <li>
-          <code>COMPUTE</code>: Introduces a geometric object called <code>NAME</code> of type <code>TYPE</code> and assigns it value <code>VAL</code>.
-          <br>
-          <br>
-          <div class="container-fluid">
-            <div class="container-fluid">
-              <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(COMPUTE NAME TYPE VAL)</code></p>
-              </blockquote>
-            </div>
-            <br>
-            <div class="container-fluid">
-              <div class="row">
-                <div class="col">
-                  <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
-                    <div class="card-header text-success">Valid Usage</div>
-                    <div class="card-body">
-                      <ul class="list-unstyled">
-                        <li>
-                          <code>(COMPUTE P POINT (INCENTER A B C))</code>
-                        </li>
-                        <li>
-                          <code>(COMPUTE GAMMA CIRCLE (INCIRCLE A B C))</code>
-                        </li>
-                        <li>
-                          <code>(COMPUTE L LINE (PERPBIS B C))</code>
-                        </li>
-                        <ul>
-                          <li>The type of <code>VAL</code> is consistent with <code>TYPE</code> in all above commands</li>
-                        </ul>
-                      </ul>
 
-                    </div>
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
-                    <div class="card-header text-danger">Invalid Usage</div>
-                    <div class="card-body">
-                      <ul class="list-unstyled">
-                        <li>
-                          <code>(COMPUTE X NUMBER (DIST A B))</code>
-                          <ul>
-                            <li>Numerical values cannot be named</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <code>(COMPUTE P POINT (INCIRCLE A B C))</code>
-                          <ul>
-                            <li>The type of <code>VAL</code> must match <code>TYPE</code></li>
-                          </ul>
-                        </li>
-                        <li>
-                          <code>(COMPUTE P POINT A)</code>
-                          <ul>
-                            <li><code>VAL</code> cannot be a name (i.e., a string) as duplicate objects are not permitted</li>
-                          </ul>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <br>
-          <p>Note that detail on functions used in the above examples (e.g., <code>INCENTER</code>, <code>DIST</code>) is provided in the next section</p>
-        </li>
         <!-- PARAM -->
         <li>
-          <code>PARAM</code>: Introduces a geometric object called <code>NAME</code> of type <code>TYPE</code> and parameterizes it either by the default parameterization for <code>TYPE</code> or by a supplied parameterization
+          <code>PARAM</code>: Assigns a <code>NAME</code> to a geometric object parameterized either by the default parameterization for <code>&lt;TYPE&gt;</code> or by a supplied parameterization
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(PARAM NAME TYPE OPTIONAL-PARAMETERIZATION)</code></p>
+                <p class="mb-0"><code>(PARAM &lt;STRING&gt; &lt;TYPE&gt; &lt;OPTIONAL-PARAMETERIZATION&gt;)</code></p>
               </blockquote>
               <span>Each type has the following default parameterization:</span>
               <ul>
@@ -356,16 +301,16 @@
               </ul>
               <br>
               <!-- FIXME: Shouldn't we be able to parameterize the origin/radius of a circle? -->
-              <span><code>LINE</code> and <code>CIRCLE</code> have no additional parameterizations, while one of the following optional parameterizations can be supplied for a <code>POINT P</code>:</span>
+              <span>There are no optional parameterizations for <code>LINE</code> and <code>CIRCLE</code>. One of the following optional parameterizations can be supplied for <code>POINT</code>:</span>
               <ul>
                 <li>
-                  <code>(ONLINE P LINE-VAL)</code>: Parameterize <code>P</code> on a line
+                  <code>(ONLINE &lt;LINE&gt;)</code>: Parameterized on a line
                 </li>
                 <li>
-                  <code>(ONSEG P POINT-VAL POINT-VAL)</code>: Parameterize <code>P</code> on the segment connecting two points
+                  <code>(ONSEG &lt;POINT&gt; &lt;POINT&gt;)</code>: Parameterized on the segment connecting two points
                 </li>
                 <li>
-                  <code>(ONCIRC P CIRC-VAL)</code>: Parameterize <code>P</code> on a circle
+                  <code>(ONCIRC &lt;CIRCLE&gt;)</code>: Parameterized on a circle
                 </li>
                 <!-- FIXME: Add parameterizations like insidePolygon -->
               </ul>
@@ -374,7 +319,7 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 38rem;">
                     <div class="card-header text-success">Valid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -385,15 +330,15 @@
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (ONLINE P (LINE A B)))</code>
+                          <code>(PARAM P POINT (ONLINE (LINE A B)))</code>
                           <ul>
                             <li>Introduces a point <code>P</code> parameterized on the line connecting <code>A</code> and <code>B</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (ONCIRC (C3 A B C)))</code>
+                          <code>(PARAM P POINT (ONCIRC C1))</code>
                           <ul>
-                            <li>Introduces a point <code>P</code> parameterized on the circumcircle of <code>A</code>, <code>B</code>, and <code>C</code></li>
+                            <li>Introduces a point <code>P</code> parameterized on <code>C1</code>
                           </ul>
                         </li>
                         <li>
@@ -413,7 +358,7 @@
                   </div>
                 </div>
                 <div class="col">
-                  <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 38rem;">
                     <div class="card-header text-danger">Invalid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -426,7 +371,7 @@
                         <li>
                           <code>(PARAM P POINT (INCIRCLE A B C))</code>
                           <ul>
-                            <li><code>INCIRCLE A B C</code> is not a valid parameterization of a point</li>
+                            <li><code>(INCIRCLE A B C)</code> is not a valid parameterization of a point</li>
                           </ul>
                         </li>
                         <li>
@@ -442,7 +387,7 @@
                           </ul>
                         </li>
                         <li>
-                          <code>(COMPUTE P POINT (MIDP A B))</code><br><code>(PARAM P POINT)</code>
+                          <code>(PARAM P POINT (ONCIRC C1))</code><br><code>(PARAM P POINT)</code>
                           <ul>
                             <li>Cannot introduce the same object twice</li>
                           </ul>
@@ -457,12 +402,11 @@
           <br>
           <br>
           <p>In addition to the standard grammar for parameterizations outlined above, there is an important variation of <code>PARAM</code> to introduce sets of points that form triangles and polygons. These variations take the following form:</p>
-          <br>
           <blockquote class="blockquote text-center">
-            <p class="mb-0"><code>(PARAM (NAME, NAME, ..., NAME) PARAMETERIZATION)</code></p>
+            <p class="mb-0"><code>(PARAM (&lt;STRING&gt;, &lt;STRING&gt;, ..., &lt;STRING&gt;) &lt;PARAMETERIZATION&gt;)</code></p>
           </blockquote>
-          <p>Note the ommission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to infer <code>TYPE</code> in a <code>COMPUTE</code> or <code>PARAM</code> command when possible, it is generally enforced to improve readability.</p>
-          <span>The following values of <code>PARAMETERIZATION</code> are available:</span>
+          <p>Note the ommission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to infer <code>TYPE</code> in a <code>PARAM</code> (or <code>COMPUTE</code>) command when possible, it is generally enforced to improve readability.</p>
+          <span>The following values of <code>&lt;PARAMETERIZATION&gt;</code> are available:</span>
           <ul>
             <li>
               <code>TRIANGLE</code>: Parameterize a list of three points as a triangle
@@ -471,13 +415,13 @@
               <code>ACUTETRI</code>: Parameterize a list of three points as an acute triangle
             </li>
             <li>
-              <code>(ISOTRI NAME)</code>: Parameterize a list of three points as an isosceles triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (ISOTRI A))</code> introduces an isosceles triangle with <var>AB = AC</var>
+              <code>(ISOTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as an isosceles triangle. <code>&lt;STRING&gt;</code> must be in the list of point names being parameterized. For example, <code>(PARAM (P Q R) (ISOTRI P))</code> introduces an isosceles triangle with <var>PQ = PR</var>
             </li>
             <li>
-              <code>(ACUTEISOTRI NAME)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
+              <code>(ACUTEISOTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
             </li>
             <li>
-              <code>(RIGHTTRI NAME)</code>: Parameterize a list of three points as a right triangle. <code>NAME</code> must be in the list of point names being parameterized. For example, <code>(PARAM (A B C) (RIGHTTRI A))</code> introduces a triangle with a right angle at <var>&lt;BAC</var>
+              <code>(RIGHTTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as a right triangle. <code>&lt;STRING&gt;</code> must be in the list of point names being parameterized. For example, <code>(PARAM (P Q R) (RIGHTTRI P))</code> introduces a triangle with a right angle at <var>&lt;QPR</var>
             </li>
             <li>
               <code>POLYGON</code>: Parameterize a list of <var>n</var> points as a convex polygon
@@ -488,26 +432,26 @@
           <div class="container-fluid">
             <div class="row">
               <div class="col">
-                <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
+                <div class="card border-success mb-3 mx-auto" style="max-width: 38rem;">
                   <div class="card-header text-success">Valid Usage</div>
                   <div class="card-body">
                     <ul class="list-unstyled">
                       <li>
-                        <code>(PARAM (A B C) TRIANGLE)</code>
+                        <code>(PARAM (P Q R) TRIANGLE)</code>
                         <ul>
-                          <li>Introduces three points, <code>A</code>, <code>B</code>, and <code>C</code> that form a triangle</li>
+                          <li>Introduces three points, <code>P</code>, <code>Q</code>, and <code>R</code> that form a triangle</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (A B C) (ISOTRI B))</code>
+                        <code>(PARAM (P Q R) (ISOTRI Q))</code>
                         <ul>
-                          <li>Introduce three points that form an isosceles triangle with <var>BA = BC</var></li>
+                          <li>Introduce three points that form an isosceles triangle with <var>QP = QR</var></li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (A B C D E) POLYGON)</code>
+                        <code>(PARAM (P Q R S T) POLYGON)</code>
                         <ul>
-                          <li>Introduces five points, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, and <code>E</code>, that form a convex pentagon</li>
+                          <li>Introduces five points, <code>P</code>, <code>Q</code>, <code>R</code>, <code>S</code>, and <code>T</code>, that form a convex pentagon</li>
                         </ul>
                       </li>
                     </ul>
@@ -515,33 +459,38 @@
                 </div>
               </div>
               <div class="col">
-                <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
+                <div class="card border-danger mb-3 mx-auto" style="max-width: 38rem;">
                   <div class="card-header text-danger">Invalid Usage</div>
                   <div class="card-body">
                     <ul class="list-unstyled">
                       <li>
-                        <code>(PARAM (A B C D) TRIANGLE)</code>
+                        <code>(PARAM (P Q R S) TRIANGLE)</code>
                         <ul>
                           <li>Only lists of points of length three can be parameterized as a triangle</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (A B C) (ISOTRI D))</code>
+                        <code>(PARAM (P Q R) (ISOTRI A))</code>
                         <ul>
                           <li>The argument to <code>ISOTRI</code> must be a point in the isosceles triangle (i.e., a point being introduced)</li>
                         </ul>
                       </li>
-
                       <li>
-                        <code>(PARAM (A B) POLYGON)</code>
+                        <code>(PARAM (P Q) POLYGON)</code>
                         <ul>
                           <li>A polygon has at least three vertices</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (A B C) (POINT POINT POINT) TRIANGLE)</code>
+                        <code>(PARAM (P Q R) (POINT POINT POINT) TRIANGLE)</code>
                         <ul>
                           <li>Type information should not be included for commands introducing lists of points that form triangles/polygons</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (P Q R))</code>
+                        <ul>
+                          <li>When parameterizing a list of points, <code>&lt;PARAMETERIZATION&gt;</code> is required</li>
                         </ul>
                       </li>
                     </ul>
@@ -552,22 +501,101 @@
           </div>
 
         </li>
-        <!-- ASSERT -->
+
+
+        <!-- COMPUTE -->
         <li>
-          <code>ASSERT</code>: Imposes a additional constraint <code>PRED</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>COMPUTE</code> or <code>PARAM</code>.
+          <code>COMPUTE</code>: Assigns a <code>NAME</code> to a geometric object computed from existing objects. <code>&lt;VALUE&gt;</code> is one of <code>&lt;POINT&gt;</code>, <code>&lt;LINE&gt;</code>, or <code>&lt;CIRCLE&gt;</code>.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(ASSERT PRED)</code></p>
+                <p class="mb-0"><code>(COMPUTE &lt;STRING&gt; &lt;TYPE&gt; &lt;VALUE&gt;)</code></p>
               </blockquote>
             </div>
             <br>
             <div class="container-fluid">
               <div class="row">
                 <div class="col">
-                  <div class="card border-success mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 38rem;">
+                    <div class="card-header text-success">Valid Usage</div>
+                    <div class="card-body">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(COMPUTE P POINT (INCENTER A B C))</code>
+                          <ul>
+                            <li><code>P</code> is assigned to the incenter of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE GAMMA CIRCLE (INCIRCLE A B C))</code>
+                          <ul>
+                            <li><code>GAMMA</code> is assigned to the incircle of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE L LINE (PERPBIS B C))</code>
+                          <ul>
+                            <li><code>L</code> is assigned to the perpendicular bisector of the segment connecting <code>B</code> and <code>C</code></li>
+                          </ul>
+                        </li>
+                      </ul>
+
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 38rem;">
+                    <div class="card-header text-danger">Invalid Usage</div>
+                    <div class="card-body">
+                      <ul class="list-unstyled">
+                        <li>
+                          <code>(COMPUTE X NUMBER (DIST A B))</code>
+                          <ul>
+                            <li>Numerical values cannot be named</li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE P POINT (INCIRCLE A B C))</code>
+                          <ul>
+                            <li>The type of <code>&lt;VALUE&gt;</code> must be consistent with <code>&lt;TYPE&gt;</code></li>
+                          </ul>
+                        </li>
+                        <li>
+                          <code>(COMPUTE P POINT A)</code>
+                          <ul>
+                            <li><code>&lt;VALUE&gt;</code> cannot be a <code>NAME</code> as duplicate objects are not permitted</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <p>Note that detail on functions used in the above examples (e.g., <code>INCENTER</code>, <code>DIST</code>) is provided in the next section</p>
+        </li>
+
+
+        <!-- ASSERT -->
+        <li>
+          <code>ASSERT</code>: Imposes an additional constraint <code>&lt;PRED&gt;</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>COMPUTE</code> or <code>PARAM</code>.
+          <br>
+          <br>
+          <div class="container-fluid">
+            <div class="container-fluid">
+              <blockquote class="blockquote text-center">
+                <p class="mb-0"><code>(ASSERT &lt;PRED&gt;)</code></p>
+              </blockquote>
+            </div>
+            <br>
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col">
+                  <div class="card border-success mb-3 mx-auto" style="max-width: 38rem;">
                     <div class="card-header text-success">Valid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -595,7 +623,7 @@
                   </div>
                 </div>
                 <div class="col">
-                  <div class="card border-danger mb-3 mx-auto" style="max-width: 35rem;">
+                  <div class="card border-danger mb-3 mx-auto" style="max-width: 38rem;">
                     <div class="card-header text-danger">Invalid Usage</div>
                     <div class="card-body">
                       <ul class="list-unstyled">
@@ -605,7 +633,12 @@
                             <li>Assertions are made one at a time</li>
                           </ul>
                         </li>
-                        <!-- FIXME: Could add an example that uses undeclared points, if we make clear that other points (e.g., A, B, C) HAVE already been introduced -->
+                        <li>
+                          <code>(ASSERT (COLL P Q R))</code>
+                          <ul>
+                            <li>Assertions cannot introduce geometric objects, and <code>P</code>, <code>Q</code>, and <code>R</code> have not been assigned (see <a href="#preliminaries">Preliminaries</a>)</li>
+                          </ul>
+                        </li>
                       </ul>
                     </div>
                   </div>
@@ -618,27 +651,20 @@
         </li>
         <!-- CONFIRM -->
         <li>
-          <code>CONFIRM</code>: Filter final solutions by those in which <code>PRED</code> is satisfied. Like <code>ASSERT</code>, this command does not introduce any new geometric objects.
+          <code>CONFIRM</code>: Filter final solutions by those in which <code>&lt;PRED&gt;</code> is satisfied. Like <code>ASSERT</code>, this command does not introduce any new geometric objects.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(CONFIRM PRED)</code></p>
+                <p class="mb-0"><code>(CONFIRM &lt;PRED&gt;)</code></p>
               </blockquote>
             </div>
           </div>
-          <p>Usage for <code>CONFIRM</code> is the same as that for <code>ASSERT</code>. The key distinction between <code>ASSERT</code> and <code>CONFIRM</code> is that <strong><code>CONFIRM</code> does not enforce <code>PRED</code> via numerical optimization</strong>. This command is most useful for those interested in integrating GeoBuilder with automated theorem provers. As many problem statements are of the form "If P, prove Q," one may wish to optimize directly for P while only confirming that Q holds in the model.</p>
+          <p>Usage for <code>CONFIRM</code> is the same as that for <code>ASSERT</code>. The key distinction between <code>ASSERT</code> and <code>CONFIRM</code> is that <strong><code>CONFIRM</code> does not enforce <code>&lt;PRED&gt;</code> via numerical optimization</strong>. This command is most useful for those interested in integrating GeoBuilder with automated theorem provers. As many problem statements are of the form "If X, prove Y," one may wish to optimize directly for X while only checking that Y holds in the final model.</p>
         </li>
       </ul>
 
-      <!--
-
-           Confirm: (confirm PRED). Introduces a constraint to filter final solutions, but a constraint that is not optimized over.
-
-           Note: Confirm may only be useful to people interested in automated theorem proving for problems of the form "Given a system that satisfies X constraints, prove Y". They may want to have X constraints and not optimize Y, but be assured Y holds in the model.
-
-      -->
 
       <h2>Functions and Predicates</h2>
       <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, numerical values, and predicates as arguments. The following functions and predicates are the operations by which a user can define such arguments for use in the above commands</p>
