@@ -5,7 +5,7 @@ import collections
 import itertools
 
 from instruction import *
-from cline import Line, Point
+from primitives import Line, Point
 
 # Also stores the points used to compute it
 class SlopeInterceptForm(collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])):

@@ -1,7 +1,7 @@
 import pdb
 import copy
 
-from cline import Line, Circle, Point
+from primitives import Line, Circle, Point
 from instruction import Compute, Parameterize, Assert, AssertNDG
 from util import *
 from constraint import Constraint

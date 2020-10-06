@@ -1,11 +1,19 @@
 from abc import ABC, abstractmethod
 import collections
+import numbers
 
 
 class Point(collections.namedtuple("Point", ["val"])):
     def __str__(self):
         if isinstance(self.val, str):
             return self.val
+        else:
+            return f"({self.val[0]} {' '.join([str(v) for v in self.val[1]])})"
+
+class Num(collections.namedtuple("Num", ["val"])):
+    def __str__(self):
+        if isinstance(self.val, numbers.Number):
+            return str(self.val)
         else:
             return f"({self.val[0]} {' '.join([str(v) for v in self.val[1]])})"
 

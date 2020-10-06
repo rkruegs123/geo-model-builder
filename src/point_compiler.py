@@ -7,7 +7,7 @@ from util import *
 from compile_state import CompileState
 from instruction import Assert, AssertNDG, Confirm, Sample
 from parse import parse_sexprs
-from cline import Point
+from primitives import Point
 
 class PointCompiler:
     def __init__(self, instructions, ps):

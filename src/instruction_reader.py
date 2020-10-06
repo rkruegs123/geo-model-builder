@@ -4,7 +4,7 @@ import argparse
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
 from parse import parse_sexprs
-from cline import Point, Line, Circle
+from primitives import Point, Line, Circle
 from util import Root
 
 
