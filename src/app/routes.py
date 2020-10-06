@@ -1,4 +1,4 @@
-from flask import render_template, request, Response, send_file
+from flask import render_template, request, Response, send_file, jsonify
 from app import app
 from io import StringIO, BytesIO
 import pdb
@@ -12,10 +12,6 @@ from util import DEFAULTS
 def index():
     return render_template('index.html')
 
-@app.route('/getimage')
-def get_img():
-    return "barney.jpg"
-
 @app.route('/solve', methods=['POST'])
 def solve():
     try:
@@ -24,17 +20,21 @@ def solve():
 
         args = DEFAULTS
         args['lines'] = lines
+        args['n_tries'] = 2
 
         figs = build(args, show_plot=False, encode_fig=True)
-        fig = figs[0]
+        urls = list()
 
-        img = BytesIO()
-        fig.savefig(img, format='png')
-        fig.close()
-        img.seek(0)
-        plot_url = base64.b64encode(img.getvalue()).decode()
+        for fig in figs:
+            img = BytesIO()
+            fig.savefig(img, format='png')
+            fig.close()
+            img.seek(0)
+            plot_url = base64.b64encode(img.getvalue()).decode()
+            urls.append(f"data:image/png;base64,{plot_url}")
 
-        return f"data:image/png;base64,{plot_url}"
+        return jsonify(srcs=urls)
+        # return f"data:image/png;base64,{plot_url}"
 
     except Exception as e:
         return Response(
