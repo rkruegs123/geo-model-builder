@@ -9,27 +9,64 @@ from util import Root
 
 
 class InstructionReader:
-    def __init__(self, lines):
+    def __init__(self, problem_lines):
         self.points = list()
         self.instructions = list()
-        self.lines = lines
+        self.problem_lines = problem_lines
 
-        cmds = parse_sexprs(self.lines)
+        self.problem_type = None
+
+        cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
             self.process_command(cmd)
+
+        print("INPUT INSTRUCTIONS:\n{instrs_str}".format(
+            instrs_str="\n".join([str(i) for i in self.instructions])))
+
+    def update_problem_type(self, p_type):
+        if p_type not in ["compile", "instructions"]:
+            raise RuntimeError(f"Invalid problem type: {p_type}")
+        if self.problem_type == "compile" and p_type == "instructions":
+            raise RuntimeError(f"Invalid problem statement")
+        elif self.problem_type == "instructions" and p_type == "compile":
+            raise RuntimeError(f"Invalid problem statement")
+        self.problem_type = p_type
+
+    def register_pt(self, p):
+        if p in self.points:
+            raise RuntimeError(f"[register_pt] Same point declared twice: {p}")
+        if not (isinstance(p, Point) and isinstance(p.val, str)):
+            raise RuntimeError(f"[register_pt] Invalid point: {p}")
+        self.points.append(p)
 
     def process_command(self, cmd):
         pred = cmd[0]
         if pred == "sample":
             self.sample(cmd)
+            self.update_problem_type("instructions")
         elif pred == "assert":
             self.add(cmd)
         elif pred == "compute":
             self.compute(cmd)
+            self.update_problem_type("instructions")
         elif pred == "confirm":
             self.confirm(cmd)
         elif pred == "param":
             self.param(cmd)
+            self.update_problem_type("instructions")
+        elif pred == "declare-points":
+            assert(len(cmd) > 1)
+            ps = cmd[1:]
+            ps = [self.process_point(p) for p in ps]
+            for p in ps:
+                self.register_pt(p)
+            self.update_problem_type("compile")
+        elif pred == "declare-point":
+            assert(len(cmd) == 2)
+            p = cmd[1]
+            p = self.process_point(p)
+            self.register_pt(p)
+            self.update_problem_type("compile")
         else:
             raise NotImplementedError(f"[InstructionReader.process_command] Command not supported: {pred}")
 
@@ -129,6 +166,8 @@ class InstructionReader:
 
 
     def process_constraint(self, constraint):
+        assert(isinstance(constraint, tuple))
+
         negate = (constraint[0] == "not")
         if negate:
             constraint = constraint[1]
@@ -142,7 +181,16 @@ class InstructionReader:
         cs = [t for t in args if isinstance(t, Circle)]
 
         # Validate
-        if pred == "concur":
+        if pred == "acutes":
+            assert(len(args) == 3)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "circumcenter":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "coll":
+            assert(len(args) == 3)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "concur":
             assert(len(args) == 3)
             assert(all([isinstance(t, Line) for t in args]))
         elif pred == "cong":
@@ -160,16 +208,21 @@ class InstructionReader:
         elif pred == "onCirc":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Circle))
-        elif pred == "para":
+        elif pred == "para" or pred == "perp":
             if len(args) == 2:
                 assert(all([isinstance(t, Line) for t in args]))
             elif len(args) == 4:
                 assert(all([isinstance(t, Point) for t in args]))
+                '''
                 l1 = Line("connecting", [args[0], args[1]])
                 l2 = Line("connecting", [args[2], args[3]])
                 args = [l1, l2]
+                '''
             else:
                 raise RuntimeError(f"Invalid para constraint {constraint}")
+        elif pred == "triangle":
+            assert(len(args) == 3)
+            assert(all([isinstance(t, Point) for t in args]))
         else:
             raise NotImplementedError(f"[process_constraint] Unsupported pred {pred}")
 
@@ -236,30 +289,41 @@ class InstructionReader:
     def process_line(self, l_info):
         l_pred = l_info[0]
         ps = [self.process_point(p) for p in l_info[1:]]
+        ret_line = None
         if l_pred == "line":
             assert(len(ps) == 2)
-            return Line("connecting", ps)
+            ret_line = Line("connecting", ps)
         elif l_pred == "perpAt":
             assert(len(ps) == 3)
-            return Line("perpAt", ps)
+            ret_line = Line("perpAt", ps)
         elif l_pred == "perpBis":
             assert(len(ps) == 2)
-            return Line("perpBis", ps)
+            ret_line = Line("perpBis", ps)
+
+        if ret_line is not None:
+            self.update_problem_type("instructions")
+            return ret_line
         else:
             raise NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
 
     def process_circle(self, c_info):
         c_pred = c_info[0]
         ps = [self.process_point(p) for p in c_info[1:]]
+        ret_circ = None
+
         if c_pred == "circ":
             assert(len(ps) == 3)
-            return Circle("c3", ps)
+            ret_circ = Circle("c3", ps)
         elif c_pred == "coa":
             assert(len(ps) == 2)
-            return Circle("coa", ps)
+            ret_circ = Circle("coa", ps)
         elif c_pred == "diam":
             assert(len(ps) == 2)
-            return Circle("diam", ps)
+            ret_circ = Circle("diam", ps)
+
+        if ret_circ is not None:
+            self.update_problem_type("instructions")
+            return ret_circ
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 

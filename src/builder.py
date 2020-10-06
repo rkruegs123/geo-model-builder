@@ -15,25 +15,23 @@ tf.disable_v2_behavior()
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
-    grammar = opts['grammar']
     lines = opts['lines']
     solver = opts['solver']
 
-    if grammar == "pointwise":
-        # Read the problem
-        compiler = PointCompiler(lines)
+    cmds = parse_sexprs(lines)
+    reader = InstructionReader(lines)
+    instructions = reader.instructions
 
-        # Compile to instructions
+
+    if reader.problem_type == "compile":
+        compiler = PointCompiler(instructions, reader.points)
         compiler.compile()
-        instructions = compiler.instructions
-    elif grammar == "instructions":
-        cmds = parse_sexprs(lines)
-        reader = InstructionReader(lines)
-        instructions = reader.instructions
-        for instr in instructions:
-            print(instr)
+        final_instructions = compiler.instructions
+    elif reader.problem_tpye == "instructions":
+        final_instructions = instructions
     else:
-        raise RuntimeError(f"Invalid grammar: {grammar}")
+        raise RuntimeError("[build] Did not properly set problem type")
+
 
     # Solve the constraint problem with the chosen solving method
     if solver == "tensorflow":
@@ -41,7 +39,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
         g = tf.Graph()
         with g.as_default():
 
-            solver = TfOptimizer(instructions, opts, g)
+            solver = TfOptimizer(final_instructions, opts, g)
             solver.preprocess()
             filtered_models = solver.solve()
             # print(filtered_models)
@@ -49,7 +47,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
     elif solver == "scipy":
         raise NotImplementedError("Scipy solver is deprecated")
         '''
-        solver = ScipyOptimizer(instructions, opts)
+        solver = ScipyOptimizer(final_instructions, opts)
         solver.preprocess()
         filtered_models = solver.solve()
         '''

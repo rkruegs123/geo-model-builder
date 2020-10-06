@@ -295,9 +295,9 @@
               </blockquote>
               <span>Each type has the following default parameterization:</span>
               <ul>
-                <li><code>POINT</code>: Parameterized by it's x- and y-coordinates</li>
-                <li><code>LINE</code>: Parameterized by it's coefficients in standard form (<var>ax + by = c</var>)</li>
-                <li><code>CIRCLE</code>: Parameterized by it's origin and radius (where the origin is parameterized as a point)</li>
+                <li><code>POINT</code>: Parameterized by its x- and y-coordinates</li>
+                <li><code>LINE</code>: Parameterized by its coefficients in standard form (<var>ax + by = c</var>)</li>
+                <li><code>CIRCLE</code>: Parameterized by its origin and radius (where the origin is parameterized as a point)</li>
               </ul>
               <br>
               <!-- FIXME: Shouldn't we be able to parameterize the origin/radius of a circle? -->
@@ -405,7 +405,7 @@
           <blockquote class="blockquote text-center">
             <p class="mb-0"><code>(PARAM (&lt;STRING&gt;, &lt;STRING&gt;, ..., &lt;STRING&gt;) &lt;PARAMETERIZATION&gt;)</code></p>
           </blockquote>
-          <p>Note the ommission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to infer <code>TYPE</code> in a <code>PARAM</code> (or <code>COMPUTE</code>) command when possible, it is generally enforced to improve readability.</p>
+          <p>Note the omission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to infer <code>TYPE</code> in a <code>PARAM</code> (or <code>COMPUTE</code>) command when possible, it is generally enforced to improve readability.</p>
           <span>The following values of <code>&lt;PARAMETERIZATION&gt;</code> are available:</span>
           <ul>
             <li>

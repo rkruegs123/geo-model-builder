@@ -10,45 +10,11 @@ from parse import parse_sexprs
 from cline import Point
 
 class PointCompiler:
-    def __init__(self, lines):
-        self.points = list()
-        self.constraints = list()
-        self.goals = list()
-        self.lines = lines
-
-        cmds = parse_sexprs(self.lines)
-        for cmd in cmds:
-            self.process_command(cmd)
-
-    def process_command(self, cmd):
-        head = cmd[0]
-        if head == "declare-points":
-            if self.points:
-                raise RuntimeError("Duplicate declaration of points")
-            self.points = [Point(p) for p in cmd[1:]]
-        elif head == "declare-point":
-            if len(cmd) != 2:
-                raise RuntimeError(f"Mal-formed declare-point cmd: {cmd}")
-            p = Point(cmd[1])
-            if p in self.points:
-                raise RuntimeError(f"Duplicate point encountered: {p}")
-            self.points.append(p)
-        else:
-            term = cmd[1]
-            if not isinstance(term, tuple):
-                raise RuntimeError(f"Malformed command: {cmd}")
-            negate = (term[0] == 'not')
-            if negate:
-                term = term[1]
-            pred = term[0]
-            ps = [Point(p) for p in list(term[1:])]
-            constraint = Constraint(pred=pred, args=ps, negate=negate)
-            if head == "assert":
-                self.constraints.append(constraint)
-            elif head == "confirm":
-                self.goals.append(constraint)
-            else:
-                raise RuntimeError(f"Unrecognized command: {cmd}")
+    def __init__(self, instructions, ps):
+        assert(all([isinstance(i, Assert) or isinstance(i, Confirm) for i in instructions]))
+        self.points = ps
+        self.constraints = [i.constraint for i in instructions if isinstance(i, Assert)]
+        self.goals = [i.constraint for i in instructions if isinstance(i, Confirm)]
 
 
     def preprocess(self):
@@ -70,13 +36,13 @@ class PointCompiler:
         aux_cs = [c for c in self.sample_bucket.assertions if not is_sample_pred(c.pred)]
 
         if aux_cs and not sample_cs:
-            raise RuntimeException("Mishandled sampling constraints")
+            raise RuntimeError("Mishandled sampling constraints")
 
         if not sample_cs:
             return sample_instructions
         elif len(sample_cs) > 1:
             pdb.set_trace()
-            raise RuntimeException("Unexpected sampling")
+            raise RuntimeError("Unexpected sampling")
 
         sampler = sample_cs[0]
 
@@ -122,7 +88,7 @@ class PointCompiler:
         for c in self.solve_bucket.assertions:
             for p in (c.args):
                 if p not in all_bucketed_points:
-                    raise RuntimeException("unexpected point " ++ str(p))
+                    raise RuntimeError(f"unexpected point {p}")
         return
 
     def solve_bucket_2_instructions(self):
@@ -156,7 +122,7 @@ class PointCompiler:
         print(instructions_str)
 
     def __str__(self):
-        return '\nPOINTWISE PROBLEM:\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
+        return '\nCOMPILED INSTRUCTIONS:\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(
             header='-' * 9,
             pts=' '.join([str(p) for p in self.points]),
             cs='\n\t'.join([str(c) for c in self.constraints]),
