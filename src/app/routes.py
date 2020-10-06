@@ -1,5 +1,8 @@
-from flask import render_template, request, Response
+from flask import render_template, request, Response, send_file
 from app import app
+from io import StringIO, BytesIO
+import pdb
+import base64
 
 from builder import build
 from util import DEFAULTS
@@ -22,10 +25,17 @@ def solve():
         args = DEFAULTS
         args['lines'] = lines
 
-        build(args, show_plot=False, save_plot=True, outf_prefix="app/static/img/diagram")
+        figs = build(args, show_plot=False, encode_fig=True)
+        fig = figs[0]
 
-        # print(lines)
-        return "diagram_0.png"
+        img = BytesIO()
+        fig.savefig(img, format='png')
+        fig.close()
+        img.seek(0)
+        plot_url = base64.b64encode(img.getvalue()).decode()
+
+        return f"data:image/png;base64,{plot_url}"
+
     except Exception as e:
         return Response(
             "Invalid input",

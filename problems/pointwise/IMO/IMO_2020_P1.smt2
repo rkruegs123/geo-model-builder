@@ -14,5 +14,3 @@
 
 (assert (midp Mab A B))
 (confirm (perp X Mab A B))
-
-;; FIXME - We have a problem with assertion_vals for triangle/acutes/poly, etc. HAve to clean up the trello

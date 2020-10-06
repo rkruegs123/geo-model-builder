@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import os
 
 class Diagram(collections.namedtuple("Diagram", ["points", "segments", "circles", "ndgs", "goals"])):
-    def plot(self, show=True, save=False, fname=None):
+    def plot(self, show=True, save=False, fname=None, return_fig=False):
         xs = [p.x for p in self.points.values()]
         ys = [p.y for p in self.points.values()]
         names = [n for n in self.points.keys()]
 
-        fit, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.scatter(xs, ys)
         for i, n in enumerate(names):
             ax.annotate(n, (xs[i], ys[i]))
@@ -23,6 +23,10 @@ class Diagram(collections.namedtuple("Diagram", ["points", "segments", "circles"
             ax.add_artist(circle)
 
         plt.axis('square')
+
+        if return_fig:
+            return plt
+
         if show:
             plt.show()
         if save:

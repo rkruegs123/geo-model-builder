@@ -14,14 +14,13 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 tf.disable_v2_behavior()
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
+def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=False):
     lines = opts['lines']
     solver = opts['solver']
 
     cmds = parse_sexprs(lines)
     reader = InstructionReader(lines)
     instructions = reader.instructions
-
 
     if reader.problem_type == "compile":
         compiler = PointCompiler(instructions, reader.points)
@@ -57,5 +56,8 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None):
         raise NotImplementedError(f"Solver not implemented: {solver}")
 
     print(f"\n\nFound {len(filtered_models)} models")
+    figs = list()
     for i, m in enumerate(filtered_models):
-        m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png")
+        # m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png")
+        figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig))
+    return figs

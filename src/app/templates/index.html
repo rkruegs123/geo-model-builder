@@ -88,7 +88,7 @@
                   },
                   success: function(response) {
                       console.log(response);
-                      $("#diagram-img").attr('src', '/static/img/' + response + "?" + new Date().getTime());
+                      $("#diagram-img").attr('src', response);
                   },
                   error: function(err) {
                       console.log(err.responseText)
