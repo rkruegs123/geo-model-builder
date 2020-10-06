@@ -203,8 +203,14 @@ class InstructionReader:
         elif pred == "eq":
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "ibisector":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "insidePolygon":
             assert(len(args) >= 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "midp":
+            assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onLine":
             assert(len(args) == 2)
