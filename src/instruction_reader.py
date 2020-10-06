@@ -4,8 +4,8 @@ import argparse
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
 from parse import parse_sexprs
-from primitives import Point, Line, Circle
-from util import Root
+from primitives import Point, Line, Circle, Num
+from util import Root, is_number
 
 
 class InstructionReader:
@@ -238,10 +238,13 @@ class InstructionReader:
                 try:
                     return self.process_circle(term)
                 except:
-                    raise RuntimeError(f"Term {term} not a point/line/circle")
+                    try:
+                        return self.process_number(term)
+                    except:
+                        raise RuntimeError(f"Term {term} not a point/line/circle")
 
     def process_point(self, p_info):
-        if isinstance(p_info, str):
+        if isinstance(p_info, str) and not is_number(p_info):
             return Point(p_info)
         if not isinstance(p_info, tuple):
             raise NotImplementedError(f"[process_point] p_info must be tuple or string")
@@ -326,6 +329,24 @@ class InstructionReader:
             return ret_circ
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
+
+    def process_number(self, n_info):
+        if isinstance(n_info, str) and is_number(n_info):
+            return Num(float(n_info))
+        if not isinstance(n_info, tuple):
+            raise NotImplementedError(f"[process_number] n_info must be tuple or string")
+
+        n_pred = n_info[0]
+        n_args = n_info[1:]
+        if n_pred == "dist":
+            assert(len(n_args) == 2)
+            p1 = self.process_point(n_args[0])
+            p2 = self.process_point(n_args[1])
+            n_val = ("dist", [p1, p2])
+            return Num(n_val)
+        else:
+            raise NotImplementedError(f"[process_number] Unsupporrted number pred: {n_pred}")
+
 
     def process_rs(self, rs_info):
         rs_pred = rs_info[0]

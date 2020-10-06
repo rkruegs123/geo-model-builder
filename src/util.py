@@ -49,3 +49,10 @@ DEFAULTS = {
     "regularize_points": 1e-6,
     "solver": "tensorflow"
 }
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
