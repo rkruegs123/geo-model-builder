@@ -5,7 +5,8 @@ import collections
 import itertools
 
 from instruction import *
-from primitives import Line, Point
+from primitives import Line, Point, Circle, Num
+from util import is_number
 
 # Also stores the points used to compute it
 class SlopeInterceptForm(collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])):
@@ -95,6 +96,26 @@ class Optimizer(ABC):
                 else:
                     raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
         return p_vals
+
+    def eval_num(self, n_info):
+        n_val = n_info.val
+        if not isinstance(n_val, tuple) and is_number(n_val):
+            return self.const(n_val)
+
+        n_pred = n_val[0]
+        n_args = n_val[1]
+
+        if n_pred == "dist":
+            p1, p2 = self.lookup_pts(n_args)
+            return self.dist(p1, p2)
+        elif n_pred == "uangle":
+            p1, p2, p3 = self.lookup_pts(n_args)
+            return self.angle(p1, p2, p3)
+        elif n_pred == "div":
+            n1, n2 = [self.eval_num(n) for n in n_args]
+            return n1 / n2
+        else:
+            raise NotImplementedError(f"[eval_num] Unsupported pred {n_pred}")
 
     @abstractmethod
     def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):
@@ -605,6 +626,9 @@ class Optimizer(ABC):
         elif pred == "distGt":
             X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
+        elif pred == "eq":
+            n1, n2 = [self.eval_num(n) for n in args]
+            return [n1 - n2]
         elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(args))]
         elif pred == "eqoangle":
             A, B, C, P, Q, R = self.lookup_pts(args)

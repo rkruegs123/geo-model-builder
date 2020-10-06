@@ -18,15 +18,23 @@ class PointCompiler:
 
 
     def preprocess(self):
-        sample_points = [p for c in self.constraints for p in c.args if is_sample_pred(c.pred)]
-        cs_with_sampled_points = [c for c in self.constraints if not c.negate and set(c.args).issubset(set(sample_points))]
+        self.ndgs = [Constraint(c.pred, c.args, False) for c in self.constraints if c.negate]
+        cs_to_consider = [c for c in self.constraints if not c.negate]
+        cs_with_function_symbols = [c for c in cs_to_consider if
+                                    not all([isinstance(arg, Point) and isinstance(arg.val, str) for arg in c.args])]
+        self.final_asserts = cs_with_function_symbols
+
+        cs_without_funcs = [c for c in cs_to_consider if c not in cs_with_function_symbols]
+
+        sample_points = [p for c in cs_without_funcs for p in c.args if is_sample_pred(c.pred)]
+        cs_with_sampled_points = [c for c in cs_without_funcs if not c.negate and set(c.args).issubset(set(sample_points))]
         self.sample_bucket = Bucket(points=sample_points, assertions=cs_with_sampled_points)
 
         solve_points = [p for p in self.points if p not in sample_points] # maintain order
-        cs_to_solve = [c for c in self.constraints if not set(c.args).issubset(set(sample_points)) and not c.negate]
+        cs_to_solve = [c for c in cs_without_funcs if not set(c.args).issubset(set(sample_points)) and not c.negate]
         self.solve_bucket = Bucket(points=solve_points, assertions=cs_to_solve)
 
-        self.ndgs = [Constraint(c.pred, c.args, False) for c in self.constraints if c.negate]
+
 
 
     def sample_bucket_2_instructions(self):
@@ -112,6 +120,7 @@ class PointCompiler:
         solve_instructions = self.solve_bucket_2_instructions()
         self.instructions += solve_instructions
 
+        self.instructions += [Assert(c) for c in self.final_asserts]
         self.instructions += [AssertNDG(c) for c in self.ndgs]
         self.instructions += [Confirm(c) for c in self.goals]
 

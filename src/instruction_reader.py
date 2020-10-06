@@ -179,6 +179,7 @@ class InstructionReader:
         ps = [t for t in args if isinstance(t, Point)]
         ls = [t for t in args if isinstance(t, Line)]
         cs = [t for t in args if isinstance(t, Circle)]
+        ns = [t for t in args if isinstance(t, Num)]
 
         # Validate
         if pred == "acutes":
@@ -197,6 +198,12 @@ class InstructionReader:
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "cycl":
+            assert(len(args) >= 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "eq":
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "insidePolygon":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onLine":
@@ -220,6 +227,9 @@ class InstructionReader:
                 '''
             else:
                 raise RuntimeError(f"Invalid para constraint {constraint}")
+        elif pred == "polygon":
+            assert(len(args) >= 3)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
@@ -343,6 +353,16 @@ class InstructionReader:
             p1 = self.process_point(n_args[0])
             p2 = self.process_point(n_args[1])
             n_val = ("dist", [p1, p2])
+            return Num(n_val)
+        elif n_pred == "uangle":
+            assert(len(n_args) == 3)
+            p1, p2, p3 = [self.process_point(p) for p in n_args]
+            n_val = ("uangle", [p1, p2, p3])
+            return Num(n_val)
+        elif n_pred == "div":
+            assert(len(n_args) == 2)
+            n1, n2 = [self.process_number(n) for n in n_args]
+            n_val = ("div", [n1, n2])
             return Num(n_val)
         else:
             raise NotImplementedError(f"[process_number] Unsupporrted number pred: {n_pred}")
