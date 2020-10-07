@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}" />
 
 
+
     <script type="text/javascript">
 
       window.onload = function () {
@@ -57,12 +58,17 @@
 
           document.getElementById('upload-problem').addEventListener('change', handleFileSelect, false);
 
-
-          var dImg = document.getElementById('diagram-img');
+          // var dImg = document.getElementById('diagram-img');
           $(document).ajaxStart(function() {
-              dImg.style.opacity = "0.5";
+              $("img.d-block").each(function (index, element){
+                  element.style.opacity = "0.5";
+              });
+              // dImg.style.opacity = "0.5";
           }).ajaxStop(function() {
-              dImg.style.opacity = "1.0";
+              $("img.d-block").each(function (index, element){
+                  element.style.opacity = "1.0";
+              });
+              // dImg.style.opacity = "1.0";
           });
 
           $('#solve-btn').click(function() {
@@ -78,34 +84,50 @@
                   success: function(response) {
                       console.log(response);
 
-                      var carousel_inner = "";
-                      var i;
-                      for (i = 0; i < response['srcs'].length; i++) {
-                          var tmp_src = response['srcs'][i];
-                          var first_div_line = "<div class=\"carousel-item\">";
-                          if (i == 0) {
-                              first_div_line = "<div class=\"carousel-item active\">";
-                          }
-                          carousel_inner +=
-                              first_div_line +
-                              "<img src=" + tmp_src + " class=\"d-block w-100\"></div>";
-                      }
-                      document.getElementById('myCarousel').innerHTML = carousel_inner
+                      if (response['srcs'].length == 0) {
 
-                      var carousel_targets = "";
-                      for (i = 0; i < response['srcs'].length; i++) {
-                          if (i == 0) {
-                              carousel_targets +=
-                                  "<li data-target=\"#carouselExampleControls\" data-slide-to=\"0\" class=\"active\"></li>"
-                          } else {
-                              carousel_targets +=
-                                  "<li data-target=\"#carouselExampleControls\" data-slide-to=\"" + i.toString + "\"></li>"
-                          }
-                      }
-                      document.getElementById('carousel-targets').innerHTML = carousel_targets;
 
-                      document.getElementById("alerts").innerHTML =
-                          "<div class=\"alert alert-success\" role=\"alert\">Success: Found " + response['srcs'].length.toString() + " diagrams</div>";
+                          document.getElementById("alerts").innerHTML =
+                              "<div class=\"alert alert-danger\" role=\"alert\">Failure: Found 0 diagrams</div>";
+                          document.getElementById('myCarousel').innerHTML =
+                              "<div class=\"carousel-item active\"><img src=\"{{ url_for('static',filename='img/empty-diag.jpg') }}\" class=\"d-block w-100\" alt=\"Image 1\" id=\"diagram-img\"></div>";
+
+                          document.getElementById('carousel-targets').innerHTML = "<li data-target=\"#carouselExampleControls\" data-slide-to=\"0\" class=\"active\"></li>";
+
+                      } else {
+
+                          var carousel_inner = "";
+                          var i;
+                          for (i = 0; i < response['srcs'].length; i++) {
+                              var tmp_src = response['srcs'][i];
+                              var first_div_line = "<div class=\"carousel-item\">";
+                              if (i == 0) {
+                                  first_div_line = "<div class=\"carousel-item active\">";
+                              }
+                              carousel_inner +=
+                                  first_div_line +
+                                  "<img src=" + tmp_src + " class=\"d-block w-100\"></div>";
+                          }
+                          document.getElementById('myCarousel').innerHTML = carousel_inner
+
+                          var carousel_targets = "";
+                          for (i = 0; i < response['srcs'].length; i++) {
+                              if (i == 0) {
+                                  carousel_targets +=
+                                      "<li data-target=\"#carouselExampleControls\" data-slide-to=\"0\" class=\"active\"></li>"
+                              } else {
+                                  carousel_targets +=
+                                      "<li data-target=\"#carouselExampleControls\" data-slide-to=\"" + i.toString + "\"></li>"
+                              }
+                          }
+                          document.getElementById('carousel-targets').innerHTML = carousel_targets;
+
+                          document.getElementById("alerts").innerHTML =
+                              "<div class=\"alert alert-success\" role=\"alert\">Success: Found " + response['srcs'].length.toString() + " diagrams</div>";
+
+                          $('.carousel').carousel()
+
+                      }
 
                       // $("#diagram-img").attr('src', response['srcs'][0]);
                   },
@@ -113,6 +135,10 @@
                       console.log(err.responseText)
                       document.getElementById("alerts").innerHTML =
                           "<div class=\"alert alert-danger\" role=\"alert\"><h4 class=\"alert-heading\">Failure!</h4><span>Some common sources of error</span><ul><li>Malformed input</li><li>Invalid command/function/predicate</li></ul></div>";
+                      document.getElementById('myCarousel').innerHTML =
+                              "<div class=\"carousel-item active\"><img src=\"{{ url_for('static',filename='img/empty-diag.jpg') }}\" class=\"d-block w-100\" alt=\"Image 1\" id=\"diagram-img\"></div>";
+                      document.getElementById('carousel-targets').innerHTML =
+                          "<li data-target=\"#carouselExampleControls\" data-slide-to=\"0\" class=\"active\"></li>";
                   }
               });
           });
@@ -217,7 +243,6 @@
     </div>
     <div class="container-fluid">
       <button type="button" id="solve-btn" class="btn btn-primary btn-lg btn-block">Build!</button>
-
     </div>
     <div class="container-fluid">
       <p id="error"></p>

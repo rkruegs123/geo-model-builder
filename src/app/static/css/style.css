@@ -6,9 +6,17 @@
    background-image: url('https://apufpel.com.br/assets/img/seta_ult.png')
  }
 
- .carousel-indicators .active {
-     background-color: black;
- }
+
+#carousel-targets li {
+  background-color: grey;
+  background-color: grey;
+}
+
+#carousel-targets .active {
+  background-color: black;
+}
+
+
 
  .CodeMirror {
      font-size: 20px;
