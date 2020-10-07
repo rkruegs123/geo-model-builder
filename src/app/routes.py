@@ -15,12 +15,12 @@ def index():
 @app.route('/solve', methods=['POST'])
 def solve():
     try:
-        jsdata = request.form['hi']
+        jsdata = request.form['problem_input']
         lines = str(jsdata).split('\n')
 
         args = DEFAULTS
         args['lines'] = lines
-        args['n_tries'] = 2
+        args['n_tries'] = int(request.form['n_tries'])
 
         figs = build(args, show_plot=False, encode_fig=True)
         urls = list()
