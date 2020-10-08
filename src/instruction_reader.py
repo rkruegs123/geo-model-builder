@@ -419,28 +419,33 @@ class InstructionReader:
 
         c_pred = c_info[0]
         ps = [self.process_point(p) for p in c_info[1:]]
-        ret_circ = None
+        c_val = None
 
         if c_pred == "circ":
             assert(len(ps) == 3)
             c_val = FuncInfo("c3", ps)
-            ret_circ = Circle(c_val)
         elif c_pred == "coa":
             assert(len(ps) == 2)
             c_val = FuncInfo("coa", ps)
-            ret_circ = Circle(c_val)
         elif c_pred == "diam":
             assert(len(ps) == 2)
             c_val = FuncInfo("diam", ps)
-            ret_circ = Circle(c_val)
         elif c_pred == "circumcircle":
             assert(len(ps) == 3)
             c_val = FuncInfo("circumcircle", ps)
-            ret_circ = Circle(c_val)
+        elif c_pred == "incircle":
+            assert(len(ps) == 3)
+            c_val = FuncInfo("incircle", ps)
+        elif c_pred == "excircle":
+            assert(len(ps) == 3)
+            c_val = FuncInfo("excircle", ps)
+        elif c_pred == "mixtilinearIncircle":
+            assert(len(ps) == 3)
+            c_val = FuncInfo("mixtilinearIncircle", ps)
 
-        if ret_circ is not None:
+        if c_val is not None:
             self.update_problem_type("instructions")
-            return ret_circ
+            return Circle(c_val)
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 

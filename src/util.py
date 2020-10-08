@@ -1,5 +1,8 @@
 import collections
 import pdb
+import random
+import string
+
 
 class Root(collections.namedtuple("Root", ["pred", "vars"])):
     def __str__(self):
@@ -57,3 +60,10 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+
+
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    return result_str

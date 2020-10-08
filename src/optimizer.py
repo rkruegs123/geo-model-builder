@@ -73,27 +73,63 @@ class Optimizer(ABC):
     def simplify(self, p, method="all"):
         pass
 
+    def lookup_pt(self, p, name=None):
+        if isinstance(p.val, str): # Base case
+            return self.name2pt[p]
+
+        if isinstance(p.val, FuncInfo):
+            head, args = p.val
+            if head == "midp": return self.midp(*self.lookup_pts(args))
+            elif head == "circumcenter": return self.circumcenter(*self.lookup_pts(args))
+            elif head == "orthocenter": return self.orthocenter(*self.lookup_pts(args))
+            elif head == "incenter": return self.incenter(*self.lookup_pts(args))
+            elif head == "centroid": return self.centroid(*self.lookup_pts(args))
+            elif head == "amidpOpp": return self.amidp_opp(*self.lookup_pts(args))
+            elif head == "amidpSame": return self.amidp_same(*self.lookup_pts(args))
+            elif head == "excenter": return self.excenter(*self.lookup_pts(args))
+            elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
+            elif head == "interLL":
+                l1, l2 = args
+                sf1 = self.line2sf(l1)
+                sf2 = self.line2sf(l2)
+                return self.inter_ll(sf1, sf2)
+            elif head == "interLC":
+                l, c, root_select = args
+                l_sf = self.line2sf(l)
+                cnf = self.circ2nf(c)
+                if name:
+                    self.make_lc_intersect(name, l_sf, cnf)
+                else:
+                    # Use random name as point is unnamed, but we still want to force LC to intersect
+                    rand_name = get_random_string(6)
+                    self.make_lc_intersect(rand_name, l_sf, cnf)
+                return self.inter_lc(l_sf, cnf, root_select)
+            elif head == "interCC":
+                c1, c2, root_select = args
+                cnf1 = self.circ2nf(c1)
+                cnf2 = self.circ2nf(c2)
+                if name:
+                    self.make_lc_intersect(name, self.radical_axis(cnf1, cnf2), cnf1)
+                else:
+                    # Use random name as point is unnamed, but we still want to force LC to intersect
+                    rand_name = get_random_string(6)
+                    self.make_lc_intersect(rand_name, self.radical_axis(cnf1, cnf2), cnf1)
+                return self.inter_cc(cnf1, cnf2, root_select)
+            elif head == "isogonal": return self.isogonal(*self.lookup_pts(args))
+            elif head == "isotomic": return self.isotomic(*self.lookup_pts(args))
+            elif head == "inverse": return self.inverse(*self.lookup_pts(args))
+            elif head == "midpFrom": return self.midp_from(*self.lookup_pts(args))
+            elif head == "mixtilinearIncenter": return self.mixtilinear_incenter(*self.lookup_pts(args))
+
+            else:
+                raise NotImplementedError(f"[lookup_pt] Unsupported head {head}")
+        else:
+            raise RuntimeError("Invalid point type")
+
     def lookup_pts(self, ps):
         p_vals = list()
         for p in ps:
-            if isinstance(p.val, str):
-                p_vals.append(self.name2pt[p])
-            elif isinstance(p.val, FuncInfo):
-                head, args = p.val
-                if head == "midp":
-                    p_vals.append(self.midp(*self.lookup_pts(args)))
-                elif head == "circumcenter":
-                    p_vals.append(self.circumcenter(*self.lookup_pts(args)))
-                elif head == "orthocenter":
-                    p_vals.append(self.orthocenter(*self.lookup_pts(args)))
-                elif head == "incenter":
-                    p_vals.append(self.incenter(*self.lookup_pts(args)))
-                elif head == "centroid":
-                    p_vals.append(self.centroid(*self.lookup_pts(args)))
-                else:
-                    raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
-            else:
-                raise RuntimeError("Invalid point type")
+            p_vals.append(self.lookup_pt(p))
         return p_vals
 
     def eval_num(self, n_info):
@@ -341,6 +377,38 @@ class Optimizer(ABC):
         obj_name = i.obj_name
         c_method = i.computation.val[0]
         c_args = i.computation.val
+        if isinstance(i.computation, Point):
+            P = self.lookup_pt(i.computation, str(obj_name))
+            self.register_pt(obj_name, P)
+
+            # Add drawings
+            if c_method == "midp":
+                A, B = self.lookup_pts(c_args[1])
+                self.segments.append((A, B))
+            elif c_method == "midpFrom":
+                M, A = self.lookup_pts(c_args[1])
+                self.segments.append((P, A))
+            elif c_method == "circumcenter":
+                A, _, _ = self.lookup_pts(c_args[1])
+                self.circles.append((P, self.dist(P, A))) # P is the circumcenter
+            elif c_method == "incenter":
+                A, B, C = self.lookup_pts(c_args[1])
+                self.circles.append((P, self.inradius(A, B, C))) # P is the incenter
+            elif c_method == "excenter":
+                A, B, C = self.lookup_pts(c_args[1])
+                self.circles.append((P, self.exradius(A, B, C))) # P is the excenter
+            elif c_method == "mixtilinearIncenter":
+                A, B, C = self.lookup_pts(c_args[1])
+                self.circles.append((P, self.mixtilinear_inradius(A, B, C))) # P is the mixtilinearIncenter
+            elif c_method == "inverse":
+                X, O, A = self.lookup_pts(c_args[1])
+                self.circles.append((O, self.dist(O, A)))
+            elif c_method == "harmonicLConj":
+                X, A, B = self.lookup_pts(ps)
+                self.segments.append((A, B))
+                self.segments.append((X, P))
+
+        '''
         if c_method == "amidpOpp": self.compute_amidp_opp(obj_name, c_args[1])
         elif c_method == "amidpSame": self.compute_amidp_same(obj_name, c_args[1])
         elif c_method == "centroid": self.compute_centroid(obj_name, c_args[1])
@@ -358,6 +426,8 @@ class Optimizer(ABC):
         elif c_method == "midpFrom": self.compute_midp_from(obj_name, c_args[1])
         elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(obj_name, c_args[1])
         elif c_method == "orthocenter": self.compute_orthocenter(obj_name, c_args[1])
+        '''
+
         elif isinstance(i.computation, Line):
             L = self.line2sf(i.computation)
             self.register_line(obj_name, L)
@@ -1206,6 +1276,18 @@ class Optimizer(ABC):
                 B, C = self.lookup_pts(args)
                 O = self.midp(B, C)
                 return CircleNF(center=O, radius=self.dist(O, B))
+            elif pred == "incircle":
+                A, B, C = self.lookup_pts(args)
+                I = self.incenter(A, B, C)
+                return CircleNF(center=I, radius=self.inradius(A, B, C))
+            elif pred == "excircle":
+                A, B, C = self.lookup_pts(args)
+                I = self.excenter(A, B, C)
+                return CircleNF(center=I, radius=self.exradius(A, B, C))
+            elif pred == "mixtilinearIncircle":
+                A, B, C = self.lookup_pts(args)
+                I = self.mixtilinear_incenter(A, B, C)
+                return CircleNF(center=I, radius=self.mixtilinear_inradius(A, B, C))
             else:
                 raise RuntimeError(f"[circ2nf] NYI: {pred}")
         else:
