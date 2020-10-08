@@ -338,26 +338,32 @@ class Optimizer(ABC):
     ####################
 
     def compute(self, i):
-        p = i.point
+        obj_name = i.obj_name
         c_method = i.computation.val[0]
         c_args = i.computation.val
-        if c_method == "amidpOpp": self.compute_amidp_opp(p, c_args[1])
-        elif c_method == "amidpSame": self.compute_amidp_same(p, c_args[1])
-        elif c_method == "centroid": self.compute_centroid(p, c_args[1])
-        elif c_method == "circumcenter": self.compute_circumcenter(p, c_args[1])
-        elif c_method == "excenter": self.compute_excenter(p, c_args[1])
-        elif c_method == "harmonicLConj": self.compute_harmonic_l_conj(p, c_args[1])
-        elif c_method == "incenter": self.compute_incenter(p, c_args[1])
-        elif c_method == "interLL": self.compute_inter_ll(p, *c_args[1])
-        elif c_method == "interLC": self.compute_inter_lc(p, *c_args[1])
-        elif c_method == "interCC": self.compute_inter_cc(p, *c_args[1])
-        elif c_method == "isogonal": self.compute_isogonal(p, c_args[1])
-        elif c_method == "isotomic": self.compute_isotomic(p, c_args[1])
-        elif c_method == "inverse": self.compute_inverse(p, c_args[1])
-        elif c_method == "midp": self.compute_midp(p, c_args[1])
-        elif c_method == "midpFrom": self.compute_midp_from(p, c_args[1])
-        elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(p, c_args[1])
-        elif c_method == "orthocenter": self.compute_orthocenter(p, c_args[1])
+        if c_method == "amidpOpp": self.compute_amidp_opp(obj_name, c_args[1])
+        elif c_method == "amidpSame": self.compute_amidp_same(obj_name, c_args[1])
+        elif c_method == "centroid": self.compute_centroid(obj_name, c_args[1])
+        elif c_method == "circumcenter": self.compute_circumcenter(obj_name, c_args[1])
+        elif c_method == "excenter": self.compute_excenter(obj_name, c_args[1])
+        elif c_method == "harmonicLConj": self.compute_harmonic_l_conj(obj_name, c_args[1])
+        elif c_method == "incenter": self.compute_incenter(obj_name, c_args[1])
+        elif c_method == "interLL": self.compute_inter_ll(obj_name, *c_args[1])
+        elif c_method == "interLC": self.compute_inter_lc(obj_name, *c_args[1])
+        elif c_method == "interCC": self.compute_inter_cc(obj_name, *c_args[1])
+        elif c_method == "isogonal": self.compute_isogonal(obj_name, c_args[1])
+        elif c_method == "isotomic": self.compute_isotomic(obj_name, c_args[1])
+        elif c_method == "inverse": self.compute_inverse(obj_name, c_args[1])
+        elif c_method == "midp": self.compute_midp(obj_name, c_args[1])
+        elif c_method == "midpFrom": self.compute_midp_from(obj_name, c_args[1])
+        elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(obj_name, c_args[1])
+        elif c_method == "orthocenter": self.compute_orthocenter(obj_name, c_args[1])
+        elif isinstance(i.computation, Line):
+            L = self.line2sf(i.computation)
+            self.register_line(obj_name, L)
+        elif isinstance(i.computation, Circle):
+            C = self.circ2nf(i.computation)
+            self.register_circ(obj_name, C)
         else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
@@ -466,7 +472,7 @@ class Optimizer(ABC):
     ####################
 
     def parameterize(self, i):
-        p_name = i.point
+        p_name = i.obj_name
         p_method = i.parameterization[0]
         p_args = i.parameterization
         param_method = i.parameterization
@@ -1129,14 +1135,12 @@ class Optimizer(ABC):
                 return M, M + self.rotate_counterclockwise_90(A - B)
             elif pred == "ibisector":
                 A, B, C = self.lookup_pts(args)
-                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
                 X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
                 M = self.midp(X, C)
                 return B, M
             elif pred == "ebisector":
                 A, B, C = self.lookup_pts(args)
                 X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
-                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
                 M = self.midp(X, C)
                 Y = B + self.rotate_counterclockwise_90(M - B)
                 return B, Y
@@ -1188,7 +1192,7 @@ class Optimizer(ABC):
 
             pred, args = circ.val
 
-            if pred == "c3":
+            if pred == "c3" or pred == "circumcircle":
                 A, B, C = self.lookup_pts(args)
                 O = self.circumcenter(A, B, C)
                 return CircleNF(center=O, radius=self.dist(O, A))

@@ -132,14 +132,20 @@ class InstructionReader:
             p = Point(obj_name)
             self.register_pt(p)
 
-            computation = self.process_point(cmd[2])
+            computation = self.process_point(cmd[3])
             assert(not isinstance(computation.val, str))
 
             c_instr = Compute(p, computation)
             self.instructions.append(c_instr)
         elif obj_type == "circle":
-            c = Circle("__name__", [obj_name])  # FIXME: Using a different idiom than for Point
+            c = Circle(obj_name)
             self.register_circ(c)
+
+            computation = self.process_circle(cmd[3])
+            assert(not isinstance(computation.val, str))
+
+            c_instr = Compute(c, computation)
+            self.instructions.append(c_instr)
 
         else:
             raise NotImplementedError("Computing other things not currently supported")
@@ -416,6 +422,10 @@ class InstructionReader:
         elif c_pred == "diam":
             assert(len(ps) == 2)
             c_val = FuncInfo("diam", ps)
+            ret_circ = Circle(c_val)
+        elif c_pred == "circumcircle":
+            assert(len(ps) == 3)
+            c_val = FuncInfo("circumcircle", ps)
             ret_circ = Circle(c_val)
 
         if ret_circ is not None:

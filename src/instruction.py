@@ -17,8 +17,8 @@ class AssertNDG:
         return f"assertNDG ({self.constraint})"
 
 class Compute:
-    def __init__(self, point, computation):
-        self.point = point
+    def __init__(self, obj_name, computation):
+        self.obj_name = obj_name
         self.computation = computation
 
     def __str__(self):
@@ -27,8 +27,8 @@ class Compute:
             # comp_str = ' '.join(str(x) for x in self.computation)
         else:
             comp_str = str(self.computation)
-        return "compute {p} ({computation_str})".format(
-            p=self.point,
+        return "compute {obj} ({computation_str})".format(
+            obj=self.obj_name,
             computation_str=comp_str
         )
 
@@ -40,8 +40,8 @@ class Confirm:
         return f"confirm ({self.constraint})"
 
 class Parameterize:
-    def __init__(self, point, parameterization):
-        self.point = point
+    def __init__(self, obj_name, parameterization):
+        self.obj_name = obj_name
         self.parameterization = parameterization
 
     def __str__(self):
@@ -55,7 +55,7 @@ class Parameterize:
             param_str = str(self.parameterization)
 
         return "parameterize {p} {p_str}".format(
-            p=self.point,
+            p=self.obj_name,
             p_str=param_str
         )
 
