@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import collections
 import numbers
 
+from util import FuncInfo
 
 class Point(collections.namedtuple("Point", ["val"])):
     def __str__(self):
@@ -19,18 +20,23 @@ class Num(collections.namedtuple("Num", ["val"])):
 
 
 class Cline(ABC):
-    def __init__(self, pred, points):
-        self.pred = pred
-        self.points = points
+    def __init__(self, val):
+        self.val = val
         super().__init__()
 
+    '''
     @abstractmethod
     def pointsOn(self):
         pass
+    '''
 
+    @abstractmethod
+    def __str__(self):
+        pass
 
 
 class Circle(Cline):
+    '''
     def pointsOn(self):
         if self.pred == "coa":
             return [self.points[1]]
@@ -42,11 +48,19 @@ class Circle(Cline):
             return self.points
         else:
             raise RuntimeError("[Circle.pointsOn] Invalid circle pred")
+    '''
 
     def __str__(self):
-        return f"({self.pred} {' '.join([p.val for p in self.points])})"
+        if isinstance(self.val, str):
+            return self.val
+        elif isinstance(self.val, FuncInfo):
+            pred, args = self.val
+            return f"({pred} {' '.join([str(a) for a in args])})"
+        else:
+            raise RuntimeError("Invalid circle")
 
 class Line(Cline):
+    '''
     def pointsOn(self):
         if self.pred == "connecting":
             return self.points
@@ -64,6 +78,13 @@ class Line(Cline):
             return [self.points[0]]
         else:
             raise RuntimeError("[Line.pointsOn] Invalid line pred")
+    '''
 
     def __str__(self):
-        return f"({self.pred} {' '.join([p.val for p in self.points])})"
+        if isinstance(self.val, str):
+            return self.val
+        elif isinstance(self.val, FuncInfo):
+            pred, args = self.val
+            return f"({pred} {' '.join([str(a) for a in args])})"
+        else:
+            raise RuntimeError("Invalid line")

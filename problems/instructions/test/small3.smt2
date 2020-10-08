@@ -1,1 +1,2 @@
-(param (A B C) (isoTri C))
+(param circA circle)
+;; (param lineB line)

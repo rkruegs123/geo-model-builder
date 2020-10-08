@@ -5,12 +5,15 @@ from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Comput
 from constraint import Constraint
 from parse import parse_sexprs
 from primitives import Point, Line, Circle, Num
-from util import Root, is_number
+from util import Root, is_number, FuncInfo
 
 
 class InstructionReader:
     def __init__(self, problem_lines):
         self.points = list()
+        self.circles = list()
+        self.lines = list()
+
         self.instructions = list()
         self.problem_lines = problem_lines
 
@@ -38,6 +41,20 @@ class InstructionReader:
         if not (isinstance(p, Point) and isinstance(p.val, str)):
             raise RuntimeError(f"[register_pt] Invalid point: {p}")
         self.points.append(p)
+
+    def register_circ(self, c):
+        if c in self.circles:
+            raise RuntimeError(f"[register_circ] Same circle declared twice: {c}")
+        if not (isinstance(c, Circle) and isinstance(c.val, str)):
+            raise RuntimeError(f"[register_circ] Invalid circle name: {c.val}")
+        self.circles.append(c)
+
+    def register_line(self, l):
+        if l in self.lines:
+            raise RuntimeError(f"[register_line] Same line declared twice: {l}")
+        if not (isinstance(l, Line) and isinstance(l.val, str)):
+            raise RuntimeError(f"[register_line] Invalid line name: {l.val}")
+        self.lines.append(l)
 
     def process_command(self, cmd):
         pred = cmd[0]
@@ -103,17 +120,30 @@ class InstructionReader:
 
 
     def compute(self, cmd):
-        if len(cmd) != 3:
-            raise RuntimeError(f"Malformed compute command: {cmd}")
+        assert(len(cmd) == 4)
 
-        p = Point(cmd[1])
-        self.register_pt(p)
+        obj_name = cmd[1]
+        assert(isinstance(obj_name, str))
 
-        computation = self.process_point(cmd[2])
-        assert(not isinstance(computation.val, str))
+        obj_type = cmd[2]
+        assert(obj_type in ["point", "line", "circle"])
 
-        c_instr = Compute(p, computation)
-        self.instructions.append(c_instr)
+        if obj_type == "point":
+            p = Point(obj_name)
+            self.register_pt(p)
+
+            computation = self.process_point(cmd[2])
+            assert(not isinstance(computation.val, str))
+
+            c_instr = Compute(p, computation)
+            self.instructions.append(c_instr)
+        elif obj_type == "circle":
+            c = Circle("__name__", [obj_name])  # FIXME: Using a different idiom than for Point
+            self.register_circ(c)
+
+        else:
+            raise NotImplementedError("Computing other things not currently supported")
+
 
 
     def add(self, cmd):
@@ -136,16 +166,27 @@ class InstructionReader:
     def param(self, cmd):
         assert(len(cmd) == 3 or len(cmd) == 4)
 
-        p = Point(cmd[1])
-        self.register_pt(p)
+
 
         obj_type = cmd[2]
         assert(obj_type in ["point", "line", "circle"])
 
-        if obj_type in ["line", "circle"]:
+        if obj_type == "line":
             assert(len(cmd) == 3)
-            raise NotImplementedError("Param a line or circle")
+            l = Line(cmd[1])
+            self.register_line(l)
+            p_instr = Parameterize(l, ("line", None))
+            self.instructions.append(p_instr)
+        elif obj_type == "circle":
+            assert(len(cmd) == 3)
+            c = Circle(cmd[1])
+            self.register_circ(c)
+            p_instr = Parameterize(c, ("circle", None))
+            self.instructions.append(p_instr)
         else:
+            p = Point(cmd[1])
+            self.register_pt(p)
+
             param_method = "coords"
             if len(cmd) == 4:
                 param_method = cmd[3]
@@ -289,53 +330,63 @@ class InstructionReader:
             assert(len(p_args) == 2)
             l1 = self.process_line(p_args[0])
             l2 = self.process_line(p_args[1])
-            p_val = ("interLL", [l1, l2])
+            p_val = FuncInfo("interLL", [l1, l2])
             return Point(p_val)
         elif p_pred in ["incenter", "excenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
-            p_val = (p_pred, ps)
+            p_val = FuncInfo(p_pred, ps)
             return Point(p_val)
         elif p_pred == "interLC":
             assert(len(p_args) == 3)
             l = self.process_line(p_args[0])
             c = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = ("interLC", [l, c, rs])
+            p_val = FuncInfo("interLC", [l, c, rs])
             return Point(p_val)
         elif p_pred == "interCC":
             assert(len(p_args) == 3)
             c1 = self.process_circle(p_args[0])
             c2 = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = ("interCC", [c1, c2, rs])
+            p_val = FuncInfo("interCC", [c1, c2, rs])
             return Point(p_val)
         elif p_pred == "midp":
             assert(len(p_args) == 2)
             ps = [self.process_point(p) for p in p_args]
-            p_val = ("midp", ps)
+            p_val = FuncInfo("midp", ps)
             return Point(p_val)
         elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
-            p_val = (p_pred, ps)
+            p_val = FuncInfo(p_pred, ps)
             return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
 
     def process_line(self, l_info):
+        if isinstance(l_info, str) and not is_number(l_info):
+            assert(Line(l_info) in self.lines)
+            return Line(l_info)
+        if not isinstance(l_info, tuple):
+            raise NotImplementedError(f"[process_line] l_info must be tuple or string")
+
+
         l_pred = l_info[0]
         ps = [self.process_point(p) for p in l_info[1:]]
         ret_line = None
         if l_pred == "line":
             assert(len(ps) == 2)
-            ret_line = Line("connecting", ps)
+            l_val = FuncInfo("connecting", ps)
+            ret_line = Line(l_val)
         elif l_pred == "perpAt":
             assert(len(ps) == 3)
-            ret_line = Line("perpAt", ps)
+            l_val = FuncInfo("perpAt", ps)
+            ret_line = Line(l_val)
         elif l_pred == "perpBis":
             assert(len(ps) == 2)
-            ret_line = Line("perpBis", ps)
+            l_val = FuncInfo("perpBis", ps)
+            ret_line = Line(l_val)
 
         if ret_line is not None:
             self.update_problem_type("instructions")
@@ -344,19 +395,28 @@ class InstructionReader:
             raise NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
 
     def process_circle(self, c_info):
+        if isinstance(c_info, str) and not is_number(c_info):
+            assert(Circle(c_info) in self.circles)
+            return Circle(l_info)
+        if not isinstance(c_info, tuple):
+            raise NotImplementedError(f"[process_circle] c_info must be tuple or string")
+
         c_pred = c_info[0]
         ps = [self.process_point(p) for p in c_info[1:]]
         ret_circ = None
 
         if c_pred == "circ":
             assert(len(ps) == 3)
-            ret_circ = Circle("c3", ps)
+            c_val = FuncInfo("c3", ps)
+            ret_circ = Circle(c_val)
         elif c_pred == "coa":
             assert(len(ps) == 2)
-            ret_circ = Circle("coa", ps)
+            c_val = FuncInfo("coa", ps)
+            ret_circ = Circle(c_val)
         elif c_pred == "diam":
             assert(len(ps) == 2)
-            ret_circ = Circle("diam", ps)
+            c_val = FuncInfo("diam", ps)
+            ret_circ = Circle(c_val)
 
         if ret_circ is not None:
             self.update_problem_type("instructions")
@@ -376,17 +436,17 @@ class InstructionReader:
             assert(len(n_args) == 2)
             p1 = self.process_point(n_args[0])
             p2 = self.process_point(n_args[1])
-            n_val = ("dist", [p1, p2])
+            n_val = FuncInfo("dist", [p1, p2])
             return Num(n_val)
         elif n_pred == "uangle":
             assert(len(n_args) == 3)
             p1, p2, p3 = [self.process_point(p) for p in n_args]
-            n_val = ("uangle", [p1, p2, p3])
+            n_val = FuncInfo("uangle", [p1, p2, p3])
             return Num(n_val)
         elif n_pred == "div":
             assert(len(n_args) == 2)
             n1, n2 = [self.process_number(n) for n in n_args]
-            n_val = ("div", [n1, n2])
+            n_val = FuncInfo("div", [n1, n2])
             return Num(n_val)
         else:
             raise NotImplementedError(f"[process_number] Unsupporrted number pred: {n_pred}")

@@ -6,18 +6,10 @@ import itertools
 
 from instruction import *
 from primitives import Line, Point, Circle, Num
-from util import is_number
+from util import is_number, FuncInfo
+
 
 # Also stores the points used to compute it
-class SlopeInterceptForm(collections.namedtuple("SlopeInterceptForm", ["m", "b", "p1", "p2"])):
-    # Note: Coefficients likely reals, not ints
-    def standard_form(self):
-        a = -1
-        b = 1 / self.m
-        c = (1 / self.m) * self.b
-        return (a, b, c)
-
-
 LineSF = collections.namedtuple("LineSF", ["a", "b", "c", "p1", "p2"])
 
 CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
@@ -26,6 +18,11 @@ class Optimizer(ABC):
     def __init__(self, instructions, opts):
 
         self.name2pt = dict()
+        self.name2line = dict()
+        self.name2circ = dict()
+
+        self.no_plot_pts = list()
+
         self.losses = dict()
         self.has_loss = False
         self.opts = opts
@@ -81,8 +78,8 @@ class Optimizer(ABC):
         for p in ps:
             if isinstance(p.val, str):
                 p_vals.append(self.name2pt[p])
-            else:
-                head, args = p.val[0], p.val[1]
+            elif isinstance(p.val, FuncInfo):
+                head, args = p.val
                 if head == "midp":
                     p_vals.append(self.midp(*self.lookup_pts(args)))
                 elif head == "circumcenter":
@@ -95,6 +92,8 @@ class Optimizer(ABC):
                     p_vals.append(self.centroid(*self.lookup_pts(args)))
                 else:
                     raise NotImplementedError(f"[lookup_pts] Unsupported head {head}")
+            else:
+                raise RuntimeError("Invalid point type")
         return p_vals
 
     def eval_num(self, n_info):
@@ -123,6 +122,14 @@ class Optimizer(ABC):
 
     @abstractmethod
     def register_pt(self, p, P):
+        pass
+
+    @abstractmethod
+    def register_line(self, l, L):
+        pass
+
+    @abstractmethod
+    def register_circ(self, c, C):
         pass
 
     @abstractmethod
@@ -241,13 +248,12 @@ class Optimizer(ABC):
         elif s_method == "polygon": self.sample_polygon(i.points)
         elif s_method == "rightTri": self.sample_triangle(i.points, right=s_args[0])
         elif s_method == "triangle": self.sample_triangle(i.points)
-        elif s_method == "uniform": self.sample_uniform(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
-    def sample_uniform(self, ps):
-        [p] = ps
+    def sample_uniform(self, p):
         P   = self.get_point(x=self.mkvar(str(p)+"x"), y=self.mkvar(str(p)+"y"))
         self.register_pt(p, P)
+        return P
 
 
     def sample_polygon(self, ps):
@@ -460,21 +466,40 @@ class Optimizer(ABC):
     ####################
 
     def parameterize(self, i):
-        p = i.point
+        p_name = i.point
         p_method = i.parameterization[0]
         p_args = i.parameterization
         param_method = i.parameterization
         if p_method == "coords": self.parameterize_coords(p)
-        elif p_method == "inPoly": self.parameterize_in_poly(p, p_args[1])
-        elif p_method == "onCirc": self.parameterize_on_circ(p, p_args[1])
-        elif p_method == "onLine": self.parameterize_on_line(p, p_args[1])
-        elif p_method == "onRay": self.parameterize_on_ray(p, p_args[1])
-        elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p, p_args[1])
-        elif p_method == "onSeg": self.parameterize_on_seg(p, p_args[1])
+        elif p_method == "inPoly": self.parameterize_in_poly(p_name, p_args[1])
+        elif p_method == "onCirc": self.parameterize_on_circ(p_name, p_args[1])
+        elif p_method == "onLine": self.parameterize_on_line(p_name, p_args[1])
+        elif p_method == "onRay": self.parameterize_on_ray(p_name, p_args[1])
+        elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p_name, p_args[1])
+        elif p_method == "onSeg": self.parameterize_on_seg(p_name, p_args[1])
+        elif p_method == "line": self.parameterize_line(p_name)
+        elif p_method == "circle": self.parameterize_circ(p_name)
         else: raise NotImplementedError(f"FIXME: Finish parameterize: {i}")
 
     def parameterize_coords(self, p):
-        self.sample_uniform([p])
+        self.sample_uniform(p)
+
+    def parameterize_line(self, l):
+        p1 = Point(l.val + "_p1")
+        p2 = Point(l.val + "_p2")
+        self.no_plot_pts += [p1, p2]
+
+        P1 = self.sample_uniform(p1)
+        P2 = self.sample_uniform(p2)
+
+        self.register_line(l, self.pp2sf(P1, P2))
+
+    def parameterize_circ(self, c):
+        o = Point(c.val + "_origin")
+        O = self.sample_uniform(o)
+        self.no_plot_pts.append(o)
+        circ_nf = CircleNF(center=O, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
+        self.register_circ(c, circ_nf)
 
     def parameterize_on_seg(self, p, ps):
         A, B = self.lookup_pts(ps)
@@ -1081,49 +1106,57 @@ class Optimizer(ABC):
     ####################
 
     def line2twoPts(self, l):
-        pred = l.pred
-        ps = l.points
-        if pred == "connecting":
-            return self.lookup_pts(ps)
-        elif pred == "paraAt":
-            X, A, B = self.lookup_pts(ps)
-            return X, X + B - A
-        elif pred == "perpAt":
-            X, A, B = self.lookup_pts(ps)
-            return X, X + self.rotate_counterclockwise_90(A - B)
-        elif pred == "perpBis":
-            a, b = ps
-            m_ab = Point(("midp", [a, b]))
-            return self.line2twoPts(Line("perpAt", [m_ab, a, b]))
-        elif pred == "mediator":
-            A, B = self.lookup_pts(ps)
-            M = self.midp(A, B)
-            return M, M + self.rotate_counterclockwise_90(A - B)
-        elif pred == "ibisector":
-            A, B, C = self.lookup_pts(ps)
-            # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
-            X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
-            M = self.midp(X, C)
-            return B, M
-        elif pred == "ebisector":
-            A, B, C = self.lookup_pts(ps)
-            X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
-            # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
-            M = self.midp(X, C)
-            Y = B + self.rotate_counterclockwise_90(M - B)
-            return B, Y
-        elif pred == "eqoangle":
-            B, C, D, E, F = self.lookup_pts(ps)
-            theta = self.angle(D, E, F)
-            X = B + self.rotate_counterclockwise(theta, C - B)
-            self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
-            return B, X
+        if isinstance(l.val, str):
+            L = self.name2line[l]
+            return L.p1, L.p2
+        elif isinstance(l.val, FuncInfo):
+            pred, args = l.val
+            if pred == "connecting":
+                return self.lookup_pts(args)
+            elif pred == "paraAt":
+                X, A, B = self.lookup_pts(args)
+                return X, X + B - A
+            elif pred == "perpAt":
+                X, A, B = self.lookup_pts(args)
+                return X, X + self.rotate_counterclockwise_90(A - B)
+            elif pred == "perpBis":
+                a, b = args
+                m_ab = Point(("midp", [a, b]))
+                return self.line2twoPts(Line(FuncInfo("perpAt", [m_ab, a, b])))
+            elif pred == "mediator":
+                A, B = self.lookup_pts(args)
+                M = self.midp(A, B)
+                return M, M + self.rotate_counterclockwise_90(A - B)
+            elif pred == "ibisector":
+                A, B, C = self.lookup_pts(args)
+                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
+                M = self.midp(X, C)
+                return B, M
+            elif pred == "ebisector":
+                A, B, C = self.lookup_pts(args)
+                X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
+                # X = B + (A - B).smul(self.divV(self.dist(B, C), self.dist(B, A)))
+                M = self.midp(X, C)
+                Y = B + self.rotate_counterclockwise_90(M - B)
+                return B, Y
+            elif pred == "eqoangle":
+                B, C, D, E, F = self.lookup_pts(args)
+                theta = self.angle(D, E, F)
+                X = B + self.rotate_counterclockwise(theta, C - B)
+                self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
+                return B, X
+            else:
+                raise RuntimeError(f"[line2twoPts] Unexpected line pred: {pred}")
         else:
-            raise RuntimeError(f"[line2twoPts] Unexpected line pred: {pred}")
+            raise RuntimeError(f"Unsupported line type: {type(l)}")
 
     def line2sf(self, l):
-        p1, p2 = self.line2twoPts(l)
-        return self.pp2sf(p1, p2)
+        if isinstance(l.val, str):
+            return self.name2line[l]
+        else:
+            p1, p2 = self.line2twoPts(l)
+            return self.pp2sf(p1, p2)
 
     def pp2sf(self, p1, p2):
         def vert_line():
@@ -1148,25 +1181,31 @@ class Optimizer(ABC):
                                            calc_sf_from_slope_intercept))
 
     def circ2nf(self, circ):
-        pred = circ.pred
-        ps = circ.points
 
-        if pred == "c3":
-            A, B, C = self.lookup_pts(ps)
-            O = self.circumcenter(A, B, C)
-            return CircleNF(center=O, radius=self.dist(O, A))
-        elif pred == "coa":
-            O, A = self.lookup_pts(ps)
-            return CircleNF(center=O, radius=self.dist(O, A))
-        elif pred == "cong":
-            O, X, Y = self.lookup_pts(ps)
-            return CircleNF(center=O, radius=self.dist(X, Y))
-        elif pred == "diam":
-            B, C = self.lookup_pts(ps)
-            O = self.midp(B, C)
-            return CircleNF(center=O, radius=self.dist(O, B))
+        if isinstance(circ.val, str):
+            return self.name2circ[circ]
+        elif isinstance(circ.val, FuncInfo):
+
+            pred, args = circ.val
+
+            if pred == "c3":
+                A, B, C = self.lookup_pts(args)
+                O = self.circumcenter(A, B, C)
+                return CircleNF(center=O, radius=self.dist(O, A))
+            elif pred == "coa":
+                O, A = self.lookup_pts(args)
+                return CircleNF(center=O, radius=self.dist(O, A))
+            elif pred == "cong":
+                O, X, Y = self.lookup_pts(args)
+                return CircleNF(center=O, radius=self.dist(X, Y))
+            elif pred == "diam":
+                B, C = self.lookup_pts(args)
+                O = self.midp(B, C)
+                return CircleNF(center=O, radius=self.dist(O, B))
+            else:
+                raise RuntimeError(f"[circ2nf] NYI: {pred}")
         else:
-            raise RuntimeError(f"[circ2nf] NYI: {pred}")
+            raise RuntimeError("Invalid circle type")
 
     def shift(self, O, Ps):
         return [self.get_point(P.x - O.x, P.y - O.y) for P in Ps]

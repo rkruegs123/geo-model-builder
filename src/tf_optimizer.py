@@ -4,7 +4,7 @@ import collections
 import random
 import itertools
 
-from optimizer import Optimizer
+from optimizer import Optimizer, LineSF, CircleNF
 from diagram import Diagram
 
 class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
@@ -114,6 +114,21 @@ class TfOptimizer(Optimizer):
         Py = tf.debugging.check_numerics(P.y, message=str(p))
         self.name2pt[p] = self.get_point(Px, Py)
 
+    def register_line(self, l, L):
+        assert(l not in self.name2line)
+        assert(isinstance(l.val, str))
+        a = tf.debugging.check_numerics(L.a, message=str(l))
+        b = tf.debugging.check_numerics(L.b, message=str(l))
+        c = tf.debugging.check_numerics(L.c, message=str(l))
+        self.name2line[l] = LineSF(a, b, c, L.p1, L.p2)
+
+    def register_circ(self, c, C):
+        assert(c not in self.name2circ)
+        assert(isinstance(c.val, str))
+        r = tf.debugging.check_numerics(C.radius, message=str(c))
+        self.name2circ[c] = CircleNF(center=C.center, radius=r)
+
+
     def register_loss(self, key, val, weight=1.0):
         assert(key not in self.losses)
         # TF has a bug that causes nans when differentiating something exactly 0
@@ -207,9 +222,9 @@ class TfOptimizer(Optimizer):
     ####################
 
     def get_model(self):
-        pt_assn, segments, circles, ndgs, goals = self.run([
-            self.name2pt, self.segments, self.circles, self.ndgs, self.goals])
-        return Diagram(points=pt_assn, segments=segments, circles=circles, ndgs=ndgs, goals=goals)
+        pt_assn, line_assn, circ_assn, segments, circles, ndgs, goals = self.run([
+            self.name2pt, self.name2line, self.name2circ, self.segments, self.circles, self.ndgs, self.goals])
+        return Diagram(points=pt_assn, lines=line_assn, segments=segments, circles=circles, ndgs=ndgs, goals=goals, no_plot_pts=self.no_plot_pts, named_circles=circ_assn)
 
     def run(self, x):
         return self.sess.run(x)

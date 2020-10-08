@@ -46,8 +46,8 @@ class Parameterize:
 
     def __str__(self):
 
-        if self.parameterization[0] == "coords":
-            param_str = "coords"
+        if self.parameterization[0] in ["coords", "line", "circle"]:
+            param_str = self.parameterization[0]
         elif isinstance(self.parameterization, collections.abc.Iterable) and type(self.parameterization) != str:
             assert(len(self.parameterization) == 2)
             param_str = f"({self.parameterization[0]} {' '.join(str(x) for x in self.parameterization[1])})"
