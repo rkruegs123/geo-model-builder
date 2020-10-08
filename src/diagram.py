@@ -14,7 +14,7 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
 
         ax.scatter(xs, ys)
         for i, n in enumerate(names):
-            ax.annotate(n, (xs[i], ys[i]))
+            ax.annotate(str(n), (xs[i], ys[i]))
 
         for p1, p2 in self.segments:
             plt.plot([p1.x, p2.x],[p1.y, p2.y])

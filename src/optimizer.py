@@ -526,7 +526,7 @@ class Optimizer(ABC):
         p_method = i.parameterization[0]
         p_args = i.parameterization
         param_method = i.parameterization
-        if p_method == "coords": self.parameterize_coords(p)
+        if p_method == "coords": self.parameterize_coords(p_name)
         elif p_method == "inPoly": self.parameterize_in_poly(p_name, p_args[1])
         elif p_method == "onCirc": self.parameterize_on_circ(p_name, p_args[1])
         elif p_method == "onLine": self.parameterize_on_line(p_name, p_args[1])

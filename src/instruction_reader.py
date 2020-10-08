@@ -418,7 +418,7 @@ class InstructionReader:
     def process_circle(self, c_info):
         if isinstance(c_info, str) and not is_number(c_info):
             assert(Circle(c_info) in self.circles)
-            return Circle(l_info)
+            return Circle(c_info)
         if not isinstance(c_info, tuple):
             raise NotImplementedError(f"[process_circle] c_info must be tuple or string")
 
@@ -489,8 +489,7 @@ class InstructionReader:
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
-        elif rs_pred == "rsArbitrary":
-            assert(not rs_args)
+        elif rs_info == "rsArbitrary":
             return Root("arbitrary", list())
         else:
             raise NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
