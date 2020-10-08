@@ -42,8 +42,9 @@ class InstructionReader:
     def process_command(self, cmd):
         pred = cmd[0]
         if pred == "sample":
-            self.sample(cmd)
-            self.update_problem_type("instructions")
+            raise NotImplementedError("Sample is deprecated")
+            # self.sample(cmd)
+            # self.update_problem_type("instructions")
         elif pred == "assert":
             self.add(cmd)
         elif pred == "compute":
@@ -52,54 +53,61 @@ class InstructionReader:
         elif pred == "confirm":
             self.confirm(cmd)
         elif pred == "param":
-            self.param(cmd)
+            if isinstance(cmd[1], str):
+                self.param(cmd)
+            elif isinstance(cmd[1], tuple):
+                self.param_special(cmd)
+            else:
+                raise RuntimeError("Invalid param input type")
             self.update_problem_type("instructions")
         elif pred == "declare-points":
             assert(len(cmd) > 1)
             ps = cmd[1:]
-            ps = [self.process_point(p) for p in ps]
             for p in ps:
-                self.register_pt(p)
+                self.register_pt(Point(p))
             self.update_problem_type("compile")
         elif pred == "declare-point":
             assert(len(cmd) == 2)
             p = cmd[1]
-            p = self.process_point(p)
-            self.register_pt(p)
+            self.register_pt(Point(p))
             self.update_problem_type("compile")
         else:
             raise NotImplementedError(f"[InstructionReader.process_command] Command not supported: {pred}")
 
 
-    def sample(self, cmd):
+    # def sample(self, cmd):
+    def param_special(self, cmd):
 
-        ps = [self.process_term(p) for p in cmd[1]]
-        assert(all([isinstance(p, Point) and isinstance(p.val, str) for p in ps]))
+        assert(len(cmd) == 3)
 
-        method = cmd[2]
+        ps = [Point(p) for p in cmd[1]]
+        for p in ps:
+            self.register_pt(p)
 
-        if method in ["triangle", "acuteTri", "equiTri", "polygon"]:
-            assert(len(cmd) == 3)
-            instr = Sample(ps, method) # No extra args here
+        param_method = cmd[2]
+
+        if isinstance(param_method, str):
+            assert(param_method in ["triangle", "acuteTri", "equiTri", "polygon"])
+            instr = Sample(ps, param_method) # No extra args here
             self.instructions.append(instr)
-        elif method in ["rightTri", "isoTri", "acuteIsoTri"]:
-            assert(len(cmd) == 4)
-            args = cmd[3]
-            assert(len(args) == 1)
-            special_p = self.process_term(args[0])
-            assert(isinstance(special_p, Point) and isinstance(special_p.val, str))
-            instr = Sample(ps, method, (special_p))
+        elif isinstance(param_method, tuple):
+            assert(len(param_method) == 2)
+            head, arg = param_method
+            assert(head in ["rightTri", "isoTri", "acuteIsoTri"])
+            assert(isinstance(arg, str) and Point(arg) in ps)
+            special_p = Point(arg) # Not coming in as Point
+            instr = Sample(ps, head, (special_p,))
             self.instructions.append(instr)
         else:
-            raise NotImplementedError(f"[InstructionReader.sample] Sampling method not yet supported: {method}")
+            raise RuntimeError("Invalid joint param method")
 
 
     def compute(self, cmd):
         if len(cmd) != 3:
             raise RuntimeError(f"Malformed compute command: {cmd}")
 
-        p = self.process_point(cmd[1])
-        assert(isinstance(p.val, str))
+        p = Point(cmd[1])
+        self.register_pt(p)
 
         computation = self.process_point(cmd[2])
         assert(not isinstance(computation.val, str))
@@ -108,7 +116,6 @@ class InstructionReader:
         self.instructions.append(c_instr)
 
 
-    # FIXME, look over everything, then update point compilatoina nd optimization with Point type
     def add(self, cmd):
         assert(len(cmd) == 2)
         negate, pred, args = self.process_constraint(cmd[1])
@@ -127,14 +134,24 @@ class InstructionReader:
         self.instructions.append(Confirm(instr_cons))
 
     def param(self, cmd):
-        assert(len(cmd) == 3)
+        assert(len(cmd) == 3 or len(cmd) == 4)
 
-        p = self.process_term(cmd[1])
-        assert(isinstance(p, Point) and isinstance(p.val, str))
+        p = Point(cmd[1])
+        self.register_pt(p)
 
-        pred, args = self.process_param(cmd[2])
-        p_instr = Parameterize(p, (pred, args))
-        self.instructions.append(p_instr)
+        obj_type = cmd[2]
+        assert(obj_type in ["point", "line", "circle"])
+
+        if obj_type in ["line", "circle"]:
+            assert(len(cmd) == 3)
+            raise NotImplementedError("Param a line or circle")
+        else:
+            param_method = "coords"
+            if len(cmd) == 4:
+                param_method = cmd[3]
+            pred, args = self.process_param(param_method)
+            p_instr = Parameterize(p, (pred, args))
+            self.instructions.append(p_instr)
 
     def process_param(self, param):
         if param == "coords":
@@ -261,6 +278,7 @@ class InstructionReader:
 
     def process_point(self, p_info):
         if isinstance(p_info, str) and not is_number(p_info):
+            assert(Point(p_info) in self.points)
             return Point(p_info)
         if not isinstance(p_info, tuple):
             raise NotImplementedError(f"[process_point] p_info must be tuple or string")
@@ -386,6 +404,17 @@ class InstructionReader:
             return Root("arbitrary", list())
         else:
             raise NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
+
+    # Utilities
+    def assert_all_points(self, ps):
+        assert(all([isinstance(t, Point) for t in ps]))
+
+    def assert_all_lines(self, ls):
+        assert(all([isinstance(t, Line) for t in ls]))
+
+    def assert_all_circles(self, cs):
+        assert(all([isinstance(t, Circle) for t in cs]))
+
 
 if __name__ == "__main__":
     # Get problem to compile

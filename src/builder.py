@@ -26,7 +26,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
         compiler = PointCompiler(instructions, reader.points)
         compiler.compile()
         final_instructions = compiler.instructions
-    elif reader.problem_tpye == "instructions":
+    elif reader.problem_type == "instructions":
         final_instructions = instructions
     else:
         raise RuntimeError("[build] Did not properly set problem type")

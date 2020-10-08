@@ -1,0 +1,1 @@
+(param (A B C) (isoTri C))
