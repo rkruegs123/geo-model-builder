@@ -137,6 +137,16 @@ class InstructionReader:
 
             c_instr = Compute(p, computation)
             self.instructions.append(c_instr)
+        elif obj_type == "line":
+            l = Line(obj_name)
+            self.register_line(l)
+
+            computation = self.process_line(cmd[3])
+            assert(not isinstance(computation.val, str))
+
+            c_instr = Compute(l, computation)
+            self.instructions.append(c_instr)
+
         elif obj_type == "circle":
             c = Circle(obj_name)
             self.register_circ(c)
@@ -148,7 +158,7 @@ class InstructionReader:
             self.instructions.append(c_instr)
 
         else:
-            raise NotImplementedError("Computing other things not currently supported")
+            raise RuntimeError("Invalid compute type")
 
 
 
