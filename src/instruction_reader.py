@@ -390,23 +390,28 @@ class InstructionReader:
 
         l_pred = l_info[0]
         ps = [self.process_point(p) for p in l_info[1:]]
-        ret_line = None
+
+        l_val = None
+
         if l_pred == "line":
             assert(len(ps) == 2)
             l_val = FuncInfo("connecting", ps)
-            ret_line = Line(l_val)
         elif l_pred == "perpAt":
             assert(len(ps) == 3)
             l_val = FuncInfo("perpAt", ps)
-            ret_line = Line(l_val)
         elif l_pred == "perpBis":
             assert(len(ps) == 2)
             l_val = FuncInfo("perpBis", ps)
-            ret_line = Line(l_val)
+        elif l_pred == "ibisector":
+            assert(len(ps) == 3)
+            l_val = FuncInfo("ibisector", ps)
+        elif l_pred == "ebisector":
+            assert(len(ps) == 3)
+            l_val = FuncInfo("ebisector", ps)
 
-        if ret_line is not None:
+        if l_val is not None:
             self.update_problem_type("instructions")
-            return ret_line
+            return Line(l_val)
         else:
             raise NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
 

@@ -407,34 +407,14 @@ class Optimizer(ABC):
                 X, A, B = self.lookup_pts(ps)
                 self.segments.append((A, B))
                 self.segments.append((X, P))
-
-        '''
-        if c_method == "amidpOpp": self.compute_amidp_opp(obj_name, c_args[1])
-        elif c_method == "amidpSame": self.compute_amidp_same(obj_name, c_args[1])
-        elif c_method == "centroid": self.compute_centroid(obj_name, c_args[1])
-        elif c_method == "circumcenter": self.compute_circumcenter(obj_name, c_args[1])
-        elif c_method == "excenter": self.compute_excenter(obj_name, c_args[1])
-        elif c_method == "harmonicLConj": self.compute_harmonic_l_conj(obj_name, c_args[1])
-        elif c_method == "incenter": self.compute_incenter(obj_name, c_args[1])
-        elif c_method == "interLL": self.compute_inter_ll(obj_name, *c_args[1])
-        elif c_method == "interLC": self.compute_inter_lc(obj_name, *c_args[1])
-        elif c_method == "interCC": self.compute_inter_cc(obj_name, *c_args[1])
-        elif c_method == "isogonal": self.compute_isogonal(obj_name, c_args[1])
-        elif c_method == "isotomic": self.compute_isotomic(obj_name, c_args[1])
-        elif c_method == "inverse": self.compute_inverse(obj_name, c_args[1])
-        elif c_method == "midp": self.compute_midp(obj_name, c_args[1])
-        elif c_method == "midpFrom": self.compute_midp_from(obj_name, c_args[1])
-        elif c_method == "mixtilinearIncenter": self.compute_mixtilinear_incenter(obj_name, c_args[1])
-        elif c_method == "orthocenter": self.compute_orthocenter(obj_name, c_args[1])
-        '''
-
         elif isinstance(i.computation, Line):
             L = self.line2sf(i.computation)
             self.register_line(obj_name, L)
         elif isinstance(i.computation, Circle):
             C = self.circ2nf(i.computation)
             self.register_circ(obj_name, C)
-        else: raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
+        else:
+            raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
     def compute_midp(self, m, ps):
         A, B = self.lookup_pts(ps)
