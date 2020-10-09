@@ -44,6 +44,7 @@ class CompileState:
         self.param_tricks = [
             self.paramOnSeg
             , self.paramOnRay
+            , self.paramOnRayOpp
             , self.paramOnLine
             , self.paramOnCirc
             , self.paramInPoly
@@ -61,7 +62,7 @@ class CompileState:
             for key, root in self.open_roots.items():
                 self.root_blacklist.append(root)
             if self.root_blacklist:
-                print(f"[WARNING] root blacklist: {self.root_blacklist}")
+                print(f"[WARNING] root blacklist: [{' '.join([str(p) for p in self.root_blacklist])}]")
                 self.visited = copy.deepcopy(self.sample_bucket.points)
                 self.solve_instructions = list()
                 self.ps = copy.deepcopy(self.solve_bucket.points)
@@ -227,7 +228,7 @@ class CompileState:
             if match_success:
                 x, a, b = match
                 self.solve_instructions.append(
-                    Compute(p, Point(FuncInfo("interLC", [Line(FuncInfo("perpAt", [x, a, b])), Circle(FuncInfo("coa", [a, x])), Root("neq", [x])])))
+                    Compute(p, Point(FuncInfo("interLC", [Line(FuncInfo("perpAt", (x, a, b))), Circle(FuncInfo("coa", [a, x])), Root("neq", [x])])))
                 )
                 self.cs.remove(c)
                 return True
@@ -238,7 +239,7 @@ class CompileState:
         for c in footCs:
             p1, x, a, b = c.args
             if p1 == p:
-                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [Line(FuncInfo("perpAt", [x, a, b])), Line(FuncInfo("connecting", [a, b]))]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [Line(FuncInfo("perpAt", (x, a, b))), Line(FuncInfo("connecting", (a, b)))]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -275,9 +276,9 @@ class CompileState:
         for c in interllCs:
             if c.args[0] == p:
                 w, x, y, z = c.args[1:]
-                l1 = Line(FuncInfo("connecting", [w, x]))
-                l2 = Line(FuncInfo("connecting", [y, z]))
-                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [l1, l2]))))
+                l1 = Line(FuncInfo("connecting", (w, x)))
+                l2 = Line(FuncInfo("connecting", (y, z)))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", (l1, l2)))))
                 self.cs.remove(c)
                 return True
         return False
@@ -345,6 +346,19 @@ class CompileState:
                 return True
         return False
 
+    def paramOnRayOpp(self, p, cs):
+        onRayCs = [c for c in cs if c.pred == "onSeg"]
+        for c in onRayCs:
+            if c.args[0] != p:
+                x, a, b = c.args
+                if p == a:
+                    self.solve_instructions.append(Parameterize(p, ("onRayOpp", [x, b])))
+                else:
+                    self.solve_instructions.append(Parameterize(p, ("onRayOpp", [x, a])))
+                self.cs.remove(c)
+                return True
+        return False
+
     def paramInPoly(self, p, cs):
         inPolyCs = [c for c in cs if c.pred == "insidePolygon"]
         for c in inPolyCs:
@@ -358,7 +372,7 @@ class CompileState:
         lines = self.linesFor(p, cs)
         if lines:
             lcs, l, extra_cs = lines[0]
-            self.solve_instructions.append(Parameterize(p, ("onLine", [l])))
+            self.solve_instructions.append(Parameterize(p, ("onLine", (l,))))
             for c in lcs:
                 self.cs.remove(c)
             self.cs += extra_cs
@@ -395,56 +409,56 @@ class CompileState:
             pred = c.pred
             ps = c.args
             if pred == "coll":
-                other_ps = [p1 for p1 in ps if p1 != p]
+                other_ps = tuple([p1 for p1 in ps if p1 != p])
                 lines.append(([c], Line(FuncInfo("connecting", other_ps)), list()))
             elif pred == "para":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line(FuncInfo("paraAt", [x, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("paraAt", (x, y, z))), list()))
             elif pred == "perp":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line(FuncInfo("perpAt", [x, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("perpAt", (x, y, z))), list()))
             elif pred == "cong":
                 w, x, y, z = c.args
                 if p == w and p == y:
-                    lines.append(([c], Line(FuncInfo("mediator", [x, z])), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", (x, z))), list()))
                 elif p == w and p == z:
-                    lines.append(([c], Line(FuncInfo("mediator", [x, y])), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", (x, y))), list()))
                 elif p == x and p == y:
-                    lines.append(([c], Line(FuncInfo("mediator", [w, z])), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", (w, z))), list()))
                 elif p == x and p == z:
-                    lines.append(([c], Line(FuncInfo("mediator", [w, y])), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", (w, y))), list()))
             elif pred == "ibisector":
                 # FIXME: Missing extra sameside constraints (the ndgs)
                 p1, x, y, z = c.args
                 if p == p1:
                     extra_c1 = Constraint("sameSide", [p1, x, y, z], False)
                     extra_c2 = Constraint("sameSide", [p1, z, y, x], False)
-                    lines.append(([c], Line(FuncInfo("ibisector", [x, y, z])), [extra_c1, extra_c2]))
+                    lines.append(([c], Line(FuncInfo("ibisector", (x, y, z))), [extra_c1, extra_c2]))
             elif pred == "ebisector":
                 p1, x, y, z = c.args
                 if p == p1:
-                    lines.append(([c], Line(FuncInfo("ebisector", [x, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("ebisector", (x, y, z))), list()))
             elif pred == "eqOAngle":
                 u, v, w, x, y, z = c.args
                 if u == p and p not in [v, w, x, y, z]:
-                    lines.append(([c], Line(FuncInfo("eqOAngle", [v, w, x, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", (v, w, x, y, z))), list()))
                 elif w == p and p not in [u, v, x, y, z]:
-                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, x, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", (u, v, x, y, z))), list()))
                 elif x == p and p not in [u, v, w, y, z]:
-                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, w, y, z])), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", (u, v, w, y, z))), list()))
                 elif z == p and p not in [u, v, w, x, y]:
-                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, w, x, y])), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", (u, v, w, x, y))), list()))
             elif pred == "onSeg":
                 x, y, z = c.args
                 extra_c = Constraint("between", [x, y, z], False)
                 if p == x:
-                    lines.append(([c], Line(FuncInfo("connecting", [y, z])), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", (y, z))), [extra_c]))
                 elif p == y:
-                    lines.append(([c], Line(FuncInfo("connecting", [x, z])), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", (x, z))), [extra_c]))
                 elif p == z:
-                    lines.append(([c], Line(FuncInfo("connecting", [x, y])), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", (x, y))), [extra_c]))
 
         return lines
 
@@ -503,16 +517,16 @@ class CompileState:
         elif oppCs and (oppCs[0].points[0] == p or oppCs[0].points[1] == p):
             a, b, c, d = oppCs[0].points[0], oppCs[0].points[1], oppCs[0].points[2], oppCs[0].points[3]
             if oppCs[0].points[0] == p:
-                root = Root("oppSides", [b, Line(FuncIno("connecting", [c, d]))])
+                root = Root("oppSides", [b, Line(FuncIno("connecting", (c, d)))])
             else: # oppCs[0].points[1] == p
-                root = Root("oppSides", [a, Line(FuncInfo("connecting", [c, d]))])
+                root = Root("oppSides", [a, Line(FuncInfo("connecting", (c, d)))])
             return (root, [oppCs[0]])
         elif sameCs and (sameCs[0].points[0] == p or sameCs[0].points[1] == p):
             a, b, c, d = sameCs[0].points[0], sameCs[0].points[1], sameCs[0].points[2], sameCs[0].points[3]
             if sameCs[0].points[0] == p:
-                root = Root("sameSide", [b, Line(FuncInfo("connecting", [c, d]))])
+                root = Root("sameSide", [b, Line(FuncInfo("connecting", (c, d)))])
             else: # sameCs[0].points[1] == p
-                root = Root("sameSide", [a, Line(FuncInfo("connecting", [c, d]))])
+                root = Root("sameSide", [a, Line(FuncInfo("connecting", (c, d)))])
             return (root, [sameCs[0]])
         else:
             # rsArbitrary

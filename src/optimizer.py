@@ -3,6 +3,7 @@ import math
 import pdb
 import collections
 import itertools
+import tensorflow.compat.v1 as tf
 
 from instruction import *
 from primitives import Line, Point, Circle, Num
@@ -13,6 +14,12 @@ from util import is_number, FuncInfo
 LineSF = collections.namedtuple("LineSF", ["a", "b", "c", "p1", "p2"])
 
 CircleNF = collections.namedtuple("CircleNF", ["center", "radius"])
+
+# by convention, n is a unit vector located in the upper-half plane
+LineNF = collections.namedtuple("LineNF", ["n", "r"])
+
+
+
 
 class Optimizer(ABC):
     def __init__(self, instructions, opts):
@@ -146,6 +153,9 @@ class Optimizer(ABC):
         elif n_pred == "uangle":
             p1, p2, p3 = self.lookup_pts(n_args)
             return self.angle(p1, p2, p3)
+        elif n_pred == "radius":
+            circ = self.circ2nf(n_args[0])
+            return circ.radius
         elif n_pred in ["div", "add", "mul", "sub", "pow"]:
             n1, n2 = [self.eval_num(n) for n in n_args]
             if n_pred == "div":
@@ -300,7 +310,7 @@ class Optimizer(ABC):
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
     def sample_uniform(self, p):
-        P   = self.get_point(x=self.mkvar(str(p)+"x"), y=self.mkvar(str(p)+"y"))
+        P   = self.get_point(x=self.mkvar(str(p)+"x", trainable=False), y=self.mkvar(str(p)+"y", trainable=False))
         self.register_pt(p, P)
         return P
 
@@ -357,9 +367,9 @@ class Optimizer(ABC):
         C = self.get_point(self.const(2.0), self.const(0.0))
 
         if iso is not None or equi:
-            Ax = self.const(0.0)
+            Ax = self.const(0)
         else:
-            Ax = self.mkvar("tri_x", lo=-1.0, hi=1.2)
+            Ax = self.mkvar("tri_x", lo=-1.2, hi=1.2, trainable=False)
 
         if right is not None:
             Ay = self.sqrt(4 - (Ax ** 2))
@@ -373,8 +383,10 @@ class Optimizer(ABC):
         A = self.get_point(Ax, Ay)
 
         # Shuffle if the isosceles vertex was not C
-        if iso == nB or right == nB:   (A, B, C) = (B, A, C)
-        elif iso == nC or right == nC: (A, B, C) = (C, B, A)
+        if iso == nB or right == nB:
+            (A, B, C) = (B, A, C)
+        elif iso == nC or right == nC:
+            (A, B, C) = (C, B, A)
 
         self.register_pt(nA, A)
         self.register_pt(nB, B)
@@ -580,7 +592,8 @@ class Optimizer(ABC):
 
     def parameterize_on_line(self, p, p_args):
         [l] = p_args
-        A, B = self.line2twoPts(l)
+        # A, B = self.line2twoPts(l)
+        A, B = self.lnf2pp(self.line2nf(l))
         z = self.mkvar(name=f"{p}_line")
         z = 0.2 * z
         self.register_loss(f"{p}_line_regularization", z, weight=1e-4)
@@ -1222,6 +1235,38 @@ class Optimizer(ABC):
         else:
             p1, p2 = self.line2twoPts(l)
             return self.pp2sf(p1, p2)
+
+    def lnf2pp(self, lnf):
+        n, r = lnf
+        w = n.smul(r)
+        m = self.rotate_clockwise_90(n)
+        return w, w + m
+
+    def pp2lnf(self, p1, p2):
+        # TODO(jesse): please name this
+        def mysterious_pp2pp(p1, p2):
+            x,y = p2
+            def pred(x,y):
+                return tf.logical_or(tf.math.less(y, self.const(0.0)),
+                                     tf.logical_and(tf.equal(y, self.const(0.0)), tf.math.less(x, self.const(0.0))))
+            return tf.compat.v1.cond(pred(x,y), lambda:(p1, p2.smul(-1.0)), lambda:(p1, p2))
+
+        def pp2lnf_core(p1, p2):
+            p1, p2 = mysterious_pp2pp(p1, p2)
+            x , _ = p2
+            n = tf.compat.v1.cond(tf.less_equal(x,0.0), lambda: self.rotate_clockwise_90(p2), lambda: self.rotate_counterclockwise_90(p2))
+            r = self.inner_product(p1, n)
+            return LineNF(n=n, r=r)
+
+        return pp2lnf_core(p1, (p1 - p2).normalize())
+
+
+    def line2nf(self, l):
+        if isinstance(l.val, str):
+            return self.name2line[l]
+        else:
+            p1, p2 = self.line2twoPts(l)
+            return self.pp2lnf(p1, p2)
 
     def pp2sf(self, p1, p2):
         def vert_line():

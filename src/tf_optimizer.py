@@ -195,6 +195,7 @@ class TfOptimizer(Optimizer):
         loss_v = None
 
         for i in range(opts['n_iterations']):
+
             loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
             '''
             if i > 0 and i % opts.print_freq == 0:
@@ -202,7 +203,7 @@ class TfOptimizer(Optimizer):
                 if opts.verbose > 1: self.print_losses()
                 if opts.plot > 1: self.plot()
             '''
-            # print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
+            print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
             # self.print_losses()
             # self.get_model().plot()
             if loss_v < opts['eps']:

@@ -1,5 +1,4 @@
 (param (A B C D) polygon)
-;; AB * CD = BC * DA --> AB / BC = DA / CD
 (assert (eqratio A B B C D A C D))
 (param X point (inPoly A B C D))
 (assert (eqangle X A A B X C C D))

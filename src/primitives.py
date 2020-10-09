@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import collections
 import numbers
+import pdb
 
 from util import FuncInfo
 
@@ -13,8 +14,9 @@ class Primitive(ABC):
 
     def __eq__(self, other):
         if type(self) != type(other):
-            # don't attempt to compare against unrelated types
-            return NotImplementedError("Must test equality with same types for Primitive")
+            return False
+            # # don't attempt to compare against unrelated types
+            # return NotImplementedError("Must test equality with same types for Primitive")
 
         return self.val == other.val
 
@@ -45,6 +47,19 @@ class Num(Primitive):
 
 class Circle(Primitive):
 
+    def pointsOn(self):
+        pred, points = self.val
+        if pred == "coa":
+            return [points[1]]
+        elif pred == "c3":
+            return points
+        elif pred == "cong":
+            return list()
+        elif pred == "diam":
+            return points
+        else:
+            raise RuntimeError("[Circle.pointsOn] Invalid circle pred")
+
     def __str__(self):
         if isinstance(self.val, str):
             return self.val
@@ -55,6 +70,25 @@ class Circle(Primitive):
             raise RuntimeError("Invalid circle")
 
 class Line(Primitive):
+
+    def pointsOn(self):
+        pred, points = self.val
+        if pred == "connecting":
+            return points
+        elif pred == "paraAt":
+            return [points[0]]
+        elif pred == "perpAt":
+            return [points[0]]
+        elif pred == "mediator":
+            return list()
+        elif pred == "ibisector":
+            return [points[1]]
+        elif pred == "ebisector":
+            return [points[1]]
+        elif pred == "eqoangle":
+            return [points[0]]
+        else:
+            raise RuntimeError("[Line.pointsOn] Invalid line pred")
 
     def __str__(self):
         if isinstance(self.val, str):

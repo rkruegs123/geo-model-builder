@@ -1,3 +1,5 @@
+import pdb
+
 class Constraint:
     def __init__(self, pred, args, negate):
         self.pred = pred

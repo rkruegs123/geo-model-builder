@@ -25,4 +25,4 @@
 
 ;; Prove that BD, FX, and ME are concurrent
 (assert (interLL Aux B D F X))
-(prove (coll Aux M E))
+(confirm (coll Aux M E))

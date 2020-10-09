@@ -296,6 +296,9 @@ class InstructionReader:
         elif pred == "ibisector":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "interLL":
+            assert(len(args) == 5)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "insidePolygon":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
@@ -362,36 +365,36 @@ class InstructionReader:
             assert(len(p_args) == 2)
             l1 = self.process_line(p_args[0])
             l2 = self.process_line(p_args[1])
-            p_val = FuncInfo("interLL", [l1, l2])
+            p_val = FuncInfo("interLL", (l1, l2))
             return Point(p_val)
         elif p_pred in ["incenter", "excenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
-            p_val = FuncInfo(p_pred, ps)
+            p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
         elif p_pred == "interLC":
             assert(len(p_args) == 3)
             l = self.process_line(p_args[0])
             c = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = FuncInfo("interLC", [l, c, rs])
+            p_val = FuncInfo("interLC", (l, c, rs))
             return Point(p_val)
         elif p_pred == "interCC":
             assert(len(p_args) == 3)
             c1 = self.process_circle(p_args[0])
             c2 = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = FuncInfo("interCC", [c1, c2, rs])
+            p_val = FuncInfo("interCC", (c1, c2, rs))
             return Point(p_val)
-        elif p_pred == "midp":
+        elif p_pred in ["midp", "midpFrom"]:
             assert(len(p_args) == 2)
             ps = [self.process_point(p) for p in p_args]
-            p_val = FuncInfo("midp", ps)
+            p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
         elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
-            p_val = FuncInfo(p_pred, ps)
+            p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
@@ -493,6 +496,11 @@ class InstructionReader:
             assert(len(n_args) == 3)
             p1, p2, p3 = [self.process_point(p) for p in n_args]
             n_val = FuncInfo("uangle", [p1, p2, p3])
+            return Num(n_val)
+        elif n_pred == "radius":
+            assert(len(n_args) == 1)
+            circ = self.process_circle(n_args[0])
+            n_val = FuncInfo("radius", [circ])
             return Num(n_val)
         elif n_pred in ["div", "add", "sub", "mul", "pow"]:
             assert(len(n_args) == 2)
