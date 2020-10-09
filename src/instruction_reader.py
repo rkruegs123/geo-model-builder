@@ -274,9 +274,6 @@ class InstructionReader:
         elif pred == "coll":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "concur":
-            assert(len(args) == 3)
-            assert(all([isinstance(t, Line) for t in args]))
         elif pred == "cong":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))

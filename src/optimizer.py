@@ -97,20 +97,20 @@ class Optimizer(ABC):
             elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
             elif head == "interLL":
                 l1, l2 = args
-                sf1 = self.line2sf(l1)
-                sf2 = self.line2sf(l2)
-                return self.inter_ll(sf1, sf2)
+                lnf1 = self.line2nf(l1)
+                lnf1 = self.line2nf(l2)
+                return self.inter_ll(lnf1, lnf2)
             elif head == "interLC":
                 l, c, root_select = args
-                l_sf = self.line2sf(l)
+                lnf = self.line2nf(l)
                 cnf = self.circ2nf(c)
                 if name:
-                    self.make_lc_intersect(name, l_sf, cnf)
+                    self.make_lc_intersect(name, lnf, cnf)
                 else:
                     # Use random name as point is unnamed, but we still want to force LC to intersect
                     rand_name = get_random_string(6)
-                    self.make_lc_intersect(rand_name, l_sf, cnf)
-                return self.inter_lc(l_sf, cnf, root_select)
+                    self.make_lc_intersect(rand_name, lnf, cnf)
+                return self.inter_lc(lnf, cnf, root_select)
             elif head == "interCC":
                 c1, c2, root_select = args
                 cnf1 = self.circ2nf(c1)
@@ -433,7 +433,7 @@ class Optimizer(ABC):
                 self.segments.append((A, B))
                 self.segments.append((X, P))
         elif isinstance(i.computation, Line):
-            L = self.line2sf(i.computation)
+            L = self.line2nf(i.computation)
             self.register_line(obj_name, L)
         elif isinstance(i.computation, Circle):
             C = self.circ2nf(i.computation)
@@ -493,13 +493,13 @@ class Optimizer(ABC):
         self.circles.append((I, self.exradius(A, B, C)))
 
     def compute_inter_ll(self, p, l1, l2):
-        sf1 = self.line2sf(l1)
-        sf2 = self.line2sf(l2)
-        P = self.inter_ll(sf1, sf2)
+        lnf1 = self.line2nf(l1)
+        lnf2 = self.line2nf(l2)
+        P = self.inter_ll(lnf1, lnf2)
         self.register_pt(p, P)
 
     def compute_inter_lc(self, p, l, c, root_select):
-        l_sf = self.line2sf(l)
+        l_sf = self.line2nf(l)
         cnf = self.circ2nf(c)
         P = self.inter_lc(l_sf, cnf, root_select)
         self.make_lc_intersect(p, l_sf, cnf)
@@ -573,7 +573,7 @@ class Optimizer(ABC):
         P1 = self.sample_uniform(p1)
         P2 = self.sample_uniform(p2)
 
-        self.register_line(l, self.pp2sf(P1, P2))
+        self.register_line(l, self.pp2lnf(P1, P2))
 
     def parameterize_circ(self, c):
         o = Point(c.val + "_origin")
@@ -702,9 +702,6 @@ class Optimizer(ABC):
             for i in range(len(coll_args)-1):
                 self.segments.append((coll_args[i], coll_args[i+1]))
             return diffs
-        elif pred == "concur":
-            l1, l2, l3 = args
-            return [self.concur_phi(l1, l2, l3)]
         elif pred == "cong":
             A, B, C, D = self.lookup_pts(args)
             if A in [C, D]: self.circles.append((A, self.dist(A, B)))
@@ -906,22 +903,6 @@ class Optimizer(ABC):
     def coll_phi(self, A, B, C):
         return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y)
 
-    def concur_phi(self, l1, l2, l3):
-        a1, b1, c1, _, _ = self.line2sf(l1)
-        a2, b2, c2, _, _ = self.line2sf(l2)
-        a3, b3, c3, _, _ = self.line2sf(l3)
-
-        # [[a, b], [c, d]]
-        def det2x2(a, b, c, d):
-            return a * d - c * b
-
-        # [[a, b, c], [d, e, f], [g, h, i]]
-        def det3x3(a, b, c, d, e, f, g, h, i):
-            return a * det2x2(e, f, h, i) - b * det2x2(d, f, g, i) + c * det2x2(d, e, g, h)
-
-        return det3x3(a1, b1, c1, a2, b2, c2, a3, b3, c3)
-
-
     def between_gap(self, X, A, B):
         eps = 0.2
 
@@ -951,35 +932,25 @@ class Optimizer(ABC):
     def same_side(self, a, b, x, y):
         return self.gt(self.side_score_prod(a, b, x, y), 0.0)
 
-    def inter_ll(self, sf1, sf2):
-        (a1, b1, c1, _, _) = sf1
-        (a2, b2, c2, _, _) = sf2
+    def inter_ll(self, l1, l2):
+        (n11, n12), r1 = l1 # TODO(jesse): ensure that this pattern matching works
+        (n21, n22), r2 = l2
 
-        def intersect_vert_l1_with_l2():
-            const_x = c1
-            py = (c2 - a2 * const_x) / b2 # will fail if line 2 is vertical as well (b2 == 0)
-            return self.get_point(const_x, py)
+        def inter_ll_aux(n11, n12, r1, n21, n22, r2):
+            numer = n11 * r2 * (n21 ** 2 + n22**2) - r1 * (n11**2 * n21 + n12**2 * n21)
+            denom = n11 * n22 - n12 * n21
+            def on_ok():
+                return numer/denom
 
-        def intersect_vert_l2_with_l1():
-            const_x = c2
-            py = (c1 - a1 * const_x) / b1 # will fail if line 1 is vertical as well (b1 == 0)
-            return self.get_point(const_x, py)
+            def on_bad():
+                return numer/(tf.math.sign(denom) * 1e-4)
 
-        def intersect_non_vert_lines():
-            # ax + by = c --> y = (-ax + c) / b --> y = (-a / b)x + (c / b)
-            m1, int1 = (-a1 / b1), (c1 / b1)
-            m2, int2 = (-a2 / b2), (c2 / b2)
-            # If both lines are horizontal, denominator will be 0
-            px = (int2 - int1) / (m1 - m2)
-            py = m1 * px + int1
-            return self.get_point(px, py)
+            return tf.cond(tf.less(tf.math.abs(denom), 1e-4),
+                           on_bad,
+                           on_ok)
 
-        return self.cond(self.eq(b1, self.const(0)), # sf1 is vertical
-                         intersect_vert_l1_with_l2,
-                         lambda: self.cond(self.eq(b2, self.const(0)), # sf2 is vertical
-                                           intersect_vert_l2_with_l1,
-                                           intersect_non_vert_lines))
-
+        return self.get_point(x=inter_ll_aux(n22, n21, r2, n12, n11, r1),
+                              y=inter_ll_aux(n11, n12, r1, n21, n22, r2))
 
     def inter_pp_c(self, P1, P2, cnf):
         # We follow http://mathworld.wolfram.com/Circle-LineIntersection.html
@@ -1008,15 +979,15 @@ class Optimizer(ABC):
 
         def on_neg():
             Operp = self.rotate_counterclockwise_90(P1 - P2) + O
-            F = self.inter_ll(self.pp2sf(P1, P2), self.pp2sf(O, Operp))
+            F = self.inter_ll(self.pp2lnf(P1, P2), self.pp2lnf(O, Operp))
             X = O + (F - O).smul(r / self.dist(O, F))
             Q = self.midp(F, X)
             return self.unshift(O, [Q, Q])
 
         return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
 
-    def inter_lc(self, l, c, root_select):
-        p1, p2 = l.p1, l.p2
+    def inter_lc(self, lnf, c, root_select):
+        p1, p2 = self.lnf2pp(lnf)
         I1, I2 = self.inter_pp_c(p1, p2, c)
         self.circles.append(c)
         return self.process_rs(I1, I2, root_select)
@@ -1028,12 +999,12 @@ class Optimizer(ABC):
         self.circles.append(cnf2)
         return result
 
-    def make_lc_intersect(self, name, l, c):
-        _, _, _, A, B = l
+    def make_lc_intersect(self, name, lnf, c):
+        A, B = self.lnf2pp(lnf)
         O, r = c
         Operp = self.rotate_counterclockwise_90(A - B) + O
 
-        F = self.inter_ll(l, self.pp2sf(O, Operp))
+        F = self.inter_ll(lnf, self.pp2lnf(O, Operp))
         d = self.dist(O, F)
         f_val = self.cond(self.lt(r, d), lambda: d, lambda: self.const(0.0))
 
@@ -1079,7 +1050,7 @@ class Optimizer(ABC):
 
     def radical_axis(self, cnf1, cnf2):
         p1, p2 = self.radical_axis_pts(cnf1, cnf2)
-        return self.pp2sf(p1, p2)
+        return self.pp2lnf(p1, p2)
 
     def eqangle6_diff(self, A, B, C, P, Q, R):
         s1 = self.det3(A, B, C)
@@ -1127,13 +1098,13 @@ class Optimizer(ABC):
 
 
     def to_trilinear(self, P, A, B, C):
-        la = self.pp2sf(B, C)
-        lb = self.pp2sf(C, A)
-        lc = self.pp2sf(A, B)
+        la = self.pp2lnf(B, C)
+        lb = self.pp2lnf(C, A)
+        lc = self.pp2lnf(A, B)
 
-        ga = self.pp2sf(P, P + self.rotate_counterclockwise_90(C - B))
-        gb = self.pp2sf(P, P + self.rotate_counterclockwise_90(A - C))
-        gc = self.pp2sf(P, P + self.rotate_counterclockwise_90(B - A))
+        ga = self.pp2lnf(P, P + self.rotate_counterclockwise_90(C - B))
+        gb = self.pp2lnf(P, P + self.rotate_counterclockwise_90(A - C))
+        gc = self.pp2lnf(P, P + self.rotate_counterclockwise_90(B - A))
 
         da = self.dist(P, self.inter_ll(la, ga))
         db = self.dist(P, self.inter_ll(lb, gb))
@@ -1166,9 +1137,9 @@ class Optimizer(ABC):
         # (could also do case analysis and cross-ratio)
         L = A + self.rotate_counterclockwise(const(math.pi / 3), X - A).smul(0.5)
         M = self.midp(A, L)
-        N = self.inter_ll(self.pp2sf(B, L), self.pp2sf(X, M))
-        K = self.inter_ll(self.pp2sf(A, N), self.pp2sf(B, M))
-        Y = self.inter_ll(self.pp2sf(L, K), self.pp2sf(A, X))
+        N = self.inter_ll(self.pp2lnf(B, L), self.pp2lnf(X, M))
+        K = self.inter_ll(self.pp2lnf(A, N), self.pp2lnf(B, M))
+        Y = self.inter_ll(self.pp2lnf(L, K), self.pp2lnf(A, X))
         return Y
 
     def in_poly_phis(self, X, *Ps):
@@ -1243,6 +1214,7 @@ class Optimizer(ABC):
         return w, w + m
 
     def pp2lnf(self, p1, p2):
+
         # TODO(jesse): please name this
         def mysterious_pp2pp(p1, p2):
             x,y = p2
@@ -1357,11 +1329,11 @@ class Optimizer(ABC):
             return self.cond(test, lambda: P1, lambda: P2)
         elif pred == "oppSides":
             [pt] = self.lookup_pts([rs_args[0]])
-            a, b = self.line2twoPts(rs_args[1])
+            a, b = self.lnf2pp(self.line2nf(rs_args[1]))
             return self.cond(self.opp_sides(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "sameSide":
             [pt] = self.lookup_pts([rs_args[0]])
-            a, b = self.line2twoPts(rs_args[1])
+            a, b = self.lnf2pp(self.line2nf(rs_args[1]))
             return self.cond(self.same_side(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "arbitrary":
             return P2

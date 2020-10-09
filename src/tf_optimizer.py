@@ -120,10 +120,8 @@ class TfOptimizer(Optimizer):
     def register_line(self, l, L):
         assert(l not in self.name2line)
         assert(isinstance(l.val, str))
-        a = tf.debugging.check_numerics(L.a, message=str(l))
-        b = tf.debugging.check_numerics(L.b, message=str(l))
-        c = tf.debugging.check_numerics(L.c, message=str(l))
-        self.name2line[l] = LineSF(a, b, c, L.p1, L.p2)
+        # FIXME: Check numerics
+        self.name2line[l] = L
 
     def register_circ(self, c, C):
         assert(c not in self.name2circ)

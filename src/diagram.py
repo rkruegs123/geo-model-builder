@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import pdb
 import numpy as np
+import math
 
 class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", "circles", "ndgs", "goals", "no_plot_pts", "named_circles"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
@@ -46,6 +47,21 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
         for l, L in self.lines.items():
             # ax + by = c
             l_name = l.val
+            (nx, ny), r = L
+            l_angle = math.atan(ny / nx) % math.pi
+            if l_angle == 0:
+                plt.axvline(x=r, label=l_name) # FIXME: Check if this labrel works
+            else:
+                slope = -1 / math.tan(l_angle)
+                intercept = r / math.sin(l_angle)
+
+                x_vals = np.array(ax.get_xlim())
+                y_vals = intercept + slope * x_vals
+                # plt.plot(x_vals, y_vals, '--', label=l_name)
+                plt.plot(x_vals, y_vals, label=l_name)
+
+
+            '''
             la, lb, lc, _, _ = L
 
             if la == 0: # 0x + by = c --> y = c / b
@@ -61,6 +77,7 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
                 y_vals = intercept + slope * x_vals
                 # plt.plot(x_vals, y_vals, '--', label=l_name)
                 plt.plot(x_vals, y_vals, label=l_name)
+            '''
 
         if self.lines or self.named_circles:
             plt.legend()

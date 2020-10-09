@@ -1,2 +1,2 @@
-(sample (A B C) acuteTri))
-(param X (onSeg (midp A B) B))
+(param (A B C) acuteTri))
+(param X point (onSeg (midp A B) B))
