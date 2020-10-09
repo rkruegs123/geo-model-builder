@@ -51,6 +51,9 @@ class TfOptimizer(Optimizer):
     def cos(self, x):
         return tf.math.cos(x)
 
+    def asin(self, x):
+        return tf.math.asin(x)
+
     def acos(self, x):
         return tf.math.acos(x)
 

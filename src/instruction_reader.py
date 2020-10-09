@@ -494,6 +494,11 @@ class InstructionReader:
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
+        elif rs_pred == "rsOppSides":
+            assert(len(rs_args) == 2)
+            opp_p = self.process_point(rs_args[0])
+            dividing_line = self.process_line(rs_args[1])
+            return Root("oppSides", [opp_p, dividing_line])
         elif rs_info == "rsArbitrary":
             return Root("arbitrary", list())
         else:

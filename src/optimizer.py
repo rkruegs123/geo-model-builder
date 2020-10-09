@@ -210,6 +210,10 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
+    def asin(self, x):
+        pass
+
+    @abstractmethod
     def acos(self, x):
         pass
 
@@ -758,13 +762,10 @@ class Optimizer(ABC):
             if len(args) == 4: # four points
                 return [self.para_phi(*self.lookup_pts(args))]
             else: # two lines
-                raise NotImplementedError("Fix now that we are using standard form")
-                '''
                 l1, l2 = args
-                m1, b1, _, _ = self.line2sif(l1)
-                m2, b2, _, _ = self.line2sif(l2)
-                return [m2 - m1]
-                '''
+                P1, P2 = self.line2twoPts(l1)
+                P3, P4 = self.line2twoPts(l2)
+                return [self.para_phi(P1, P2, P3, P4)]
         elif pred == "reflectPL":
             X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
@@ -1157,6 +1158,7 @@ class Optimizer(ABC):
             phis.append(self.max(self.const(0.0), - self.side_score_prod(X, C, A, B)))
         return phis
 
+
     #####################
     ## Utilities
     ####################
@@ -1300,11 +1302,11 @@ class Optimizer(ABC):
             test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
             return self.cond(test, lambda: P1, lambda: P2)
         elif pred == "oppSides":
-            [pt] = self.lookup_pts(rs_args[0])
+            [pt] = self.lookup_pts([rs_args[0]])
             a, b = self.line2twoPts(rs_args[1])
             return self.cond(self.opp_sides(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "sameSide":
-            [pt] = self.lookup_pts(rs_args[0])
+            [pt] = self.lookup_pts([rs_args[0]])
             a, b = self.line2twoPts(rs_args[1])
             return self.cond(self.same_side(P1, pt, a, b), lambda: P1, lambda: P2)
         elif pred == "arbitrary":
