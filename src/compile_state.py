@@ -469,7 +469,7 @@ class CompileState:
                     elif x == z:
                         circles.append(([c], Circle(FuncInfo("coa", [x, y])), list()))
                     else:
-                        circles.append(([c], Circle(FuncInfo("cong", [b, c, d])), list()))
+                        circles.append(([c], Circle(FuncInfo("cong", [x, y, z])), list()))
             elif pred == "perp":
                 w, x, y, z = ps
                 if p == w and p == y:
