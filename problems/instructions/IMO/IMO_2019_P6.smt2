@@ -1,13 +1,15 @@
-(sample (A B C) acuteTri))
+(param (A B C) acuteTri))
 (assert (not (cong A B A C)))
 
-(compute I (incenter A B C))
-(compute D (interLL (perpAt I B C) (line B C)))
-(compute E (interLL (perpAt I A C) (line A C)))
-(compute F (interLL (perpAt I A B) (line A B)))
+(compute I point (incenter A B C))
 
-(compute R (interLC (perpAt D E F) (circ D E F) (rsNeq D)))
-(compute P (interLC (line A R) (circ D E F) (rsNeq R)))
-(compute Q (interCC (circ P C E) (circ P B F) (rsNeq P)))
+(compute omega circle (incircle A B C))
+(compute D point (interLC (line B C) omega rsArbitrary))
+(compute E point (interLC (line C A) omega rsArbitrary))
+(compute F point (interLC (line A B) omega rsArbitrary))
 
-(confirm (onL (interLL (line D I) (line P Q)) (perpAt A A I)))
+(compute R point (interLC (perpAt D E F) omega (rsNeq D)))
+(compute P point (interLC (line A R) omega (rsNeq R)))
+(compute Q point (interCC (circ P C E) (circ P B F) (rsNeq P)))
+
+(confirm (concur (line D I) (line P Q) (perpAt A A I)))

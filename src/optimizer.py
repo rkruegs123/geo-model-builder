@@ -1177,7 +1177,7 @@ class Optimizer(ABC):
                 return X, X + self.rotate_counterclockwise_90(A - B)
             elif pred == "perpBis":
                 a, b = args
-                m_ab = Point(("midp", [a, b]))
+                m_ab = Point(FuncInfo("midp", [a, b]))
                 return self.line2twoPts(Line(FuncInfo("perpAt", [m_ab, a, b])))
             elif pred == "mediator":
                 A, B = self.lookup_pts(args)

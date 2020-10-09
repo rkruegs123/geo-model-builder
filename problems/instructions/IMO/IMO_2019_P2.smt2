@@ -1,15 +1,17 @@
-(sample (A B C) triangle)
+(param (A B C) triangle)
 
-(param A1 (onSeg A1 (line B C)))
-(param B1 (onSeg B1 (line A C)))
+(param A1 point (onSeg B C))
+(param B1 point (onSeg A C))
 
-(param P (onSeg P (line A A1)))
-(compute Q (interLL (line B B1) (paraAt P (line A B))))
+(param P point (onSeg A A1))
+(compute Q point (interLL (line B B1) (paraAt P A B)))
 
-(param P1 (onSeg B1 (line P P1)))
-(assert (= (oangle (slope (line P P1)) (slope (line P1 C))) (oangle (slope (line B A)) (slope (line A C)))))
+(param P1 point (onLine (line P B1)))
+(assert (onSeg B1 P P1))
+(assert (= (uangle P P1 C) (uangle B A C)))
 
-(param Q1 (onSeg A1 Q Q1))
-(assert (= (oangle (slope (line C Q1)) (slope (line Q1 Q))) (oangle (slope (line C B)) (slope (line B A)))))
+(param Q1 point (onLine (line Q A)))
+(assert (onSeg A1 Q Q1))
+(assert (= (uangle C Q1 Q) (uangle C B A)))
 
-(confirm (onC P (circ Q P1 Q1)))
+(confirm (onCirc P (circ Q P1 Q1)))

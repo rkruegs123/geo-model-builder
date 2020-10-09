@@ -182,8 +182,6 @@ class InstructionReader:
     def param(self, cmd):
         assert(len(cmd) == 3 or len(cmd) == 4)
 
-
-
         obj_type = cmd[2]
         assert(obj_type in ["point", "line", "circle"])
 
@@ -234,6 +232,9 @@ class InstructionReader:
         elif pred == "onCirc":
             assert(len(args) == 1)
             assert(all([isinstance(t, Circle) for t in args]))
+        elif pred == "inPoly":
+            assert(len(args) >= 3)
+            assert(all([isinstance(t, Point) for t in args]))
         else:
             raise NotImplementedError(f"[process_param] unrecognized param {param}")
         return pred, args
@@ -274,7 +275,8 @@ class InstructionReader:
         elif pred == "cycl":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "eq":
+        elif pred == "eq" or pred == "=":
+            pred = "eq"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
         elif pred == "ibisector":
@@ -399,6 +401,9 @@ class InstructionReader:
         elif l_pred == "perpAt":
             assert(len(ps) == 3)
             l_val = FuncInfo("perpAt", ps)
+        elif l_pred == "paraAt":
+            assert(len(ps) == 3)
+            l_val = FuncInfo("paraAt", ps)
         elif l_pred == "perpBis":
             assert(len(ps) == 2)
             l_val = FuncInfo("perpBis", ps)
