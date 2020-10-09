@@ -96,7 +96,7 @@ class CompileState:
         ccCs = [c for c in cs if c.pred == "circumcenter"]
         for c in ccCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("circumcenter", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("circumcenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -105,7 +105,7 @@ class CompileState:
         orthocenterCs = [c for c in cs if c.pred == "orthocenter"]
         for c in orthocenterCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("orthocenter", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("orthocenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -114,7 +114,7 @@ class CompileState:
         centroidCs = [c for c in cs if c.pred == "centroid"]
         for c in centroidCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("centroid", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("centroid", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -124,11 +124,11 @@ class CompileState:
         for c in isogonalCs:
             x, y, a, b, c = c.args
             if x == p:
-                self.solve_instructions.append(Compute(p, Point(("isogonal", [y, a, b, c]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("isogonal", [y, a, b, c]))))
                 self.cs.remove(c)
                 return True
             elif y == p:
-                self.solve_instructions.append(Compute(p, Point(("isogonal", [x, a, b, c]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("isogonal", [x, a, b, c]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -138,11 +138,11 @@ class CompileState:
         for c in isotomicCs:
             x, y, a, b, c = c.args
             if x == p:
-                self.solve_instructions.append(Compute(p, Point(("isotomic", [y, a, b, c]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("isotomic", [y, a, b, c]))))
                 self.cs.remove(c)
                 return True
             elif y == p:
-                self.solve_instructions.append(Compute(p, Point(("isotomic", [x, a, b, c]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("isotomic", [x, a, b, c]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -151,7 +151,7 @@ class CompileState:
         aMidpOppCs = [c for c in cs if c.pred == "arcMidpOpp"]
         for c in aMidpOppCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("arcMidpOpp", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("arcMidpOpp", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -160,7 +160,7 @@ class CompileState:
         aMidpSameCs = [c for c in cs if c.pred == "arcMidpSame"]
         for c in aMidpSameCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("arcMidpSame", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("arcMidpSame", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -172,7 +172,7 @@ class CompileState:
             match_success, match = match_in_first_2(p, c.args)
             if match_success:
                 y, o, a = match
-                self.solve_instructions.append(Compute(p, Point(("inverse", [y, o, a]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("inverse", [y, o, a]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -182,7 +182,7 @@ class CompileState:
         for c in harmonicLCs:
             (y, (a, b)) = group_pairs(p, ps)
             if y is not None:
-                self.solve_instructions.append(Compute(p, Point(("harmonicLConj", [y, a, b]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("harmonicLConj", [y, a, b]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -192,7 +192,7 @@ class CompileState:
         for c in harmonicCCs:
             (y, (a, b)) = group_pairs(p, ps)
             if y is not None:
-                self.solve_instructions.append(Compute(p, Point(("harmonicCConj", [y, a, b]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("harmonicCConj", [y, a, b]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -202,7 +202,7 @@ class CompileState:
         midpCs = [c for c in cs if c.pred == "midp"]
         for c in midpCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("midp", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("midp", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -215,7 +215,7 @@ class CompileState:
                 x = a
                 if a == p:
                     x = b
-                self.solve_instructions.append(Compute(p, Point(("midpFrom", [m, x]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("midpFrom", [m, x]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -227,7 +227,7 @@ class CompileState:
             if match_success:
                 x, a, b = match
                 self.solve_instructions.append(
-                    Compute(p, Point(("interLC", [Line("perpAt", [x, a, b]), Circle("coa", [a, x]), Root("neq", [x])])))
+                    Compute(p, Point(FuncInfo("interLC", [Line(FuncInfo("perpAt", [x, a, b])), Circle(FuncInfo("coa", [a, x])), Root("neq", [x])])))
                 )
                 self.cs.remove(c)
                 return True
@@ -238,7 +238,7 @@ class CompileState:
         for c in footCs:
             p1, x, a, b = c.args
             if p1 == p:
-                self.solve_instructions.append(Compute(p, Point(("interLL", [Line("perpAt", [x, a, b]), Line("connecting", [a, b])]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [Line(FuncInfo("perpAt", [x, a, b])), Line(FuncInfo("connecting", [a, b]))]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -247,7 +247,7 @@ class CompileState:
         incenterCs = [c for c in cs if c.pred == "incenter"]
         for c in incenterCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("incenter", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("incenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -256,7 +256,7 @@ class CompileState:
         mixIncenterCs = [c for c in cs if c.pred == "mixtilinearIncenter"]
         for c in mixIncenterCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("mixtilinearIncenter", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("mixtilinearIncenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -265,7 +265,7 @@ class CompileState:
         excenterCs = [c for c in cs if c.pred == "excenter"]
         for c in excenterCs:
             if c.args[0] == p:
-                self.solve_instructions.append(Compute(p, Point(("excenter", c.args[1:]))))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("excenter", c.args[1:]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -275,9 +275,9 @@ class CompileState:
         for c in interllCs:
             if c.args[0] == p:
                 w, x, y, z = c.args[1:]
-                l1 = Line("connecting", [w, x])
-                l2 = Line("connecting", [y, z])
-                self.solve_instructions.append(Compute(p, Point(("interLL", [l1, l2]))))
+                l1 = Line(FuncInfo("connecting", [w, x]))
+                l2 = Line(FuncInfo("connecting", [y, z]))
+                self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [l1, l2]))))
                 self.cs.remove(c)
                 return True
         return False
@@ -289,7 +289,7 @@ class CompileState:
         if len(lines) >= 2:
             cs1, l1, extra_cs1 = lines[0]
             cs2, l2, extra_cs2 = lines[1]
-            self.solve_instructions.append(Compute(p, Point(("interLL", [l1, l2]))))
+            self.solve_instructions.append(Compute(p, Point(FuncInfo("interLL", [l1, l2]))))
             for c in cs1 + cs2:
                 self.cs.remove(c)
             self.cs += extra_cs1 + extra_cs2
@@ -301,7 +301,7 @@ class CompileState:
             root, rcs = self.determine_root(p, l, circ, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, Point(("interLC", [l, circ, root]))))
+            self.solve_instructions.append(Compute(p, Point(FuncInfo("interLC", [l, circ, root]))))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             self.cs += extra_cs_l + extra_cs_c
@@ -313,7 +313,7 @@ class CompileState:
             root, rcs = self.determine_root(p, c1, c2, cs)
             if root is None:
                 return False
-            self.solve_instructions.append(Compute(p, Point(("interCC", [c1, c2, root]))))
+            self.solve_instructions.append(Compute(p, Point(FuncInfo("interCC", [c1, c2, root]))))
             for c in cs1 + cs2 + rcs:
                 self.cs.remove(c)
             self.cs += extra_cs1 + extra_cs2
@@ -396,55 +396,55 @@ class CompileState:
             ps = c.args
             if pred == "coll":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                lines.append(([c], Line("connecting", other_ps), list()))
+                lines.append(([c], Line(FuncInfo("connecting", other_ps)), list()))
             elif pred == "para":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line("paraAt", [x, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("paraAt", [x, y, z])), list()))
             elif pred == "perp":
                 (x, (y, z)) = group_pairs(p, ps)
                 if x is not None:
-                    lines.append(([c], Line("perpAt", [x, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("perpAt", [x, y, z])), list()))
             elif pred == "cong":
                 w, x, y, z = c.args
                 if p == w and p == y:
-                    lines.append(([c], Line("mediator", [x, z]), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", [x, z])), list()))
                 elif p == w and p == z:
-                    lines.append(([c], Line("mediator", [x, y]), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", [x, y])), list()))
                 elif p == x and p == y:
-                    lines.append(([c], Line("mediator", [w, z]), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", [w, z])), list()))
                 elif p == x and p == z:
-                    lines.append(([c], Line("mediator", [w, y]), list()))
+                    lines.append(([c], Line(FuncInfo("mediator", [w, y])), list()))
             elif pred == "ibisector":
                 # FIXME: Missing extra sameside constraints (the ndgs)
                 p1, x, y, z = c.args
                 if p == p1:
                     extra_c1 = Constraint("sameSide", [p1, x, y, z], False)
                     extra_c2 = Constraint("sameSide", [p1, z, y, x], False)
-                    lines.append(([c], Line("ibisector", [x, y, z]), [extra_c1, extra_c2]))
+                    lines.append(([c], Line(FuncInfo("ibisector", [x, y, z])), [extra_c1, extra_c2]))
             elif pred == "ebisector":
                 p1, x, y, z = c.args
                 if p == p1:
-                    lines.append(([c], Line("ebisector", [x, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("ebisector", [x, y, z])), list()))
             elif pred == "eqOAngle":
                 u, v, w, x, y, z = c.args
                 if u == p and p not in [v, w, x, y, z]:
-                    lines.append(([c], Line("eqOAngle", [v, w, x, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", [v, w, x, y, z])), list()))
                 elif w == p and p not in [u, v, x, y, z]:
-                    lines.append(([c], Line("eqOAngle", [u, v, x, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, x, y, z])), list()))
                 elif x == p and p not in [u, v, w, y, z]:
-                    lines.append(([c], Line("eqOAngle", [u, v, w, y, z]), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, w, y, z])), list()))
                 elif z == p and p not in [u, v, w, x, y]:
-                    lines.append(([c], Line("eqOAngle", [u, v, w, x, y]), list()))
+                    lines.append(([c], Line(FuncInfo("eqOAngle", [u, v, w, x, y])), list()))
             elif pred == "onSeg":
                 x, y, z = c.args
                 extra_c = Constraint("between", [x, y, z], False)
                 if p == x:
-                    lines.append(([c], Line("connecting", [y, z]), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", [y, z])), [extra_c]))
                 elif p == y:
-                    lines.append(([c], Line("connecting", [x, z]), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", [x, z])), [extra_c]))
                 elif p == z:
-                    lines.append(([c], Line("connecting", [x, y]), [extra_c]))
+                    lines.append(([c], Line(FuncInfo("connecting", [x, y])), [extra_c]))
 
         return lines
 
@@ -456,30 +456,30 @@ class CompileState:
             ps = c.args
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                circles.append(([c], Circle("c3", other_ps), list()))
+                circles.append(([c], Circle(FuncInfo("c3", other_ps)), list()))
             elif pred == "onC":
                 p1, o, x = ps
                 if p == p1:
-                    circles.append(([c], Circle("coa", [o, x]), list()))
+                    circles.append(([c], Circle(FuncInfo("coa", [o, x])), list()))
             elif pred == "cong":
                 if ps.count(p) == 1:
                     (x, (y, z)) = group_pairs(p, ps)
                     if x == y:
-                        circles.append(([c], Circle("coa", [x, z]), list()))
+                        circles.append(([c], Circle(FuncInfo("coa", [x, z])), list()))
                     elif x == z:
-                        circles.append(([c], Circle("coa", [x, y]), list()))
+                        circles.append(([c], Circle(FuncInfo("coa", [x, y])), list()))
                     else:
-                        circles.append(([c], Circle("cong", [b, c, d]), list()))
+                        circles.append(([c], Circle(FuncInfo("cong", [b, c, d])), list()))
             elif pred == "perp":
                 w, x, y, z = ps
                 if p == w and p == y:
-                    circles.append(([c], Circle("diam", [x, z]), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", [x, z])), list()))
                 elif p == w and p == z:
-                    circles.append(([c], Circle("diam", [x, y]), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", [x, y])), list()))
                 elif p == x and p == y:
-                    circles.append(([c], Circle("diam", [w, z]), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", [w, z])), list()))
                 elif p == x and p == z:
-                    circles.append(([c], Circle("diam", [w, y]), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", [w, y])), list()))
         return circles
 
     # Returns (root, constraints to get root)
@@ -503,16 +503,16 @@ class CompileState:
         elif oppCs and (oppCs[0].points[0] == p or oppCs[0].points[1] == p):
             a, b, c, d = oppCs[0].points[0], oppCs[0].points[1], oppCs[0].points[2], oppCs[0].points[3]
             if oppCs[0].points[0] == p:
-                root = Root("oppSides", [b, Line("connecting", [c, d])])
+                root = Root("oppSides", [b, Line(FuncIno("connecting", [c, d]))])
             else: # oppCs[0].points[1] == p
-                root = Root("oppSides", [a, Line("connecting", [c, d])])
+                root = Root("oppSides", [a, Line(FuncInfo("connecting", [c, d]))])
             return (root, [oppCs[0]])
         elif sameCs and (sameCs[0].points[0] == p or sameCs[0].points[1] == p):
             a, b, c, d = sameCs[0].points[0], sameCs[0].points[1], sameCs[0].points[2], sameCs[0].points[3]
             if sameCs[0].points[0] == p:
-                root = Root("sameSide", [b, Line("connecting", [c, d])])
+                root = Root("sameSide", [b, Line(FuncInfo("connecting", [c, d]))])
             else: # sameCs[0].points[1] == p
-                root = Root("sameSide", [a, Line("connecting", [c, d])])
+                root = Root("sameSide", [a, Line(FuncInfo("connecting", [c, d]))])
             return (root, [sameCs[0]])
         else:
             # rsArbitrary
