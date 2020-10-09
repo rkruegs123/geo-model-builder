@@ -1,5 +1,6 @@
 import pdb
 import argparse
+import math
 
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
@@ -7,6 +8,7 @@ from parse import parse_sexprs
 from primitives import Point, Line, Circle, Num
 from util import Root, is_number, FuncInfo
 
+RESERVED_NAMES = ["pi"]
 
 class InstructionReader:
     def __init__(self, problem_lines):
@@ -40,6 +42,8 @@ class InstructionReader:
             raise RuntimeError(f"[register_pt] Same point declared twice: {p}")
         if not (isinstance(p, Point) and isinstance(p.val, str)):
             raise RuntimeError(f"[register_pt] Invalid point: {p}")
+        if p.val.lower() in RESERVED_NAMES:
+            raise RuntimeError(f"[register_pt] Reserved name: {p}")
         self.points.append(p)
 
     def register_circ(self, c):
@@ -47,6 +51,8 @@ class InstructionReader:
             raise RuntimeError(f"[register_circ] Same circle declared twice: {c}")
         if not (isinstance(c, Circle) and isinstance(c.val, str)):
             raise RuntimeError(f"[register_circ] Invalid circle name: {c.val}")
+        if c.val.lower() in RESERVED_NAMES:
+            raise RuntimeError(f"[register_circ] Reserved name: {c}")
         self.circles.append(c)
 
     def register_line(self, l):
@@ -54,6 +60,8 @@ class InstructionReader:
             raise RuntimeError(f"[register_line] Same line declared twice: {l}")
         if not (isinstance(l, Line) and isinstance(l.val, str)):
             raise RuntimeError(f"[register_line] Invalid line name: {l.val}")
+        if l.val.lower() in RESERVED_NAMES:
+            raise RuntimeError(f"[register_line] Reserved name: {l}")
         self.lines.append(l)
 
     def process_command(self, cmd):
@@ -279,6 +287,12 @@ class InstructionReader:
             pred = "eq"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "eqangle":
+            assert(len(args) == 8)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "eqratio":
+            assert(len(args) == 8)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "ibisector":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
@@ -460,6 +474,8 @@ class InstructionReader:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 
     def process_number(self, n_info):
+        if isinstance(n_info, str) and n_info.lower() == "pi":
+            return Num(math.pi)
         if isinstance(n_info, str) and is_number(n_info):
             return Num(float(n_info))
         if not isinstance(n_info, tuple):
@@ -478,10 +494,10 @@ class InstructionReader:
             p1, p2, p3 = [self.process_point(p) for p in n_args]
             n_val = FuncInfo("uangle", [p1, p2, p3])
             return Num(n_val)
-        elif n_pred == "div":
+        elif n_pred in ["div", "add", "sub", "mul", "pow"]:
             assert(len(n_args) == 2)
             n1, n2 = [self.process_number(n) for n in n_args]
-            n_val = FuncInfo("div", [n1, n2])
+            n_val = FuncInfo(n_pred, [n1, n2])
             return Num(n_val)
         else:
             raise NotImplementedError(f"[process_number] Unsupporrted number pred: {n_pred}")

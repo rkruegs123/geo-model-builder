@@ -146,9 +146,18 @@ class Optimizer(ABC):
         elif n_pred == "uangle":
             p1, p2, p3 = self.lookup_pts(n_args)
             return self.angle(p1, p2, p3)
-        elif n_pred == "div":
+        elif n_pred in ["div", "add", "mul", "sub", "pow"]:
             n1, n2 = [self.eval_num(n) for n in n_args]
-            return n1 / n2
+            if n_pred == "div":
+                return n1 / n2
+            elif n_pred == "add":
+                return n1 + n2
+            elif n_pred == "mul":
+                return n1 * n2
+            elif n_pred == "sub":
+                return n1 - n2
+            else: # pow
+                return n1 ** n2
         else:
             raise NotImplementedError(f"[eval_num] Unsupported pred {n_pred}")
 
@@ -1068,7 +1077,7 @@ class Optimizer(ABC):
 
     def eqratio_diff(self, A, B, C, D, P, Q, R, S):
         # AB/CD = PQ/RS
-        return self.sqrt(dist(A, B) * self.dist(R, S)) - self.sqrt(self.dist(P, Q) * self.dist(C, D))
+        return self.sqrt(self.dist(A, B) * self.dist(R, S)) - self.sqrt(self.dist(P, Q) * self.dist(C, D))
 
     def cycl_diff(self, A, B, C, D):
         return self.eqangle6_diff(A, B, D, A, C, D)
