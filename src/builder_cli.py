@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--distinct_prob', action='store', dest='distinct_prob', type=float, default=DEFAULTS["distinct_prob"])
     parser.add_argument('--min_dist', action='store', dest='min_dist', type=float, default=DEFAULTS["min_dist"])
     parser.add_argument('--ndg_loss', action='store', dest='ndg_loss', type=float, default=DEFAULTS["ndg_loss"])
+    parser.add_argument('--n_init_samples', action='store', dest='n_init_samples', type=int, default=5)
 
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=DEFAULTS["learning_rate"])
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--decay_rate', action='store', dest='decay_rate', type=float, default=DEFAULTS["decay_rate"])
     parser.add_argument('--n_iterations', action='store', dest='n_iterations', type=int, default=DEFAULTS["n_iterations"])
     parser.add_argument('--eps', action='store', dest='eps', type=float, default=DEFAULTS["eps"])
+
 
     args = parser.parse_args()
     args = vars(args)

@@ -51,7 +51,8 @@ DEFAULTS = {
     "n_tries": 1,
     "ndg_loss": 1e-3,
     "regularize_points": 1e-6,
-    "solver": "tensorflow"
+    "solver": "tensorflow",
+    "n_init_samples": 5
 }
 
 def is_number(s):

@@ -3,9 +3,12 @@ import pdb
 import collections
 import random
 import itertools
+from tqdm import tqdm
+import os
 
 from optimizer import Optimizer, LineSF, CircleNF
 from diagram import Diagram
+from util import get_random_string
 
 class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
     def __add__(self, p):  return TfPoint(self.x + p.x, self.y + p.y)
@@ -191,10 +194,31 @@ class TfOptimizer(Optimizer):
 
     def train(self):
         opts = self.opts
-        self.sess.run(self.reset_step)
-        self.sess.run(tf.compat.v1.global_variables_initializer())
+
+        init_map = dict() # maps inits to losses
+        saver = tf.train.Saver()
+
+        for _ in tqdm(range(opts['n_init_samples']), desc="Sampling inits..."):
+            self.sess.run(tf.compat.v1.global_variables_initializer())
+            init_loss = self.sess.run(self.loss)
+            init_name = get_random_string(8)
+            saver.save(self.sess, init_name)
+            init_map[init_name] = init_loss
+
+        best_init = min(init_map, key=init_map.get)
+        restore_saver = tf.train.import_meta_graph(f"{best_init}.meta")
+        restore_saver.restore(self.sess, f"./{best_init}")
+
+        # remove init files
+        for init_name in init_map:
+            os.remove(f"{init_name}.meta")
+            os.remove(f"{init_name}.index")
+            os.remove(f"{init_name}.data-00000-of-00001")
+
 
         loss_v = None
+
+        self.sess.run(self.reset_step)
 
         for i in range(opts['n_iterations']):
 
