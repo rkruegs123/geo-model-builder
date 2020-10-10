@@ -382,11 +382,9 @@ class InstructionReader:
         elif pred == "right":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        '''
-        elif pred == "rightTri":
-            assert(len(args) == 3)
-            assert(all([isinstance(t, Point) for t in args]))
-        '''
+        # elif pred == "rightTri":
+            # assert(len(args) == 3)
+            # assert(all([isinstance(t, Point) for t in args]))
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
@@ -576,6 +574,11 @@ class InstructionReader:
             assert(len(n_args) == 1)
             circ = self.process_circle(n_args[0])
             n_val = FuncInfo("radius", [circ])
+            return Num(n_val)
+        elif n_pred == "diam":
+            assert(len(n_args) == 1)
+            circ = self.process_circle(n_args[0])
+            n_val = FuncInfo("diam", [circ])
             return Num(n_val)
         elif n_pred in ["div", "add", "sub", "mul", "pow"]:
             assert(len(n_args) == 2)

@@ -167,6 +167,9 @@ class Optimizer(ABC):
         elif n_pred == "radius":
             circ = self.circ2nf(n_args[0])
             return circ.radius
+        elif n_pred == "diam":
+            circ = self.circ2nf(n_args[0])
+            return 2 * circ.radius
         elif n_pred in ["div", "add", "mul", "sub", "pow"]:
             n1, n2 = [self.eval_num(n) for n in n_args]
             if n_pred == "div":
@@ -782,7 +785,7 @@ class Optimizer(ABC):
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
         elif pred == "eq":
             n1, n2 = [self.eval_num(n) for n in args]
-            return [n1 - n2]
+            return [100 * (n1 - n2)]
         elif pred == "gt":
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.max(self.const(0.0), n2 - n1)]
@@ -851,13 +854,11 @@ class Optimizer(ABC):
         elif pred == "right":
             A, B, C = self.lookup_pts(args)
             return [self.right_phi(A, B, C)]
-        '''
-        elif pred == "rightTri":
-            A, B, C = self.lookup_pts(args)
-            return [tf.reduce_min([self.right_phi(B, A, C),
-                                   self.right_phi(A, B, C),
-                                   self.right_phi(B, C, A)])]
-        '''
+        # elif pred == "rightTri":
+            # A, B, C = self.lookup_pts(args)
+            # return [tf.reduce_min([self.right_phi(B, A, C),
+                                   # self.right_phi(A, B, C),
+                                   # self.right_phi(B, C, A)])]
         elif pred == "sameSide":
             A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
