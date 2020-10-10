@@ -358,11 +358,11 @@ class Optimizer(ABC):
         if len(ps) < 4:
             print("WARNING: sample_polygon expecting >3 points")
 
-        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}") for i in range(len(ps))]
+        angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-2.0, hi=2.0) for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi
         angles = [multiplicand + (math.pi / 3) * self.tanh(0.2 * az) for az in angle_zs]
 
-        scale_zs = [self.mkvar(name=f"polygon_scale_zs_{i}") for i in range(len(ps))]
+        scale_zs = [self.mkvar(name=f"polygon_scale_zs_{i}", lo=-2.0, hi=2.0) for i in range(len(ps))]
         scales = [0.5 * self.tanh(0.2 * sz) for sz in scale_zs]
 
         Ps = [self.get_point(self.const(-2.0), self.const(0.0)),
