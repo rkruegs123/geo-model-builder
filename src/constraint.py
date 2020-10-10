@@ -21,13 +21,13 @@ class Constraint:
         else:
             return list()
 
-
     def __str__(self):
         c_str = ' '.join([self.pred] + [str(a) for a in self.args])
         if self.negate:
             return (f"not ({c_str})")
         else:
             return c_str
+
 
 def constraint_ndgs(c):
     if c.pred == "ibisector" or c.pred == "ebisector":

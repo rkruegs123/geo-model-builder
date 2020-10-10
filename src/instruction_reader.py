@@ -299,6 +299,7 @@ class InstructionReader:
 
         pred = constraint[0]
         args = constraint[1:]
+
         args = [self.process_term(t) for t in args]
 
         ps = [t for t in args if isinstance(t, Point)]
@@ -381,6 +382,11 @@ class InstructionReader:
         elif pred == "right":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
+        '''
+        elif pred == "rightTri":
+            assert(len(args) == 3)
+            assert(all([isinstance(t, Point) for t in args]))
+        '''
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))

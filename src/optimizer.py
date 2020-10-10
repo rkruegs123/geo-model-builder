@@ -264,6 +264,10 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
+    def min(self, x, y):
+        pass
+
+    @abstractmethod
     def cond(self, cond, t_lam, f_lam):
         pass
 
@@ -846,7 +850,14 @@ class Optimizer(ABC):
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
         elif pred == "right":
             A, B, C = self.lookup_pts(args)
-            return [self.angle(A, B, C) - math.pi / 2]
+            return [self.right_phi(A, B, C)]
+        '''
+        elif pred == "rightTri":
+            A, B, C = self.lookup_pts(args)
+            return [tf.reduce_min([self.right_phi(B, A, C),
+                                   self.right_phi(A, B, C),
+                                   self.right_phi(B, C, A)])]
+        '''
         elif pred == "sameSide":
             A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
@@ -945,6 +956,9 @@ class Optimizer(ABC):
     def angle(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
         return self.acos((a**2 + c**2 - b**2) / (2 * a * c))
+
+    def right_phi(self, A, B, C):
+        return self.angle(A, B, C) - math.pi / 2
 
     def conway_vals(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)

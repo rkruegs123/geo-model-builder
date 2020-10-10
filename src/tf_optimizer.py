@@ -69,6 +69,9 @@ class TfOptimizer(Optimizer):
     def max(self, x, y):
         return tf.maximum(x, y)
 
+    def min(self, x, y):
+        return tf.minimum(x, y)
+
     def cond(self, cond, t_lam, f_lam):
         return tf.cond(cond, t_lam, f_lam)
 
@@ -134,6 +137,7 @@ class TfOptimizer(Optimizer):
         assert(key not in self.losses)
         # TF has a bug that causes nans when differentiating something exactly 0
         self.losses[key] = weight * self.mk_zero(val + 1e-6 * (random.random() / 2))
+        self.has_loss = True
 
     def register_ndg(self, key, val, weight=1.0):
         assert(key not in self.ndgs)
