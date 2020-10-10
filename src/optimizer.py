@@ -39,6 +39,7 @@ class Optimizer(ABC):
 
         self.circles = list()
         self.segments = list()
+        self.lines = list()
 
         super().__init__()
 
@@ -1075,6 +1076,7 @@ class Optimizer(ABC):
         return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
 
     def inter_lc(self, lnf, c, root_select):
+        self.lines.append(lnf)
         p1, p2 = self.lnf2pp(lnf)
         I1, I2 = self.inter_pp_c(p1, p2, c)
         self.circles.append(c)

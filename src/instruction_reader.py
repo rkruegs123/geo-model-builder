@@ -423,11 +423,19 @@ class InstructionReader:
         p_pred = p_info[0]
         p_args = p_info[1:]
         if p_pred == "interLL":
-            assert(len(p_args) == 2)
-            l1 = self.process_line(p_args[0])
-            l2 = self.process_line(p_args[1])
-            p_val = FuncInfo("interLL", (l1, l2))
-            return Point(p_val)
+            if len(p_args) == 2:
+                l1 = self.process_line(p_args[0])
+                l2 = self.process_line(p_args[1])
+                p_val = FuncInfo("interLL", (l1, l2))
+                return Point(p_val)
+            elif len(p_args) == 4:
+                p1, p2, p3, p4 = [self.process_point(p) for p in p_args]
+                l1 = Line(FuncInfo("connecting", [p1, p2]))
+                l2 = Line(FuncInfo("connecting", [p3, p4]))
+                p_val = FuncInfo("interLL", (l1, l2))
+                return Point(p_val)
+            else:
+                raise RuntimeError("invalid interLL")
         elif p_pred in ["incenter", "excenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]

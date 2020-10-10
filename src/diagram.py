@@ -7,7 +7,7 @@ import math
 
 
 
-class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", "circles", "ndgs", "goals", "no_plot_pts", "named_circles"])):
+class Diagram(collections.namedtuple("Diagram", ["points", "named_lines", "segments", "circles", "ndgs", "goals", "no_plot_pts", "named_circles"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
         xs = [p.x for p_name, p in self.points.items() if p_name not in self.no_plot_pts]
         ys = [p.y for p_name, p in self.points.items() if p_name not in self.no_plot_pts]
@@ -47,7 +47,7 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
             plt.xlim(-2, 2)
             plt.ylim(-2, 2)
 
-        for l, L in self.lines.items():
+        for l, L in self.named_lines.items():
             # ax + by = c
             l_name = l.val
             (nx, ny), r = L
@@ -82,7 +82,7 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
                 plt.plot(x_vals, y_vals, label=l_name)
             '''
 
-        if self.lines or self.named_circles:
+        if self.named_lines or self.named_circles:
             plt.legend()
 
         if return_fig:
