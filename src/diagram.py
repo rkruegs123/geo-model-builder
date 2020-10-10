@@ -5,6 +5,8 @@ import pdb
 import numpy as np
 import math
 
+
+
 class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", "circles", "ndgs", "goals", "no_plot_pts", "named_circles"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
         xs = [p.x for p_name, p in self.points.items() if p_name not in self.no_plot_pts]
@@ -31,7 +33,8 @@ class Diagram(collections.namedtuple("Diagram", ["points", "lines", "segments", 
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
                                 fill=False,
-                                label=c_name
+                                label=c_name,
+                                color=np.random.rand(3)
             )
             ax.add_patch(circle)
 
