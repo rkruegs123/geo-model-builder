@@ -607,10 +607,10 @@ class InstructionReader:
             p2 = self.process_point(n_args[1])
             n_val = FuncInfo("dist", [p1, p2])
             return Num(n_val)
-        elif n_pred == "uangle":
+        elif n_pred in ["uangle", "area"]:
             assert(len(n_args) == 3)
             p1, p2, p3 = [self.process_point(p) for p in n_args]
-            n_val = FuncInfo("uangle", [p1, p2, p3])
+            n_val = FuncInfo(n_pred, [p1, p2, p3])
             return Num(n_val)
         elif n_pred == "radius":
             assert(len(n_args) == 1)

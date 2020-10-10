@@ -1,0 +1,7 @@
+(param (A B C) triangle)
+(compute R point (interLC (ibisector B C A) (circumcircle A B C) (rsNeq C)))
+(compute P point (interLL (ibisector B C A) (perpBis B C)))
+(compute Q point (interLL (ibisector B C A) (perpBis A C)))
+(compute K point (midp B C))
+(compute L point (midp A C))
+(confirm (eq (area R P K) (area R Q L)))

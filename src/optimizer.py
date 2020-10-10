@@ -184,6 +184,9 @@ class Optimizer(ABC):
         elif n_pred == "uangle":
             p1, p2, p3 = self.lookup_pts(n_args)
             return self.angle(p1, p2, p3)
+        elif n_pred == "area":
+            p1, p2, p3 = self.lookup_pts(n_args)
+            return self.area(p1, p2, p3)
         elif n_pred == "radius":
             circ = self.circ2nf(n_args[0])
             return circ.radius
