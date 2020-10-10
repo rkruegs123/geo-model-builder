@@ -332,6 +332,10 @@ class InstructionReader:
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "tangent":
+            assert(len(args) == 2)
+            assert(isinstance(args[0], Line) or isinstance(args[1], Circle))
+            assert(isinstance(args[1], Circle))
         elif pred == "tangentAt":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point))

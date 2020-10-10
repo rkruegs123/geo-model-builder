@@ -813,6 +813,16 @@ class Optimizer(ABC):
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
             return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
+        elif pred == "tangent":
+            obj1, obj2 = args
+            if isinstance(obj1, Line) and isinstance(obj2, Circle):
+                inter_point = Point(FuncInfo("interLC", [obj1, obj2, Root("arbitrary", list())]))
+                return self.assertion_vals("tangentAt", [inter_point, obj1, obj2])
+            elif isinstance(obj1, Circle) and isinstance(obj2, Circle):
+                inter_point = Point(FuncInfo("interCC", [obj1, obj2, Root("arbitrary", list())]))
+                return self.assertion_vals("tangentAt", [inter_point, obj1, obj2])
+            else:
+                raise RuntimeError("Invalid arguments to tangent")
         elif pred == "tangentAt":
             p, obj1, obj2 = args
             if isinstance(obj1, Line) and isinstance(obj2, Circle):
