@@ -94,6 +94,11 @@ class Optimizer(ABC):
             elif head == "amidpOpp": return self.amidp_opp(*self.lookup_pts(args))
             elif head == "amidpSame": return self.amidp_same(*self.lookup_pts(args))
             elif head == "excenter": return self.excenter(*self.lookup_pts(args))
+            elif head == "foot":
+                X, A, B = args
+                foot_p = Point(FuncInfo("interLL", [Line(FuncInfo("connecting", [A, B])),
+                                                    Line(FuncInfo("perpAt", [X, A, B]))]))
+                return self.lookup_pt(foot_p)
             elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
             elif head == "origin":
                 assert(len(args) == 1)
@@ -742,6 +747,9 @@ class Optimizer(ABC):
         elif pred == "eq":
             n1, n2 = [self.eval_num(n) for n in args]
             return [n1 - n2]
+        elif pred == "gt":
+            n1, n2 = [self.eval_num(n) for n in args]
+            return [self.max(self.const(0.0), n2 - n1)]
         elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(args))]
         elif pred == "eqoangle":
             A, B, C, P, Q, R = self.lookup_pts(args)
@@ -804,6 +812,9 @@ class Optimizer(ABC):
         elif pred == "reflectPL":
             X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
+        elif pred == "right":
+            A, B, C = self.lookup_pts(args)
+            return [self.angle(A, B, C) - math.pi / 2]
         elif pred == "sameSide":
             A, B, X, Y = self.lookup_pts(args)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]

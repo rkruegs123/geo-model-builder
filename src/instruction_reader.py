@@ -287,6 +287,13 @@ class InstructionReader:
             pred = "eq"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "foot":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "gt" or pred == ">":
+            pred = "gt"
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Num) for t in args]))
         elif pred == "eqangle":
             assert(len(args) == 8)
             assert(all([isinstance(t, Point) for t in args]))
@@ -328,6 +335,9 @@ class InstructionReader:
                 raise RuntimeError(f"Invalid para constraint {constraint}")
         elif pred == "polygon":
             assert(len(args) >= 3)
+            assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "right":
+            assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "triangle":
             assert(len(args) == 3)
@@ -400,7 +410,7 @@ class InstructionReader:
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
-        elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter"]:
+        elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter", "foot"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
