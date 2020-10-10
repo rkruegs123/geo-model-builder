@@ -332,6 +332,11 @@ class InstructionReader:
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "tangentAt":
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Point))
+            assert(isinstance(args[1], Line) or isinstance(args[1], Circle))
+            assert(isinstance(args[2], Circle))
         else:
             raise NotImplementedError(f"[process_constraint] Unsupported pred {pred}")
 

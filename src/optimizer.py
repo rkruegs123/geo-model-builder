@@ -95,6 +95,11 @@ class Optimizer(ABC):
             elif head == "amidpSame": return self.amidp_same(*self.lookup_pts(args))
             elif head == "excenter": return self.excenter(*self.lookup_pts(args))
             elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
+            elif head == "origin":
+                assert(len(args) == 1)
+                circ = args[0]
+                cnf = self.circ2nf(circ)
+                return cnf.center
             elif head == "interLL":
                 l1, l2 = args
                 lnf1 = self.line2nf(l1)
@@ -780,7 +785,14 @@ class Optimizer(ABC):
         elif pred == "orthocenter":
             H, A, B, C = self.lookup_pts(args)
             return [self.dist(H, self.orthocenter(A, B, C))]
-        elif pred == "perp": return [self.perp_phi(*self.lookup_pts(args))]
+        elif pred == "perp":
+            if len(args) == 4: # four points
+                return [self.perp_phi(*self.lookup_pts(args))]
+            else: # two lines
+                l1, l2 = args
+                P1, P2 = self.line2twoPts(l1)
+                P3, P4 = self.line2twoPts(l2)
+                return [self.perp_phi(P1, P2, P3, P4)]
         elif pred == "para":
             if len(args) == 4: # four points
                 return [self.para_phi(*self.lookup_pts(args))]
@@ -801,6 +813,26 @@ class Optimizer(ABC):
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
             return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
+        elif pred == "tangentAt":
+            p, obj1, obj2 = args
+            if isinstance(obj1, Line) and isinstance(obj2, Circle):
+                circ_center = Point(FuncInfo("origin", [obj2]))
+                circ_center_to_p = Line(FuncInfo("connecting", [circ_center, p]))
+
+                p_on_line = self.assertion_vals("onLine", [p, obj1])
+                p_on_circ = self.assertion_vals("onCirc", [p, obj2])
+                tangency = self.assertion_vals("perp", [obj1, circ_center_to_p])
+                return p_on_line + p_on_circ + tangency
+            elif isinstance(obj1, Circle) and isinstance(obj2, Circle):
+                c1_center = Point(FuncInfo("origin", [obj1]))
+                c2_center = Point(FuncInfo("origin", [obj2]))
+
+                p_on_c1 = self.assertion_vals("onCirc", [p, obj1])
+                p_on_c2 = self.assertion_vals("onCirc", [p, obj2])
+                tangency = self.assertion_vals("coll", [p, c1_center, c2_center])
+                return p_on_c1 + p_on_c2 + tangency
+            else:
+                raise RuntimeError("Invalid arguments to tangentAt")
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 
@@ -1163,7 +1195,7 @@ class Optimizer(ABC):
     def line2twoPts(self, l):
         if isinstance(l.val, str):
             L = self.name2line[l]
-            return L.p1, L.p2
+            return self.lnf2pp(L)
         elif isinstance(l.val, FuncInfo):
             pred, args = l.val
             if pred == "connecting":
