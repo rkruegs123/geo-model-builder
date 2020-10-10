@@ -98,7 +98,7 @@ class Optimizer(ABC):
             elif head == "interLL":
                 l1, l2 = args
                 lnf1 = self.line2nf(l1)
-                lnf1 = self.line2nf(l2)
+                lnf2 = self.line2nf(l2)
                 return self.inter_ll(lnf1, lnf2)
             elif head == "interLC":
                 l, c, root_select = args
@@ -310,7 +310,7 @@ class Optimizer(ABC):
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
     def sample_uniform(self, p):
-        P   = self.get_point(x=self.mkvar(str(p)+"x", trainable=False), y=self.mkvar(str(p)+"y", trainable=False))
+        P   = self.get_point(x=self.mkvar(str(p)+"x"), y=self.mkvar(str(p)+"y"))
         self.register_pt(p, P)
         return P
 
