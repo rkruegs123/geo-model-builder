@@ -809,6 +809,9 @@ class Optimizer(ABC):
         elif pred == "gt":
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.max(self.const(0.0), n2 - n1)]
+        elif pred == "lt":
+            n1, n2 = [self.eval_num(n) for n in args]
+            return [self.max(self.const(0.0), n1 - n2)]
         elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(args))]
         elif pred == "eqoangle":
             A, B, C, P, Q, R = self.lookup_pts(args)

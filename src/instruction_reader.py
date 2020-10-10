@@ -337,6 +337,10 @@ class InstructionReader:
             pred = "gt"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "lt" or pred == "<":
+            pred = "lt"
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Num) for t in args]))
         elif pred == "eqangle":
             assert(len(args) == 8)
             assert(all([isinstance(t, Point) for t in args]))
@@ -388,6 +392,9 @@ class InstructionReader:
         # elif pred == "rightTri":
             # assert(len(args) == 3)
             # assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "sameSide":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "triangle":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
