@@ -491,6 +491,11 @@ class InstructionReader:
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
+        elif p_pred == "origin":
+            assert(len(p_args) == 1)
+            circ = self.process_circle(p_args[0])
+            p_val = FuncInfo("origin", (circ,))
+            return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
 
