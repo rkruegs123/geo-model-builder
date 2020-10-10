@@ -238,6 +238,10 @@ class InstructionReader:
         elif pred == "radius":
             assert(len(args) == 1)
             assert(isinstance(args[0], Num))
+        elif pred == "through":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Point))
+            pred = "throughC"
         else:
             raise NotImplementedError(f"[process_param_circ] unrecognized param {param}")
         return pred, args
@@ -253,6 +257,7 @@ class InstructionReader:
         if pred == "through":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
+            pred = "throughL"
         else:
             raise NotImplementedError(f"[process_param_line] unrecognized param {param}")
         return pred, args
@@ -362,7 +367,7 @@ class InstructionReader:
         elif pred == "onLine":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Line))
-        elif pred == "onSeg":
+        elif pred in ["onSeg", "onRay", "between"]:
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onCirc":

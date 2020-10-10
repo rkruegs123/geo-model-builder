@@ -347,8 +347,9 @@ class Optimizer(ABC):
         elif s_method == "triangle": self.sample_triangle(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
-    def sample_uniform(self, p):
-        P   = self.get_point(x=self.mkvar(str(p)+"x"), y=self.mkvar(str(p)+"y"))
+    def sample_uniform(self, p, lo=-1.0, hi=1.0):
+        P   = self.get_point(x=self.mkvar(str(p)+"x", lo=lo, hi=hi),
+                             y=self.mkvar(str(p)+"y", lo=lo, hi=hi))
         self.register_pt(p, P)
         return P
 
@@ -597,7 +598,8 @@ class Optimizer(ABC):
         elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p_name, p_args[1])
         elif p_method == "onSeg": self.parameterize_on_seg(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
-        elif p_method == "through": self.parameterize_line_through(p_name, p_args[1])
+        elif p_method == "throughL": self.parameterize_line_through(p_name, p_args[1])
+        elif p_method == "throughC": self.parameterize_circ_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
         elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
         elif p_method == "radius": self.parameterize_circ_with_radius(p_name, p_args[1])
@@ -639,6 +641,18 @@ class Optimizer(ABC):
         circ_nf = CircleNF(center=origin, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
         self.register_circ(c, circ_nf)
 
+    def parameterize_circ_through(self, c, ps):
+        [through_p] = ps
+        through_p = self.lookup_pt(through_p)
+
+        o = Point(c.val + "_origin")
+        O = self.sample_uniform(o)
+        self.no_plot_pts.append(o)
+
+        radius = self.dist(through_p, O)
+        circ_nf = CircleNF(center=O, radius=radius)
+        self.register_circ(c, circ_nf)
+
     def parameterize_circ_with_radius(self, c, rs):
         [radius] = rs
         radius = self.eval_num(radius)
@@ -675,7 +689,7 @@ class Optimizer(ABC):
 
     def parameterize_on_ray(self, p, ps):
         A, B = self.lookup_pts(ps)
-        z = self.mkvar(name=f"{p}_ray")
+        z = self.mkvar(name=f"{p}_ray", hi=2.0)
         P = A + (B - A).smul(self.exp(z))
         self.register_pt(p, P)
         self.segments.extend([(A, B), (A, P)])
