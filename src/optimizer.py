@@ -569,7 +569,10 @@ class Optimizer(ABC):
         elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p_name, p_args[1])
         elif p_method == "onSeg": self.parameterize_on_seg(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
+        elif p_method == "through": self.parameterize_line_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
+        elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
+        elif p_method == "radius": self.parameterize_circ_with_radius(p_name, p_args[1])
         else: raise NotImplementedError(f"FIXME: Finish parameterize: {i}")
 
     def parameterize_coords(self, p):
@@ -585,12 +588,40 @@ class Optimizer(ABC):
 
         self.register_line(l, self.pp2lnf(P1, P2))
 
+    def parameterize_line_through(self, l, ps):
+        [through_p] = ps
+        through_p = self.lookup_pt(through_p)
+
+        p2 = Point(l.val + "_p2")
+        P2 = self.sample_uniform(p2)
+        self.no_plot_pts.append(p2)
+
+        self.register_line(l, self.pp2lnf(through_p, P2))
+
     def parameterize_circ(self, c):
         o = Point(c.val + "_origin")
         O = self.sample_uniform(o)
         self.no_plot_pts.append(o)
         circ_nf = CircleNF(center=O, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
         self.register_circ(c, circ_nf)
+
+    def parameterize_circ_centered_at(self, c, ps):
+        [origin] = ps
+        origin = self.lookup_pt(origin)
+        circ_nf = CircleNF(center=origin, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
+        self.register_circ(c, circ_nf)
+
+    def parameterize_circ_with_radius(self, c, rs):
+        [radius] = rs
+        radius = self.eval_num(radius)
+
+        o = Point(c.val + "_origin")
+        O = self.sample_uniform(o)
+        self.no_plot_pts.append(o)
+
+        circ_nf = CircleNF(center=O, radius=radius)
+        self.register_circ(c, circ_nf)
+
 
     def parameterize_on_seg(self, p, ps):
         A, B = self.lookup_pts(ps)

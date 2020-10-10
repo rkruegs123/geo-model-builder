@@ -81,7 +81,7 @@ class InstructionReader:
             if isinstance(cmd[1], str):
                 self.param(cmd)
             elif isinstance(cmd[1], tuple):
-                self.param_special(cmd)
+                self.process_param_special(cmd)
             else:
                 raise RuntimeError("Invalid param input type")
             self.update_problem_type("instructions")
@@ -101,7 +101,7 @@ class InstructionReader:
 
 
     # def sample(self, cmd):
-    def param_special(self, cmd):
+    def process_param_special(self, cmd):
 
         assert(len(cmd) == 3)
 
@@ -194,16 +194,24 @@ class InstructionReader:
         assert(obj_type in ["point", "line", "circle"])
 
         if obj_type == "line":
-            assert(len(cmd) == 3)
             l = Line(cmd[1])
             self.register_line(l)
-            p_instr = Parameterize(l, ("line", None))
+
+            param_method = "line"
+            if len(cmd) == 4:
+                param_method = cmd[3]
+            pred, args = self.process_param_line(param_method)
+            p_instr = Parameterize(l, (pred, args))
             self.instructions.append(p_instr)
         elif obj_type == "circle":
-            assert(len(cmd) == 3)
             c = Circle(cmd[1])
             self.register_circ(c)
-            p_instr = Parameterize(c, ("circle", None))
+
+            param_method = "circle"
+            if len(cmd) == 4:
+                param_method = cmd[3]
+            pred, args = self.process_param_circ(param_method)
+            p_instr = Parameterize(c, (pred, args))
             self.instructions.append(p_instr)
         else:
             p = Point(cmd[1])
@@ -212,11 +220,45 @@ class InstructionReader:
             param_method = "coords"
             if len(cmd) == 4:
                 param_method = cmd[3]
-            pred, args = self.process_param(param_method)
+            pred, args = self.process_param_point(param_method)
             p_instr = Parameterize(p, (pred, args))
             self.instructions.append(p_instr)
 
-    def process_param(self, param):
+    def process_param_circ(self, param):
+        if param == "circle":
+            return "circle", None
+
+        pred = param[0]
+        args = param[1:]
+        args = [self.process_term(t) for t in args]
+
+        if pred == "origin":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Point))
+        elif pred == "radius":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Num))
+        else:
+            raise NotImplementedError(f"[process_param_circ] unrecognized param {param}")
+        return pred, args
+
+    def process_param_line(self, param):
+        if param == "line":
+            return "line", None
+
+        pred = param[0]
+        args = param[1:]
+        args = [self.process_term(t) for t in args]
+
+        if pred == "through":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Point))
+        else:
+            raise NotImplementedError(f"[process_param_line] unrecognized param {param}")
+        return pred, args
+
+
+    def process_param_point(self, param):
         if param == "coords":
             return "coords", None
 
@@ -244,7 +286,7 @@ class InstructionReader:
             assert(len(args) >= 3)
             assert(all([isinstance(t, Point) for t in args]))
         else:
-            raise NotImplementedError(f"[process_param] unrecognized param {param}")
+            raise NotImplementedError(f"[process_param_point] unrecognized param {param}")
         return pred, args
 
 
