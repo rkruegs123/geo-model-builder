@@ -87,7 +87,9 @@ class Optimizer(ABC):
 
         if isinstance(p.val, FuncInfo):
             head, args = p.val
-            if head == "midp": return self.midp(*self.lookup_pts(args))
+            if head == "__val__":
+                return args[0]
+            elif head == "midp": return self.midp(*self.lookup_pts(args))
             elif head == "circumcenter": return self.circumcenter(*self.lookup_pts(args))
             elif head == "orthocenter": return self.orthocenter(*self.lookup_pts(args))
             elif head == "incenter": return self.incenter(*self.lookup_pts(args))
@@ -136,6 +138,24 @@ class Optimizer(ABC):
             elif head == "isogonal": return self.isogonal(*self.lookup_pts(args))
             elif head == "isotomic": return self.isotomic(*self.lookup_pts(args))
             elif head == "inverse": return self.inverse(*self.lookup_pts(args))
+            elif head == "reflectPL":
+                if len(args) == 3:
+                    # reflection of X over line AB
+                    X, A, B = args
+                elif len(args) == 2:
+                    X, l = args
+                    lnf = self.line2nf(l)
+                    p1, p2 = self.lnf2pp(lnf)
+                    A = Point(FuncInfo("__val__", [p1]))
+                    B = Point(FuncInfo("__val__", [p2]))
+                else:
+                    raise RuntimeError("invalid reflectPL")
+                p_val = Point(FuncInfo("interLC", [
+                    Line(FuncInfo("perpAt", [X, A, B])),
+                    Circle(FuncInfo("coa", [A, X])),
+                    Root("neq", [X])
+                ]))
+                return self.lookup_pt(p_val)
             elif head == "midpFrom": return self.midp_from(*self.lookup_pts(args))
             elif head == "mixtilinearIncenter": return self.mixtilinear_incenter(*self.lookup_pts(args))
 
@@ -1090,11 +1110,12 @@ class Optimizer(ABC):
 
         return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
 
-    def inter_lc(self, lnf, c, root_select):
+    def inter_lc(self, lnf, c, root_select, draw=True):
         self.lines.append(lnf)
         p1, p2 = self.lnf2pp(lnf)
         I1, I2 = self.inter_pp_c(p1, p2, c)
-        self.circles.append(c)
+        if draw:
+            self.circles.append(c)
         return self.process_rs(I1, I2, root_select)
 
     def inter_cc(self, cnf1, cnf2, root_select):
@@ -1300,6 +1321,15 @@ class Optimizer(ABC):
                 X = B + self.rotate_counterclockwise(theta, C - B)
                 self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
                 return B, X
+            elif pred == "reflectLL":
+                l1, l2 = args
+                lnf1 = self.line2nf(l1)
+                p1, p2 = self.lnf2pp(lnf1)
+                refl_p1 = Point(FuncInfo("reflectPL", [Point(FuncInfo("__val__", [p1])), l2]))
+                refl_p1 = self.lookup_pt(refl_p1)
+                refl_p2 = Point(FuncInfo("reflectPL", [Point(FuncInfo("__val__", [p2])), l2]))
+                refl_p2 = self.lookup_pt(refl_p2)
+                return refl_p1, refl_p2
             else:
                 raise RuntimeError(f"[line2twoPts] Unexpected line pred: {pred}")
         else:

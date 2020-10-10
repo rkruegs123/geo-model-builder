@@ -382,6 +382,9 @@ class InstructionReader:
         elif pred == "right":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "reflectPL":
+            assert(len(args) == 4)
+            assert(all([isinstance(t, Point) for t in args]))
         # elif pred == "rightTri":
             # assert(len(args) == 3)
             # assert(all([isinstance(t, Point) for t in args]))
@@ -464,6 +467,18 @@ class InstructionReader:
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
+        elif p_pred == "reflectPL":
+            if len(p_args) == 3:
+                ps = [self.process_point(p) for p in p_args]
+                p_val = FuncInfo(p_pred, tuple(ps))
+                return Point(p_val)
+            elif len(p_args) == 2:
+                p = self.process_point(p_args[0])
+                l = self.process_line(p_args[1])
+                p_val = FuncInfo(p_pred, (p, l))
+                return Point(p_val)
+            else:
+                raise RuntimeError("invalid reflectPL")
         elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter", "foot"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
@@ -481,28 +496,38 @@ class InstructionReader:
 
 
         l_pred = l_info[0]
-        ps = [self.process_point(p) for p in l_info[1:]]
+        l_args = l_info[1:]
 
         l_val = None
 
         if l_pred == "line":
-            assert(len(ps) == 2)
+            assert(len(l_args) == 2)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("connecting", ps)
         elif l_pred == "perpAt":
-            assert(len(ps) == 3)
+            assert(len(l_args) == 3)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("perpAt", ps)
         elif l_pred == "paraAt":
-            assert(len(ps) == 3)
+            assert(len(l_args) == 3)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("paraAt", ps)
         elif l_pred == "perpBis":
-            assert(len(ps) == 2)
+            assert(len(l_args) == 2)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("perpBis", ps)
         elif l_pred == "ibisector":
-            assert(len(ps) == 3)
+            assert(len(l_args) == 3)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("ibisector", ps)
         elif l_pred == "ebisector":
-            assert(len(ps) == 3)
+            assert(len(l_args) == 3)
+            ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("ebisector", ps)
+        elif l_pred == "reflectLL":
+            assert(len(l_args) == 2)
+            ls = [self.process_line(l) for l in l_args]
+            l_val = FuncInfo("reflectLL", ls)
 
         if l_val is not None:
             self.update_problem_type("instructions")
