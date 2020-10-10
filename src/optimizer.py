@@ -796,7 +796,7 @@ class Optimizer(ABC):
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(args)
             return [self.dist(I, self.incenter(A, B, C))]
-        elif pred == "insidePolygon": return self.in_poly_phis(*self.lookup_pts(args))
+        elif pred == "inPoly": return self.in_poly_phis(*self.lookup_pts(args))
         elif pred == "interLL":
             X, A, B, C, D = self.lookup_pts(args)
             return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]

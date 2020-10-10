@@ -348,7 +348,7 @@ class InstructionReader:
         elif pred == "interLL":
             assert(len(args) == 5)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "insidePolygon":
+        elif pred == "inPoly":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "midp":
