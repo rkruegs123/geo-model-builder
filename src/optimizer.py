@@ -702,6 +702,10 @@ class Optimizer(ABC):
             for i in range(len(coll_args)-1):
                 self.segments.append((coll_args[i], coll_args[i+1]))
             return diffs
+        elif pred == "concur":
+            l1, l2, l3 = args
+            inter_12 = Point(FuncInfo("interLL", [l1, l2]))
+            return self.assertion_vals("onLine", [inter_12, l3])
         elif pred == "cong":
             A, B, C, D = self.lookup_pts(args)
             if A in [C, D]: self.circles.append((A, self.dist(A, B)))
