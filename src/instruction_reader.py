@@ -316,7 +316,7 @@ class InstructionReader:
         if pred == "acutes":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "circumcenter":
+        elif pred in ["circumcenter", "orthocenter", "incenter", "centroid"]:
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "coll":
@@ -500,6 +500,11 @@ class InstructionReader:
             assert(len(p_args) == 1)
             circ = self.process_circle(p_args[0])
             p_val = FuncInfo("origin", (circ,))
+            return Point(p_val)
+        elif p_pred in ["amidpOpp", "amidpSame"]:
+            assert(len(p_args) == 3)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
