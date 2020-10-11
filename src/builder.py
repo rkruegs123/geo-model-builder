@@ -3,7 +3,7 @@ import os
 import pdb
 from os import listdir
 from os.path import isfile, join
-
+import matplotlib.pyplot as plt
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
@@ -72,7 +72,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
     if opts['n_models'] > 10:
         raise RuntimeError("Max n_models is 10")
 
-    problem_given = ('lines' in opts or 'problem' in opts)
+    problem_given = ('lines' in opts or opts['problem'])
     dir_given = 'dir' in opts
 
     if problem_given and dir_given:
@@ -91,6 +91,8 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
         solve_map = dict()
 
         for f in dir_files:
+            plt.close('all')
+
             opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
             models = build_aux(opts, show_plot=False, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=True)
             solve_map[f] = len(models)
