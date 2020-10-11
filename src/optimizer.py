@@ -816,7 +816,6 @@ class Optimizer(ABC):
             cycl_args = self.lookup_pts(args)
             assert(len(cycl_args) > 3)
             O = self.circumcenter(*cycl_args[:3])
-            diffs = list()
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_args, 4)]
             self.circles.append((O, self.dist(O, cycl_args[0])))
             return diffs

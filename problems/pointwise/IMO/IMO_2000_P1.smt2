@@ -22,4 +22,4 @@
 (assert (perp A B A Ocmn))
 (assert (perp B A B Odmn))
 
-(prove (cong P E Q E))
+(confirm (cong P E Q E))

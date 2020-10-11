@@ -228,7 +228,7 @@ class CompileState:
             if match_success:
                 x, a, b = match
                 self.solve_instructions.append(
-                    Compute(p, Point(FuncInfo("interLC", [Line(FuncInfo("perpAt", (x, a, b))), Circle(FuncInfo("coa", [a, x])), Root("neq", [x])])))
+                    Compute(p, Point(FuncInfo("interLC", [Line(FuncInfo("perpAt", (x, a, b))), Circle(FuncInfo("coa", (a, x))), Root("neq", [x])])))
                 )
                 self.cs.remove(c)
                 return True
@@ -470,30 +470,30 @@ class CompileState:
             ps = c.args
             if pred == "cycl":
                 other_ps = [p1 for p1 in ps if p1 != p]
-                circles.append(([c], Circle(FuncInfo("c3", other_ps)), list()))
+                circles.append(([c], Circle(FuncInfo("c3", tuple(other_ps))), list()))
             elif pred == "onC":
                 p1, o, x = ps
                 if p == p1:
-                    circles.append(([c], Circle(FuncInfo("coa", [o, x])), list()))
+                    circles.append(([c], Circle(FuncInfo("coa", (o, x))), list()))
             elif pred == "cong":
                 if ps.count(p) == 1:
                     (x, (y, z)) = group_pairs(p, ps)
                     if x == y:
-                        circles.append(([c], Circle(FuncInfo("coa", [x, z])), list()))
+                        circles.append(([c], Circle(FuncInfo("coa", (x, z))), list()))
                     elif x == z:
-                        circles.append(([c], Circle(FuncInfo("coa", [x, y])), list()))
+                        circles.append(([c], Circle(FuncInfo("coa", (x, y))), list()))
                     else:
-                        circles.append(([c], Circle(FuncInfo("cong", [x, y, z])), list()))
+                        circles.append(([c], Circle(FuncInfo("cong", (x, y, z))), list()))
             elif pred == "perp":
                 w, x, y, z = ps
                 if p == w and p == y:
-                    circles.append(([c], Circle(FuncInfo("diam", [x, z])), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", (x, z))), list()))
                 elif p == w and p == z:
-                    circles.append(([c], Circle(FuncInfo("diam", [x, y])), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", (x, y))), list()))
                 elif p == x and p == y:
-                    circles.append(([c], Circle(FuncInfo("diam", [w, z])), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", (w, z))), list()))
                 elif p == x and p == z:
-                    circles.append(([c], Circle(FuncInfo("diam", [w, y])), list()))
+                    circles.append(([c], Circle(FuncInfo("diam", (w, y))), list()))
         return circles
 
     # Returns (root, constraints to get root)
@@ -502,7 +502,7 @@ class CompileState:
         # FIXME: Should we try for all combos of lines and circles?
         # FIXME: Should key be sorted?
 
-        k = (cl1, cl1) # key
+        k = (cl1, cl2) # key
         shared_points = list(set(cl1.pointsOn()).intersection(cl2.pointsOn()))
         oppCs = [c for c in cs if c.pred == "oppSides"]
         sameCs = [c for c in cs if c.pred == "sameSide"]
