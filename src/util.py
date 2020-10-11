@@ -52,7 +52,8 @@ DEFAULTS = {
     "regularize_points": 1e-6,
     "solver": "tensorflow",
     "n_models": 3,
-    "n_tries_per_model": 2
+    "n_tries_per_model": 2,
+    "verbosity": 1,
 }
 
 def is_number(s):

@@ -25,9 +25,6 @@ class InstructionReader:
         for cmd in cmds:
             self.process_command(cmd)
 
-        print("INPUT INSTRUCTIONS:\n{instrs_str}".format(
-            instrs_str="\n".join([str(i) for i in self.instructions])))
-
     def update_problem_type(self, p_type):
         if p_type not in ["compile", "instructions"]:
             raise RuntimeError(f"Invalid problem type: {p_type}")

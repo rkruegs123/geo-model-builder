@@ -22,6 +22,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--n_models', action='store', dest='n_models', type=int, default=DEFAULTS['n_models'])
     parser.add_argument('--n_tries_per_model', action='store', dest='n_tries_per_model', type=int, default=DEFAULTS['n_tries_per_model'])
+    parser.add_argument('--verbosity', action='store', dest='verbosity', type=int, default=DEFAULTS['verbosity'])
 
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=DEFAULTS["learning_rate"])
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     parser.add_argument('--decay_rate', action='store', dest='decay_rate', type=float, default=DEFAULTS["decay_rate"])
     parser.add_argument('--n_iterations', action='store', dest='n_iterations', type=int, default=DEFAULTS["n_iterations"])
     parser.add_argument('--eps', action='store', dest='eps', type=float, default=DEFAULTS["eps"])
+
+    parser.add_argument('--experiment', dest='experiment', action='store_true')
 
 
     args = parser.parse_args()

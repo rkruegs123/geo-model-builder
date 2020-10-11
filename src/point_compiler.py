@@ -10,11 +10,13 @@ from parse import parse_sexprs
 from primitives import Point
 
 class PointCompiler:
-    def __init__(self, instructions, ps):
+    def __init__(self, instructions, ps, opts):
         assert(all([isinstance(i, Assert) or isinstance(i, Confirm) for i in instructions]))
         self.points = ps
         self.constraints = [i.constraint for i in instructions if isinstance(i, Assert)]
         self.goals = [i.constraint for i in instructions if isinstance(i, Confirm)]
+        self.opts = opts
+        self.verbosity = opts['verbosity']
 
 
     def preprocess(self):
@@ -110,7 +112,8 @@ class PointCompiler:
 
     def compile(self):
         self.preprocess()
-        print(self)
+        if self.verbosity > 0:
+            print(self)
 
         self.instructions = list()
 
@@ -128,7 +131,8 @@ class PointCompiler:
             header="-" * 13,
             i_strs = '\n'.join([str(i) for i in self.instructions])
         )
-        print(instructions_str)
+        if self.verbosity > 0:
+            print(instructions_str)
 
     def __str__(self):
         return '\nCOMPILED INSTRUCTIONS:\n{header}\n\nPoints: {pts}\nConstraints:\n\t{cs}\nGoals:\n\t{gs}\n'.format(

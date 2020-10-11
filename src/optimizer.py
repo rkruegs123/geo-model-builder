@@ -33,6 +33,7 @@ class Optimizer(ABC):
         self.losses = dict()
         self.has_loss = False
         self.opts = opts
+        self.verbosity = opts['verbosity']
         self.instructions = instructions
         self.ndgs = dict()
         self.goals = dict()
@@ -365,7 +366,8 @@ class Optimizer(ABC):
 
     def sample_polygon(self, ps):
         if len(ps) < 4:
-            print("WARNING: sample_polygon expecting >3 points")
+            if self.verbosity > 0:
+                print("WARNING: sample_polygon expecting >3 points")
 
         angle_zs = [self.mkvar(name=f"polygon_angle_zs_{i}", lo=-2.0, hi=2.0) for i in range(len(ps))]
         multiplicand = ((len(ps) - 2) / len(ps)) * math.pi
@@ -769,7 +771,8 @@ class Optimizer(ABC):
         vals = self.assertion_vals(pred, args)
         g_str = f"{pred}_{'_'.join([str(a) for a in args])}"
         if negate:
-            print("WARNING: Satisfied NDG goals will have non-zero values")
+            if self.verbosity > 0:
+                print("WARNING: Satisfied NDG goals will have non-zero values")
             g_str = f"not_{g_str}"
 
         for i, val in enumerate(vals):
@@ -1513,7 +1516,8 @@ class Optimizer(ABC):
             A, B = name2pt[a], name2pt[b]
             d = self.dist(A, B)
             if d < min_dist:
-                print(f"DUP: {a} {b}")
+                if self.verbosity > 0:
+                    print(f"DUP: {a} {b}")
                 return False
         return True
 

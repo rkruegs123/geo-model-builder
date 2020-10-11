@@ -4,6 +4,7 @@ import pdb
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
@@ -27,8 +28,13 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
     reader = InstructionReader(lines)
     instructions = reader.instructions
 
+    verbosity = opts['verbosity']
+
+    if verbosity > 0:
+        print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
+
     if reader.problem_type == "compile":
-        compiler = PointCompiler(instructions, reader.points)
+        compiler = PointCompiler(instructions, reader.points, opts)
         compiler.compile()
         final_instructions = compiler.instructions
     elif reader.problem_type == "instructions":
@@ -60,11 +66,15 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
     else:
         raise NotImplementedError(f"Solver not implemented: {solver}")
 
-    print(f"\n\nFound {len(filtered_models)} models")
+    if verbosity > 0:
+        print(f"\n\nFound {len(filtered_models)} models")
     figs = list()
     for i, m in enumerate(filtered_models):
-        # m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png")
-        figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig))
+        # FIXME: Inconsistent return type
+        if not (encode_fig or show_plot or save_plot):
+            figs.append(m)
+        else:
+            figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig))
     return figs
 
 
@@ -72,8 +82,8 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
     if opts['n_models'] > 10:
         raise RuntimeError("Max n_models is 10")
 
-    problem_given = ('lines' in opts or opts['problem'])
-    dir_given = 'dir' in opts
+    problem_given = ('lines' in opts or bool(opts['problem']))
+    dir_given = 'dir' in opts and bool(opts['dir'])
 
     if problem_given and dir_given:
         raise RuntimeError("Please only supply one of --problem and --dir")
@@ -86,16 +96,58 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             opts['lines'] = open(opts['problem'], 'r').readlines()
         return build_aux(opts, show_plot=show_plot, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=encode_fig)
     else:
-        dir_files = [f for f in listdir(opts['dir']) if isfile(join(opts['dir'], f))]
+        dir_files = [f for f in listdir(opts['dir']) if isfile(join(opts['dir'], f)) and f[-1] != "~"]
 
-        solve_map = dict()
+        if opts['experiment']:
 
-        for f in dir_files:
-            plt.close('all')
+            from statistics import mean, stdev
+            import itertools
 
-            opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
-            models = build_aux(opts, show_plot=False, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=True)
-            solve_map[f] = len(models)
+            solve_map = { f: list() for f in dir_files }
 
-        for f, n_models in solve_map.items():
-            print(f"{f}: {n_models}")
+            all_trial_data = list()
+
+            n_trials = 2
+            opts['verbosity'] = 0
+
+            for _ in tqdm(range(n_trials), desc="Trials"):
+                trial_data = list()
+                for f in tqdm(dir_files, desc="Problems"):
+                    plt.close('all')
+
+                    opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
+                    models = build_aux(opts, show_plot=False, save_plot=False, outf_prefix=outf_prefix, encode_fig=False)
+                    solve_map[f].append(len(models))
+                    trial_data.append(len(models))
+                all_trial_data.append(trial_data)
+
+
+            all_n_models_per_file = [mean(t_data) for t_data in all_trial_data] # should have length 2
+            avg_models_per_file = mean(all_n_models_per_file)
+            std_models_per_file = stdev(all_n_models_per_file)
+
+
+            # % Problems with at least one model
+            all_n_models_with_gt0_models = [len([n for n in t_data if n > 0]) / len(dir_files) * 100 for t_data in all_trial_data]
+            avg_perc_success = mean(all_n_models_with_gt0_models)
+            std_perc_success = stdev(all_n_models_with_gt0_models)
+
+            print(f"\n\nAll Trial Data:\n{all_trial_data}")
+            print(f"\n\nSolve Map:\n{solve_map}")
+            print("\n\n")
+            print(f"Models per File: Avg {avg_models_per_file}, Sd {std_models_per_file}")
+            print(f"% Problems with atleast 1 Model: Avg {avg_perc_success}, Sd {std_perc_success}")
+
+        else:
+
+            solve_map = dict()
+
+            for f in dir_files:
+                plt.close('all')
+
+                opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
+                models = build_aux(opts, show_plot=False, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=True)
+                solve_map[f] = len(models)
+
+            for f, n_models in solve_map.items():
+                print(f"{f}: {n_models}")

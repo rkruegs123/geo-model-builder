@@ -201,7 +201,7 @@ class TfOptimizer(Optimizer):
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
 
-        for _ in tqdm(range(n_inits), desc="Sampling inits..."):
+        for _ in range(n_inits):
             self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)
             init_name = get_random_string(8)
@@ -232,8 +232,10 @@ class TfOptimizer(Optimizer):
 
             loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
 
-            print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
-            # self.print_losses()
+            if self.verbosity > 0:
+                print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
+                if self.verbosity > 1:
+                    self.print_losses()
             # self.get_model().plot()
             if loss_v < opts['eps']:
                 '''
@@ -242,7 +244,8 @@ class TfOptimizer(Optimizer):
                 if opts.verbose: self.print_losses()
                 if opts.plot: self.plot()
                 '''
-                self.print_losses()
+                if self.verbosity > 1:
+                    self.print_losses()
                 return loss_v
             else:
                 self.sess.run(self.apply_grads)
@@ -274,25 +277,27 @@ class TfOptimizer(Optimizer):
 
             # Stop when we have enough
             if len(models) >= self.opts['n_models']:
-                self.remove_inits()
+                if self.has_loss: self.remove_inits()
                 return models
 
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
                 pt_assn = self.run(self.name2pt)
                 if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
-                    self.print_losses()
+                    if self.verbosity > 0:
+                        self.print_losses()
                     models.append(self.get_model())
             else:
                 loss = None
                 try:
                     loss = self.train(init_name=self.sorted_inits[i][0])
                 except Exception as e:
-                    print(f"ERROR: {e}")
+                    if self.verbosity > 0:
+                        print(f"ERROR: {e}")
 
                 if loss is not None and loss < self.opts['eps']:
                     pt_assn = self.run(self.name2pt)
                     if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
                         models.append(self.get_model())
-        self.remove_inits()
+        if self.has_loss: self.remove_inits()
         return models
