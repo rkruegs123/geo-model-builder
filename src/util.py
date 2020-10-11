@@ -48,11 +48,11 @@ DEFAULTS = {
     "make_distinct": 1e-2,
     "min_dist": 0.1,
     "n_iterations": 5000,
-    "n_tries": 1,
     "ndg_loss": 1e-3,
     "regularize_points": 1e-6,
     "solver": "tensorflow",
-    "n_init_samples": 5
+    "n_models": 3,
+    "n_tries_per_model": 2
 }
 
 def is_number(s):

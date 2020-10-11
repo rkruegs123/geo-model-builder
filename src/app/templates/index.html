@@ -78,7 +78,7 @@
                   // global: false,
                   data: {
                       problem_input: cm.getValue(),
-                      n_tries: document.getElementById('num-models').value
+                      n_models: document.getElementById('num-models').value
                   },
 
                   success: function(response) {
@@ -269,7 +269,7 @@
             <div class="form-group">
               <label for="num-models">No. of Models</label>
               <div>
-                <input class="form-control" type="number" value="1" id="num-models">
+                <input class="form-control" type="number" value="1" id="num-models" min="1" max="10">
               </div>
             </div>
             <!-- Should change 0.2 to jinja default size

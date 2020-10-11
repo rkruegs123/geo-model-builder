@@ -181,6 +181,7 @@ class TfOptimizer(Optimizer):
         gs, vs            = zip(*optimizer.compute_gradients(self.loss))
         self.apply_grads  = optimizer.apply_gradients(zip(gs, vs), name='apply_gradients', global_step=self.global_step)
         self.reset_step   = tf.assign(self.global_step, 0)
+        self.gen_inits()
 
     def print_losses(self):
         print("======== Print losses ==========")
@@ -192,29 +193,36 @@ class TfOptimizer(Optimizer):
         for k, x in self.run(self.ndgs).items(): print("  %-50s %.10f" % (k, x))
         print("================================")
 
-    def train(self):
-        opts = self.opts
+
+    def gen_inits(self):
+        n_tries = self.opts['n_models'] * self.opts['n_tries_per_model']
+        n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
 
         init_map = dict() # maps inits to losses
-        saver = tf.train.Saver()
+        saver = tf.train.Saver(max_to_keep=None)
 
-        for _ in tqdm(range(opts['n_init_samples']), desc="Sampling inits..."):
+        for _ in tqdm(range(n_inits), desc="Sampling inits..."):
             self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)
             init_name = get_random_string(8)
             saver.save(self.sess, init_name)
             init_map[init_name] = init_loss
 
-        best_init = min(init_map, key=init_map.get)
-        restore_saver = tf.train.import_meta_graph(f"{best_init}.meta")
-        restore_saver.restore(self.sess, f"./{best_init}")
+        self.sorted_inits = sorted(init_map.items(), key=lambda x: x[1])
 
+
+    def remove_inits(self):
         # remove init files
-        for init_name in init_map:
+        for (init_name, init_loss) in self.sorted_inits:
             os.remove(f"{init_name}.meta")
             os.remove(f"{init_name}.index")
             os.remove(f"{init_name}.data-00000-of-00001")
 
+    def train(self, init_name):
+        opts = self.opts
+
+        restore_saver = tf.train.import_meta_graph(f"{init_name}.meta")
+        restore_saver.restore(self.sess, f"./{init_name}")
 
         loss_v = None
 
@@ -223,12 +231,7 @@ class TfOptimizer(Optimizer):
         for i in range(opts['n_iterations']):
 
             loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
-            '''
-            if i > 0 and i % opts.print_freq == 0:
-                if opts.verbose: print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
-                if opts.verbose > 1: self.print_losses()
-                if opts.plot > 1: self.plot()
-            '''
+
             print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
             # self.print_losses()
             # self.get_model().plot()
@@ -265,7 +268,15 @@ class TfOptimizer(Optimizer):
             # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         models = list()
-        for _ in range(self.opts['n_tries']):
+        n_tries = self.opts['n_models'] * self.opts['n_tries_per_model']
+
+        for i in range(n_tries):
+
+            # Stop when we have enough
+            if len(models) >= self.opts['n_models']:
+                self.remove_inits()
+                return models
+
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
                 pt_assn = self.run(self.name2pt)
@@ -275,7 +286,7 @@ class TfOptimizer(Optimizer):
             else:
                 loss = None
                 try:
-                    loss = self.train()
+                    loss = self.train(init_name=self.sorted_inits[i][0])
                 except Exception as e:
                     print(f"ERROR: {e}")
 
@@ -283,4 +294,5 @@ class TfOptimizer(Optimizer):
                     pt_assn = self.run(self.name2pt)
                     if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
                         models.append(self.get_model())
+        self.remove_inits()
         return models

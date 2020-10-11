@@ -12,14 +12,16 @@ if __name__ == "__main__":
 
     # General arguments
     parser.add_argument('--problem', '-p', action='store', type=str, help='Name of the file defining the set of constraints')
+    parser.add_argument('--dir', '-d', action='store', type=str, help='Directory containing problem files.')
     parser.add_argument('--solver', action='store', type=str, help='Name of the constraint solving method -- options are scipy or tensorflow', default=DEFAULTS["solver"])
-    parser.add_argument('--n_tries', action='store', dest='n_tries', type=int, default=1)
     parser.add_argument('--regularize_points', action='store', dest='regularize_points', type=float, default=DEFAULTS["regularize_points"])
     parser.add_argument('--make_distinct', action='store', dest='make_distinct', type=float, default=DEFAULTS["make_distinct"])
     parser.add_argument('--distinct_prob', action='store', dest='distinct_prob', type=float, default=DEFAULTS["distinct_prob"])
     parser.add_argument('--min_dist', action='store', dest='min_dist', type=float, default=DEFAULTS["min_dist"])
     parser.add_argument('--ndg_loss', action='store', dest='ndg_loss', type=float, default=DEFAULTS["ndg_loss"])
-    parser.add_argument('--n_init_samples', action='store', dest='n_init_samples', type=int, default=5)
+
+    parser.add_argument('--n_models', action='store', dest='n_models', type=int, default=DEFAULTS['n_models'])
+    parser.add_argument('--n_tries_per_model', action='store', dest='n_tries_per_model', type=int, default=DEFAULTS['n_tries_per_model'])
 
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=DEFAULTS["learning_rate"])
@@ -32,7 +34,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args = vars(args)
 
-    lines = open(args['problem'], 'r').readlines()
-    args['lines'] = lines
+
+    # lines = open(args['problem'], 'r').readlines()
+    # args['lines'] = lines
 
     build(args)

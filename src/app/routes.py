@@ -20,7 +20,7 @@ def solve():
 
         args = DEFAULTS
         args['lines'] = lines
-        args['n_tries'] = int(request.form['n_tries'])
+        args['n_models'] = int(request.form['n_models'])
 
         figs = build(args, show_plot=False, encode_fig=True)
         urls = list()

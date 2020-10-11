@@ -1,6 +1,9 @@
 import tensorflow.compat.v1 as tf
 import os
 import pdb
+from os import listdir
+from os.path import isfile, join
+
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
@@ -14,7 +17,9 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 tf.disable_v2_behavior()
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=False):
+
+
+def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=False):
     lines = opts['lines']
     solver = opts['solver']
 
@@ -61,3 +66,34 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
         # m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png")
         figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig))
     return figs
+
+
+def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=False):
+    if opts['n_models'] > 10:
+        raise RuntimeError("Max n_models is 10")
+
+    problem_given = ('lines' in opts or 'problem' in opts)
+    dir_given = 'dir' in opts
+
+    if problem_given and dir_given:
+        raise RuntimeError("Please only supply one of --problem and --dir")
+
+    if not (problem_given or dir_given):
+        raise RuntimeError("Please provide either --problem or --dir")
+
+    if problem_given:
+        if 'lines' not in opts:
+            opts['lines'] = open(opts['problem'], 'r').readlines()
+        return build_aux(opts, show_plot=show_plot, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=encode_fig)
+    else:
+        dir_files = [f for f in listdir(opts['dir']) if isfile(join(opts['dir'], f))]
+
+        solve_map = dict()
+
+        for f in dir_files:
+            opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
+            models = build_aux(opts, show_plot=False, save_plot=save_plot, outf_prefix=outf_prefix, encode_fig=True)
+            solve_map[f] = len(models)
+
+        for f, n_models in solve_map.items():
+            print(f"{f}: {n_models}")
