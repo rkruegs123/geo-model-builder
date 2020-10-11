@@ -323,8 +323,8 @@
       </ul>
       <span>Throughout the tutorial, we also refer to the following geometric objects:</span>
       <ul class="mt-0">
-        <li><code>A</code>, <code>B</code>, and <code>C</code> are instances of <code>POINT</code></li>
-        <li><code>L1</code> and <code>L2</code> are instances of <code>LINE</code></li>
+        <li><code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> are instances of <code>POINT</code></li>
+        <li><code>L1</code>, <code>L2</code>, and <code>L3</code> are instances of <code>LINE</code></li>
         <li><code>C1</code> and <code>C2</code> are instances of <code>CIRCLE</code></li>
       </ul>
 
@@ -716,12 +716,173 @@
 
 
       <h2>Functions and Predicates</h2>
-      <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, numerical values, and predicates as arguments. The following functions and predicates are the operations by which a user can define such arguments for use in the above commands</p>
+      <p>Per the above section, GeoBuilder operates on a set of commands that accept points, lines, circles, numerical values, and predicates as arguments. In the following, we provide a sample of the functions and predicates by which a user can define such arguments. For a complete list, please reference the appendices in our <a href="">arXiv paper</a>.</p>
+
+      <h3>Functions</h3>
+      <p>Functions construct new geometric objects, as well as numerical values for dimensional constraints, from ones already declared. Functions in our DSL include a unique feature -- <strong>root selectors</strong>. Root selectors are included to address the issue that when geometric constraints are translated to numerical ones, many solutions often exist which are degenerate in their geometric interpretation. In plane geometry, this problem typically manifests with multiple candidate <code>POINT</code> solutions, such as the intersection between a line and a circle.</p>
+      <p>To control for this, we introduce a set of root selectors for plane geometry to be used in several functions of type <code>POINT</code>:
+        <ul>
+          <li><code>rsArbitrary</code>: An arbitrary root</li>
+          <li><code>(rsNeq A)</code>: The root that does not equal <code>A</code></li>
+          <li><code>(rsOppSides A L1)</code>: The root on the opposite side of <code>L1</code> as <code>A</code></li>
+          <li><code>(rsSameSide A L1)</code>: The root on the same side of <code>L1</code> as <code>A</code></li>
+        </ul>
+        The functions <code>interLC</code> and <code>interCC</code> require a root selector.
+      </p>
+
+      <p>
+        Keeping this concept in mind, we now introduce a set of commonly used functions to...
+        <ul>
+          <li>
+            <span>... construct a <code>POINT</code></span>
+            <ul>
+              <li><code>(midp A B)</code>: The midpoint of <code>A</code> and <code>B</code></li>
+              <li><code>(interLL L1 L2)</code>: The intersection of <code>L1</code> and <code>L2</code></li>
+              <li><code>(circumcenter A B C)</code>: The circumcenter of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+              <li><code>(orthocenter A B C)</code>: The orthocenter of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+              <li><code>(interLC L1 C1 &lt;ROOT-SELECTOR&gt;)</code>: The intersection of <code>L1</code> and <code>C1</code> as specified by a root selector</li>
+            </ul>
+          </li>
+          <li>
+            <span>... construct a <code>LINE</code></span>
+            <ul>
+              <li><code>(line A B)</code>: The line connecting <code>A</code> and <code>B</code></li>
+              <li><code>(perpBis A B)</code>: The perpendicular bisector of line <code><span style="text-decoration:overline">AB</span></code></li>
+              <li><code>(perpAt C A B)</code>: The line through <code>C</code> that is perpendicular to line <code><span style="text-decoration:overline">AB</span></code></li>
+            </ul>
+          </li>
+          <li>
+            <span>... construct a <code>CIRCLE</code></span>
+            <ul>
+              <li><code>(circ A B C)</code>: The circle passing through <code>A</code>, <code>B</code>, and <code>C</code></li>
+              <li><code>(incircle A B C)</code>: The incircle of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+              <li><code>(diam A B)</code>: The circle with diameter <code><span style="text-decoration:overline">AB</span></code></li>
+            </ul>
+          </li>
+          <li>
+            <span>... construct a <code>NUMBER</code></span>
+            <ul>
+              <li><code>(dist A B)</code>: The length of the segment <code><span style="text-decoration:overline">AB</span></code></li>
+              <li><code>(uangle A B C)</code>: The undirected angle measure &angle;<code>ABC</code></li>
+              <li><code>(add</code>/<code>sub</code>/<code>mul</code>/<code>div</code>/<code>pow N1 N2)</code>: The standard binary operations, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
+              <li><code>(neg</code>/<code>sqrt N1)</code>: The standard unary operations, where <code>N1</code> is an instance of <code>NUMBER</code></li>
+            </ul>
+          </li>
+        </ul>
+      </p>
+
+
+      <h3>Predicates</h3>
+      <p>
+        Predicates describe relationships between geometric objects or numerical values. As with functions, here we provide a sample of commonly used predicates and the reader should refer to our <a href="">arXiv paper</a> for a full list:
+        <ul>
+          <li><code>(cong A B C D)</code>: True i.f.f. the segments <code><span style="text-decoration:overline">AB</span></code> and <code><span style="text-decoration:overline">CD</span></code> are congruent</li>
+          <li><code>(coll A B C)</code>: True i.f.f. <code>A</code>, <code>B</code>, and <code>C</code> are collinear</li>
+          <li><code>(eq A B)</code>: True i.f.f. <code>A</code> = <code>B</code></li>
+          <li><code>(eq N1 N2)</code>: True i.f.f. <code>N1</code> = <code>N2</code>, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
+          <li><code>(onLine A L1)</code>: True i.f.f. <code>A</code> is on line <code>L1</code></li>
+          <li><code>(onCirc A C1)</code>: True i.f.f. <code>A</code> is on circle <code>C1</code></li>
+          <li><code>(onSeg C A B)</code>: True i.f.f. <code>C</code> is on the segment <code><span style="text-decoration:overline">AB</span></code></li>
+          <li><code>(onRay C A B)</code>: True i.f.f. <code>C</code> is on the ray starting at <code>A</code> that extends through <code>B</code></li>
+          <li><code>(concur L1 L2 L3)</code>: True i.f.f. lines <code>L1</code>, <code>L2</code>, and <code>L3</code> intersect at a common point</li>
+        </ul>
+      </p>
+
+      <h3>Example Usage</h3>
+      <p>Here we provide examples of valid and invalid usage of functions and predicates to construct arguments for commands:</p>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <div class="card border-success mb-3 mx-auto" style="max-width: 38rem;">
+              <div class="card-header text-success">Valid Usage</div>
+              <div class="card-body">
+                <ul class="list-unstyled">
+                  <li>
+                    <code>(PARAM P POINT (onSeg A (MIDP A B)))</code>
+                    <ul>
+                      <li>Parameterize a point <code>P</code> on the segment connecting <code>A</code> and <code>(MIDP A B)</code></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(COMPUTE P POINT (interLC L1 C1 rsArbitrary))</code>
+                    <ul>
+                      <li>Compute a point <code>P</code> as <em>any</em> intersection of the line <code>L1</code> with the circle <code>C1</code></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(COMPUTE Q POINT (interLC L1 C1 (rsNeq P)))</code>
+                    <ul>
+                      <li>Compute a point <code>Q</code> as the intersection of the line <code>L1</code> with the circle <code>C1</code> that is <em>not</em> <code>P</code></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(PARAM GAMMA CIRCLE (origin (interLL L1 (perpBis A B))))</code>
+                    <ul>
+                      <li>Parameterize a circle <code>GAMMA</code> whose origin is the intersection of <code>L1</code> and the perpendicular bisector of the segment <code><span style="text-decoration:overline">AB</span></code></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(ASSERT (eq C (midp A B)))</code>
+                    <ul>
+                      <li>Assert that <code>C</code> is the midpoint of the segment <code><span style="text-decoration:overline">AB</span></code></li>
+                    </ul>
+                  </li>
+                </ul>
+
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card border-danger mb-3 mx-auto" style="max-width: 38rem;">
+              <div class="card-header text-danger">Invalid Usage</div>
+              <div class="card-body">
+                <ul class="list-unstyled">
+                  <li>
+                    <code>(ASSERT (interLL L1 L2))</code>
+                    <ul>
+                      <li>Assertions take predicates as arguments, not functions</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(COMPUTE P POINT (interLC L1 C1))</code>
+                    <ul>
+                      <li>Root selectors are required, even if you do not care which root is selected</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <code>(ASSERT (eq A B))</code>
+                    <ul>
+                      <li>While technically a valid command, duplicate points are not allowed so this assertion will prevent a model from being found</li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
     </div>
 
     <div class="container-fluid" id="examples">
       <h1>Examples</h1>
       <p>The following examples are adapted from <a href="https://www.imo-official.org/problems.aspx">previous IMO problems</a>, as well as problems found in <a href="https://web.evanchen.cc/geombook.html">Evan Chen&#39;s "Euclidean Geometry in Mathematical Olympiads" (EGMO)</a>.</p>
+
+      <h3>IMO FIXME, Problem FIXME</h3>
+      <div class="container-fluid">
+        <blockquote class="blockquote text-center">
+          <p class="mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
+        </blockquote>
+      </div>
+
+      <h3>The Five-Circle Theorem</h3>
+      <div class="container-fluid">
+        <blockquote class="blockquote text-center">
+          <p class="mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
+        </blockquote>
+      </div>
+
     </div>
 
     <div class="container-fluid" id="contact">

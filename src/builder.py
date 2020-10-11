@@ -5,6 +5,7 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import time
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
@@ -107,19 +108,40 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
 
             all_trial_data = list()
 
+            all_trial_times = list()
+            all_trial_success_times = list()
+            all_trial_fail_times = list()
+
             n_trials = 2
             opts['verbosity'] = 0
 
             for _ in tqdm(range(n_trials), desc="Trials"):
                 trial_data = list()
+                trial_times = list()
+                trial_success_times = list()
+                trial_fail_times = list()
                 for f in tqdm(dir_files, desc="Problems"):
                     plt.close('all')
 
                     opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
+                    start = time.time()
                     models = build_aux(opts, show_plot=False, save_plot=False, outf_prefix=outf_prefix, encode_fig=False)
-                    solve_map[f].append(len(models))
-                    trial_data.append(len(models))
+                    end = time.time()
+                    time_elapsed = end - start
+                    n_models = len(models)
+                    solve_map[f].append(n_models)
+                    trial_data.append(n_models)
+                    trial_times.append(time_elapsed)
+
+                    if n_models == opts['n_models']:
+                        trial_success_times.append(time_elapsed)
+                    elif n_models == 0:
+                        trial_fail_times.append(time_elapsed)
+
                 all_trial_data.append(trial_data)
+                all_trial_times.append(trial_times)
+                all_trial_success_times.append(trial_success_times)
+                all_trial_fail_times.append(trial_fail_times)
 
 
             all_n_models_per_file = [mean(t_data) for t_data in all_trial_data] # should have length 2
@@ -132,11 +154,27 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             avg_perc_success = mean(all_n_models_with_gt0_models)
             std_perc_success = stdev(all_n_models_with_gt0_models)
 
+            # (avg time per problem) per trial
+            all_avg_times = [mean(time_data) for time_data in all_trial_times]
+            avg_time = mean(all_avg_times)
+            std_time = stdev(all_avg_times)
+
+            all_avg_success_times = [mean(success_time_data) for success_time_data in all_trial_success_times]
+            avg_success_time = mean(all_avg_success_times)
+            std_success_time = stdev(all_avg_success_times)
+
+            all_avg_fail_times = [mean(fail_time_data) for fail_time_data in all_trial_fail_times]
+            avg_fail_time = mean(all_avg_fail_times)
+            std_fail_time = stdev(all_avg_fail_times)
+
             print(f"\n\nAll Trial Data:\n{all_trial_data}")
             print(f"\n\nSolve Map:\n{solve_map}")
             print("\n\n")
             print(f"Models per File: Avg {avg_models_per_file}, Sd {std_models_per_file}")
             print(f"% Problems with atleast 1 Model: Avg {avg_perc_success}, Sd {std_perc_success}")
+            print(f"Avg Time per Problem (all): Avg {avg_time}, Sd {std_time}")
+            print(f"Avg Time per Problem (success): Avg {avg_success_time}, Sd {std_success_time}")
+            print(f"Avg Time per Problem (fail): Avg {avg_fail_time}, Sd {std_fail_time}")
 
         else:
 

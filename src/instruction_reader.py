@@ -278,7 +278,7 @@ class InstructionReader:
         elif pred == "onLine":
             assert(len(args) == 1)
             assert(all([isinstance(t, Line) for t in args]))
-        elif pred == "onRay":
+        elif pred in ["onRay", "onRayOpp"]:
             assert(len(args) == 2)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "onCirc":
