@@ -342,8 +342,16 @@ class InstructionReader:
             pred = "gt"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "gte" or pred == ">=":
+            pred = "gte"
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Num) for t in args]))
         elif pred == "lt" or pred == "<":
             pred = "lt"
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "lte" or pred == "<=":
+            pred = "lte"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
         elif pred == "eqangle":
