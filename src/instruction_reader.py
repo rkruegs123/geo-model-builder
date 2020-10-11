@@ -627,6 +627,11 @@ class InstructionReader:
             n1, n2 = [self.process_number(n) for n in n_args]
             n_val = FuncInfo(n_pred, [n1, n2])
             return Num(n_val)
+        elif n_pred in ["neg", "sqrt"]:
+            assert(len(n_args) == 1)
+            n = self.process_number(n_args[0])
+            n_val = FuncInfo(n_pred, [n])
+            return Num(n_val)
         else:
             raise NotImplementedError(f"[process_number] Unsupporrted number pred: {n_pred}")
 

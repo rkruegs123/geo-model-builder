@@ -205,6 +205,12 @@ class Optimizer(ABC):
                 return n1 - n2
             else: # pow
                 return n1 ** n2
+        elif n_pred == "neg":
+            n = self.eval_num(n_args[0])
+            return -n
+        elif n_pred == "sqrt":
+            n = self.eval_num(n_args[0])
+            return self.sqrt(n)
         else:
             raise NotImplementedError(f"[eval_num] Unsupported pred {n_pred}")
 

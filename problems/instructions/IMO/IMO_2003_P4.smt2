@@ -1,0 +1,7 @@
+(param (A B C D) polygon)
+(assert (cycl A B C D))
+(compute P point (foot D A B))
+(compute Q point (foot D B C))
+(compute R point (foot D C A))
+(assert (cong R P R Q))
+(confirm (concur (ibisector A B C) (ibisector C D A) (line A C)))
