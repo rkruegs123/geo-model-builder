@@ -44,25 +44,76 @@
               cursorBlinkRate: -1
           });
           var fc_string = "(PARAM (P0 P1 P2 P3 P4) polygon)\n"
-          fc_string += "\n(COMPUTE Q1 (interLL (line P0 P1) (line P2 P3)))"
-          fc_string += "\n(COMPUTE Q2 (interLL (line P1 P2) (line P3 P4)))"
-          fc_string += "\n(COMPUTE Q3 (interLL (line P2 P3) (line P4 P0)))"
-          fc_string += "\n(COMPUTE Q4 (interLL (line P3 P4) (line P0 P1)))"
-          fc_string += "\n(COMPUTE Q0 (interLL (line P4 P0) (line P1 P2)))\n"
+          fc_string += "\n(COMPUTE Q1 POINT (interLL (line P0 P1) (line P2 P3)))"
+          fc_string += "\n(COMPUTE Q2 POINT (interLL (line P1 P2) (line P3 P4)))"
+          fc_string += "\n(COMPUTE Q3 POINT (interLL (line P2 P3) (line P4 P0)))"
+          fc_string += "\n(COMPUTE Q4 POINT (interLL (line P3 P4) (line P0 P1)))"
+          fc_string += "\n(COMPUTE Q0 POINT (interLL (line P4 P0) (line P1 P2)))\n"
 
-          fc_string += "\n(COMPUTE M1 (interCC (circ Q0 P0 P1) (circ Q1 P1 P2) (rsNeq P1)))"
-          fc_string += "\n(COMPUTE M2 (interCC (circ Q1 P1 P2) (circ Q2 P2 P3) (rsNeq P2)))"
-          fc_string += "\n(COMPUTE M3 (interCC (circ Q2 P2 P3) (circ Q3 P3 P4) (rsNeq P3)))"
-          fc_string += "\n(COMPUTE M4 (interCC (circ Q3 P3 P4) (circ Q4 P4 P0) (rsNeq P4)))"
-          fc_string += "\n(COMPUTE M0 (interCC (circ Q4 P4 P0) (circ Q0 P0 P1) (rsNeq P0)))\n"
+          fc_string += "\n(COMPUTE M1 POINT (interCC (circ Q0 P0 P1) (circ Q1 P1 P2) (rsNeq P1)))"
+          fc_string += "\n(COMPUTE M2 POINT (interCC (circ Q1 P1 P2) (circ Q2 P2 P3) (rsNeq P2)))"
+          fc_string += "\n(COMPUTE M3 POINT (interCC (circ Q2 P2 P3) (circ Q3 P3 P4) (rsNeq P3)))"
+          fc_string += "\n(COMPUTE M4 POINT (interCC (circ Q3 P3 P4) (circ Q4 P4 P0) (rsNeq P4)))"
+          fc_string += "\n(COMPUTE M0 POINT (interCC (circ Q4 P4 P0) (circ Q0 P0 P1) (rsNeq P0)))\n"
 
           fc_string += "\n(CONFIRM (onCirc M3 (circ M0 M1 M2)))"
           fc_string += "\n(CONFIRM (onCirc M4 (circ M0 M1 M2)))"
 
           five_circle_cm.setValue(fc_string);
           five_circle_cm.setSize("100%", "100%");
-          five_circle_cm.getWrapperElement().style["font-size"] = "17px";
+          five_circle_cm.getWrapperElement().style["font-size"] = "15px";
           five_circle_cm.refresh();
+
+          var imo_2019_p2_cm = CodeMirror.fromTextArea(document.getElementById('imo-2019-p2'), {
+              mode: "text/x-common-lisp",
+              lineNumbers: true,
+              readOnly: true,
+              keyMap: "emacs",
+              theme: "3024-day",
+              cursorBlinkRate: -1
+          });
+          imo_2019_p2_string = "(PARAM (A B C) triangle)\n";
+
+          imo_2019_p2_string += "\n(PARAM A1 POINT (onSeg B C))"
+          imo_2019_p2_string += "\n(PARAM B1 POINT (onSeg A C))\n"
+
+          imo_2019_p2_string += "\n(PARAM P POINT (onSeg A A1))"
+          imo_2019_p2_string += "\n(COMPUTE Q POINT (interLL (line B B1) (paraAt P A B)))\n"
+
+          imo_2019_p2_string += "\n(PARAM P1 POINT (onRayOpp B1 P))"
+          imo_2019_p2_string += "\n(ASSERT (eq (uangle P P1 C) (uangle B A C)))\n"
+
+          imo_2019_p2_string += "\n(PARAM Q1 POINT (onRayOpp A1 Q))"
+          imo_2019_p2_string += "\n(ASSERT (eq (uangle C Q1 Q) (uangle C B A)))\n"
+
+          imo_2019_p2_string += "\n(CONFIRM (onCirc P (circ Q P1 Q1)))"
+
+          imo_2019_p2_cm.setValue(imo_2019_p2_string);
+          imo_2019_p2_cm.setSize("100%", "100%");
+          imo_2019_p2_cm.getWrapperElement().style["font-size"] = "15px";
+          imo_2019_p2_cm.refresh();
+
+
+
+          var imo_2010_p2_cm = CodeMirror.fromTextArea(document.getElementById('imo-2010-p2'), {
+              mode: "text/x-common-lisp",
+              lineNumbers: true,
+              readOnly: true,
+              keyMap: "emacs",
+              theme: "3024-day",
+              cursorBlinkRate: -1
+          });
+
+          imo_2010_p2_string = "(param (A B C) triangle)\n(compute I point (incenter A B C))\n(compute Gamma circle (circumcircle A B C))\n"
+          imo_2010_p2_string += "\n(compute D point (interLC (line A I) Gamma (rsNeq A)))\n(param E point (onCirc Gamma))\n(assert (sameSide D E B C))\n"
+
+          imo_2010_p2_string += "\n(param F point (onSeg B C))\n(assert (eq (uangle B A F) (uangle C A E)))\n(assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))\n"
+
+          imo_2010_p2_string += "\n(compute G point (midp I F))\n(confirm (onCirc (interLL D G E I) Gamma))"
+          imo_2010_p2_cm.setValue(imo_2010_p2_string);
+          imo_2010_p2_cm.setSize("100%", "100%");
+          imo_2010_p2_cm.getWrapperElement().style["font-size"] = "15px";
+          imo_2010_p2_cm.refresh();
 
           function handleFileSelect(evt) {
               var files = evt.target.files; // FileList object
@@ -918,36 +969,166 @@
       <h1>Examples</h1>
       <p>The following examples are adapted from <a href="https://www.imo-official.org/problems.aspx">previous IMO problems</a>, as well as problems found in <a href="https://web.evanchen.cc/geombook.html">Evan Chen&#39;s "Euclidean Geometry in Mathematical Olympiads" (EGMO)</a>.</p>
 
-      <h3>IMO FIXME, Problem FIXME</h3>
-      <div class="container-fluid">
-        <blockquote class="blockquote text-center">
-          <p class="mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
-        </blockquote>
+
+      <div class="container-fluid p-3">
+        <h3 class="text-center">IMO 2019, Problem 2</h3>
+        <div class="container-fluid">
+          <div class="container justify-content-center">
+            <blockquote class="blockquote text-center">
+              <p class="mb-0">
+                In a triangle <var>ABC</var>, point <var>A<sub>1</sub></var> lies on side <var>BC</var> and point <var>B<sub>1</sub></var> lies on side <var>AC</var>. Let <var>P</var> and <var>Q</var> be points on segments <var>AA<sub>1</sub></var> and <var>BB<sub>1</sub></var>, respectively, such that <var>PQ</var> is parallel to <var>AB</var>. Let <var>P<sub>1</sub></var> be a point on line <var>PB<sub>1</sub></var>, such that <var>B<sub>1</sub></var> lies strictly between <var>P</var> and <var>P<sub>1</sub></var>, and <var>&angle;PP<sub>1</sub>C = &angle;BAC</var>. Similarly, let <var>A<sub>1</sub></var> be a point on line <var>QA<sub>1</sub></var>, such that <var>A<sub>1</sub></var> lies strictly between <var>Q</var> and <var>Q<sub>1</sub></var>, and <var>&angle;CQ<sub>1</sub>Q = &angle;CBA</var>. Prove that points <var>P</var>, <var>Q</var>, <var>P<sub>1</sub></var>, and <var>Q<sub>1</sub></var> are concyclic.
+              </p>
+            </blockquote>
+          </div>
+
+          <div class="container-fluid p-3">
+            <div class="row justify-content-center">
+              <div class="block col-sm-4">
+                <textarea id="imo-2019-p2"></textarea>
+              </div>
+              <div class="block col-sm-4">
+
+                <div id="carouselExampleControls3" class="carousel slide" data-ride="carousel">
+
+                  <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleControls3" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleControls3" data-slide-to="1"></li>
+                  </ol>
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+
+                      <img src="{{ url_for('static',filename='img/imo-2019-p2-1.png') }}" class="d-block w-100">
+                    </div>
+
+                    <div class="carousel-item">
+                      <img src="{{ url_for('static',filename='img/imo-2019-p2-2.png') }}" class="d-block w-100">
+                    </div>
+
+                  </div>
+                  <a class="carousel-control-prev" href="#carouselExampleControls3" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carouselExampleControls3" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </div>
+              </div> <!-- close col -->
+            </div> <!-- close row -->
+          </div> <!-- close container -->
+        </div>
       </div>
 
-      <h3>The Five-Circle Theorem</h3>
-      <div class="container-fluid">
 
-        <blockquote class="blockquote text-center">
-          <p class="mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
-        </blockquote>
 
-        <!-- <div class="container p-3" style="height: 50vh;"> -->
-        <div class="container-fluid p-3">
-          <div class="row justify-content-center">
-            <div class="block col-sm-4">
-              <textarea id="five-circle"></textarea>
-            </div>
-            <div class="block col-sm-4">
-              <!-- <img src="{{ url_for('static',filename='img/empty-diag.jpg') }}" class="d-block w-100" alt="Image 1"> -->
-              <img src="{{ url_for('static',filename='img/empty-diag.jpg') }}" class="d-block w-100" alt="Image 1">
+
+      <div class="container-fluid p-3">
+        <h3 class="text-center">IMO 2010, Problem 2</h3>
+        <div class="container-fluid">
+          <div class="container justify-content-center">
+            <blockquote class="blockquote text-center">
+              <p class="mb-0">
+                Let <var>I</var> be the incenter of triangle <var>ABC</var> and let <var>&Gamma;</var> be its circumcircle. Let the line <var>AI</var> intersect <var>&Gamma;</var> again at <var>D</var>. Let <var>E</var> be a point on the arc <var>BDC</var> and <var>F</var> be a point on the side <var>BC</var> such that <var>&angle;BAF = &angle;CAE &lt; 0.5 * &angle;BAC</var>. Finally, let <var>G</var> be the midpoint of the segment <var>IF</var>. Prove that the lines <var>DG</var> and <var>EI</var> intersect on <var>&Gamma;</var>.
+              </p>
+            </blockquote>
+          </div>
+
+          <div class="container-fluid p-3">
+            <div class="row justify-content-center">
+              <div class="block col-sm-4">
+                <textarea id="imo-2010-p2"></textarea>
+              </div>
+              <div class="block col-sm-4">
+
+                <div id="carouselExampleControls4" class="carousel slide" data-ride="carousel">
+
+                  <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleControls4" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleControls4" data-slide-to="1"></li>
+                  </ol>
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+
+                      <img src="{{ url_for('static',filename='img/imo-2010-p2-1.png') }}" class="d-block w-100">
+                    </div>
+
+                    <div class="carousel-item">
+                      <img src="{{ url_for('static',filename='img/imo-2010-p2-2.png') }}" class="d-block w-100">
+                    </div>
+
+                  </div>
+                  <a class="carousel-control-prev" href="#carouselExampleControls4" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carouselExampleControls4" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </div>
+              </div> <!-- close col -->
+            </div> <!-- close row -->
+          </div> <!-- close container -->
+        </div>
+      </div>
+
+
+
+
+      <div class="container-fluid p-3">
+        <h3 class="text-center">The Five-Circle Theorem</h3>
+        <div class="container-fluid">
+          <div class="container justify-content-center">
+            <blockquote class="blockquote text-center">
+              <p class="mb-0">
+                Given a pentagon with vertices <var>P<sub>0</sub></var>, <var>P<sub>1</sub></var>, <var>P<sub>2</sub></var>, <var>P<sub>3</sub></var>, and <var>P<sub>4</sub></var>, let <var>Q<sub>i</sub></var> be the intersection of lines <var>P<sub>i-1</sub>P<sub>i</sub></var> and <var>P<sub>i+1</sub>P<sub>i+2</sub></var> and <var>M<sub>i</sub></var> be the intersection of <var>circle(Q<sub>i-1</sub> , P<sub>i-1</sub> , P<sub>i</sub>)</var> and <var>circle(Q<sub>i</sub> , P<sub>i</sub> , P<sub>i+1</sub>)</var> (where subscripts are understood to be <var>mod 5</var>). Show that points <var>M<sub>0</sub></var>, <var>M<sub>1</sub></var>, <var>M<sub>2</sub></var>, <var>M<sub>3</sub></var>, and <var>M<sub>4</sub></var> are cyclic.
+              </p>
+            </blockquote>
+          </div>
+
+          <!-- <div class="container p-3" style="height: 50vh;"> -->
+          <div class="container-fluid p-3">
+            <div class="row justify-content-center">
+              <div class="block col-sm-4">
+                <textarea id="five-circle"></textarea>
+              </div>
+              <div class="block col-sm-4">
+
+                <div id="carouselExampleControls2" class="carousel slide" data-ride="carousel">
+
+                  <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleControls2" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleControls2" data-slide-to="1"></li>
+                  </ol>
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+
+                      <img src="{{ url_for('static',filename='img/fc-1.png') }}" class="d-block w-100">
+                    </div>
+
+                    <div class="carousel-item">
+                      <img src="{{ url_for('static',filename='img/fc-2.png') }}" class="d-block w-100">
+                    </div>
+
+                  </div>
+                  <a class="carousel-control-prev" href="#carouselExampleControls2" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carouselExampleControls2" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </div>
+
+
+                <!-- <img src="{{ url_for('static',filename='img/fc-1.png') }}" class="d-block w-100" alt="Five Circle Theorem 1"> -->
+              </div>
             </div>
           </div>
         </div>
-
-
       </div>
-
     </div>
 
     <div class="container-fluid" id="contact">
