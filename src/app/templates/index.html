@@ -35,6 +35,35 @@
           });
           cm.setSize("100%", "100%");
 
+          var five_circle_cm = CodeMirror.fromTextArea(document.getElementById('five-circle'), {
+              mode: "text/x-common-lisp",
+              lineNumbers: true,
+              readOnly: true,
+              keyMap: "emacs",
+              theme: "3024-day",
+              cursorBlinkRate: -1
+          });
+          var fc_string = "(PARAM (P0 P1 P2 P3 P4) polygon)\n"
+          fc_string += "\n(COMPUTE Q1 (interLL (line P0 P1) (line P2 P3)))"
+          fc_string += "\n(COMPUTE Q2 (interLL (line P1 P2) (line P3 P4)))"
+          fc_string += "\n(COMPUTE Q3 (interLL (line P2 P3) (line P4 P0)))"
+          fc_string += "\n(COMPUTE Q4 (interLL (line P3 P4) (line P0 P1)))"
+          fc_string += "\n(COMPUTE Q0 (interLL (line P4 P0) (line P1 P2)))\n"
+
+          fc_string += "\n(COMPUTE M1 (interCC (circ Q0 P0 P1) (circ Q1 P1 P2) (rsNeq P1)))"
+          fc_string += "\n(COMPUTE M2 (interCC (circ Q1 P1 P2) (circ Q2 P2 P3) (rsNeq P2)))"
+          fc_string += "\n(COMPUTE M3 (interCC (circ Q2 P2 P3) (circ Q3 P3 P4) (rsNeq P3)))"
+          fc_string += "\n(COMPUTE M4 (interCC (circ Q3 P3 P4) (circ Q4 P4 P0) (rsNeq P4)))"
+          fc_string += "\n(COMPUTE M0 (interCC (circ Q4 P4 P0) (circ Q0 P0 P1) (rsNeq P0)))\n"
+
+          fc_string += "\n(CONFIRM (onCirc M3 (circ M0 M1 M2)))"
+          fc_string += "\n(CONFIRM (onCirc M4 (circ M0 M1 M2)))"
+
+          five_circle_cm.setValue(fc_string);
+          five_circle_cm.setSize("100%", "100%");
+          five_circle_cm.getWrapperElement().style["font-size"] = "17px";
+          five_circle_cm.refresh();
+
           function handleFileSelect(evt) {
               var files = evt.target.files; // FileList object
 
@@ -345,24 +374,56 @@
               <span>Each type has the following default parameterization:</span>
               <ul>
                 <li><code>POINT</code>: Parameterized by its x- and y-coordinates</li>
-                <li><code>LINE</code>: Parameterized by its coefficients in standard form (<var>ax + by = c</var>)</li>
+                <li><code>LINE</code>: Parameterized by two points that define the line</li>
                 <li><code>CIRCLE</code>: Parameterized by its origin and radius (where the origin is parameterized as a point)</li>
               </ul>
               <br>
-              <!-- FIXME: Shouldn't we be able to parameterize the origin/radius of a circle? -->
-              <span>There are no optional parameterizations for <code>LINE</code> and <code>CIRCLE</code>. One of the following optional parameterizations can be supplied for <code>POINT</code>:</span>
+              <span>The following optional parameterizations can be supplied to...</span>
               <ul>
-                <li>
-                  <code>(ONLINE &lt;LINE&gt;)</code>: Parameterized on a line
+                <li>... parameterize a <code>POINT</code>:
+                  <ul>
+                    <li>
+                      <code>(ONLINE L1)</code>: Parameterizes a point on line <code>L1</code>
+                    </li>
+                    <li>
+                      <code>(ONSEG A B)</code>: Parameterizes a point on the segment <code><span style="text-decoration:overline">AB</span></code>
+                    </li>
+                    <li>
+                      <code>(ONRAY A B)</code>: Parameterizes a point on the ray starting at <code>A</code> and extending through <code>B</code>
+                    </li>
+                    <li>
+                      <code>(ONRAYOPP A B)</code>: Parameterizes a point beyond <code>A</code> on the ray starting at <code>B</code> extending beyond <code>A</code>
+                    </li>
+                    <li>
+                      <code>(ONCIRC C1)</code>: Parameterizes a point on the circle <code>C1</code>
+                    </li>
+                    <li>
+                      <code>(INPOLY P1 ... PN)</code>: Parameterizes a point inside the polygon with vertices <code>P1</code> ... <code>PN</code>, where <var>N >= 3</var> and <code>P1</code> ... <code>PN</code> are declared points
+                    </li>
+                  </ul>
                 </li>
-                <li>
-                  <code>(ONSEG &lt;POINT&gt; &lt;POINT&gt;)</code>: Parameterized on the segment connecting two points
+                <li>... parameterize a <code>LINE</code>:
+                  <ul>
+                    <li>
+                      <code>(THROUGH A)</code>: Parameterizes a line that passes through <code>A</code>
+                    </li>
+                  </ul>
                 </li>
-                <li>
-                  <code>(ONCIRC &lt;CIRCLE&gt;)</code>: Parameterized on a circle
+                <li>... parameterize a <code>CIRCLE</code>:
+                  <ul>
+                    <li>
+                      <code>(THROUGH A)</code>: Parameterizes a circle passing through <code>A</code>
+                    </li>
+                    <li>
+                      <code>(ORIGIN A)</code>: Parameterized a circle centered at <code>A</code>
+                    </li>
+                    <li>
+                      <code>(RADIUS N1)</code>: Parameterized a circle with radius <code>N1</code>, where <code>N1</code> is an instance of <code>NUMBER</code>
+                    </li>
+                  </ul>
                 </li>
-                <!-- FIXME: Add parameterizations like insidePolygon -->
               </ul>
+
             </div>
             <br><br>
             <div class="container-fluid">
@@ -379,9 +440,9 @@
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (ONLINE (LINE A B)))</code>
+                          <code>(PARAM GAMMA CIRCLE (ORIGIN A))</code>
                           <ul>
-                            <li>Introduces a point <code>P</code> parameterized on the line connecting <code>A</code> and <code>B</code></li>
+                            <li>Introduces a circle <code>GAMMA</code> that is centered at <code>A</code> and is parameterized by it&#39;s radius</li>
                           </ul>
                         </li>
                         <li>
@@ -397,9 +458,9 @@
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM L LINE)</code>
+                          <code>(PARAM L LINE (THROUGH A))</code>
                           <ul>
-                            <li>Introduces a line <code>L</code> parameterized by it's coefficients in standard form</li>
+                            <li>Introduces a line <code>L</code> that passes through the point <code>A</code></li>
                           </ul>
                         </li>
                       </ul>
@@ -421,18 +482,6 @@
                           <code>(PARAM P POINT (INCIRCLE A B C))</code>
                           <ul>
                             <li><code>(INCIRCLE A B C)</code> is not a valid parameterization of a point</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <code>(PARAM L LINE (ANYTHING))</code>
-                          <ul>
-                            <li><code>LINE</code> has no optional parameterizations</li>
-                          </ul>
-                        </li>
-                        <li>
-                          <code>(PARAM L CIRCLE (ANYTHING))</code>
-                          <ul>
-                            <li><code>CIRCLE</code> has no optional parameterizations</li>
                           </ul>
                         </li>
                         <li>
@@ -878,9 +927,25 @@
 
       <h3>The Five-Circle Theorem</h3>
       <div class="container-fluid">
+
         <blockquote class="blockquote text-center">
           <p class="mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.</p>
         </blockquote>
+
+        <!-- <div class="container p-3" style="height: 50vh;"> -->
+        <div class="container-fluid p-3">
+          <div class="row justify-content-center">
+            <div class="block col-sm-4">
+              <textarea id="five-circle"></textarea>
+            </div>
+            <div class="block col-sm-4">
+              <!-- <img src="{{ url_for('static',filename='img/empty-diag.jpg') }}" class="d-block w-100" alt="Image 1"> -->
+              <img src="{{ url_for('static',filename='img/empty-diag.jpg') }}" class="d-block w-100" alt="Image 1">
+            </div>
+          </div>
+        </div>
+
+
       </div>
 
     </div>

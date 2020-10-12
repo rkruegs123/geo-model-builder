@@ -6,6 +6,7 @@
 (param P point (onSeg A A1))
 (compute Q point (interLL (line B B1) (paraAt P A B)))
 
+;; P1 is a point on line PB1 s.t. B1 lies strictly between P and P1
 (param P1 point (onRayOpp B1 P))
 (assert (= (uangle P P1 C) (uangle B A C)))
 
