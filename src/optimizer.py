@@ -393,8 +393,8 @@ class Optimizer(ABC):
                            angles[0] - self.angle(Ps[-1], Ps[0], Ps[1]),
                            weight=1e-2)
 
-        for i in range(len(ps)):
-            self.segments.append((Ps[i], Ps[(i+1) % (len(ps))]))
+        # for i in range(len(ps)):
+            # self.segments.append((Ps[i], Ps[(i+1) % (len(ps))]))
 
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
@@ -449,6 +449,7 @@ class Optimizer(ABC):
             self.register_pt(obj_name, P)
 
             # Add drawings
+            """
             if c_method == "midp":
                 A, B = self.lookup_pts(c_args[1])
                 self.segments.append((A, B))
@@ -474,6 +475,7 @@ class Optimizer(ABC):
                 X, A, B = self.lookup_pts(ps)
                 self.segments.append((A, B))
                 self.segments.append((X, P))
+            """
         elif isinstance(i.computation, Line):
             L = self.line2nf(i.computation)
             self.register_line(obj_name, L)
@@ -503,6 +505,7 @@ class Optimizer(ABC):
         elif p_method == "line": self.parameterize_line(p_name)
         elif p_method == "throughL": self.parameterize_line_through(p_name, p_args[1])
         elif p_method == "tangentLC": self.parameterize_line_tangentC(p_name, p_args[1])
+        elif p_method == "tangentCC": self.parameterize_circ_tangentC(p_name, p_args[1])
         elif p_method == "throughC": self.parameterize_circ_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
         elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
@@ -532,14 +535,12 @@ class Optimizer(ABC):
 
     def parameterize_line_tangentC(self, l, args):
         [c] = args
-        cnf = self.circ2nf(c)
 
         P1 = self.parameterize_on_circ(Point(f"{l.val}_p1"), [c], save_name=False)
         P1 = Point(FuncInfo('__val__', [P1]))
         L = self.line2nf(Line(FuncInfo("perpAt", [P1, Point(FuncInfo("origin", [c])), P1])))
 
         return self.register_line(l, L)
-
 
 
     def parameterize_circ(self, c):
@@ -575,17 +576,32 @@ class Optimizer(ABC):
         circ_nf = CircleNF(center=O, radius=radius)
         return self.register_circ(c, circ_nf)
 
+    def parameterize_circ_tangentC(self, c, args):
+        [circ2] = args
+
+        interP = self.parameterize_on_circ(Point(f"{c.val}_{circ2.val}_tangency"), [circ2], save_name=False)
+        interP = Point(FuncInfo('__val__', [interP]))
+
+        O = self.parameterize_on_line(Point(f"{c.val}_origin"),
+                                      [Line(FuncInfo("connecting",
+                                                     [interP, Point(FuncInfo("origin", [circ2]))]))],
+                                      save_name=False)
+
+        C = CircleNF(center=O, radius=self.dist(O, interP.val.args[0]))
+        return self.register_circ(c, C)
+
+
 
     def parameterize_on_seg(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_seg")
         z = 0.2 * z
         self.register_loss(f"{p}_seg_regularization", z, weight=1e-4)
-        self.segments.append((A, B))
+        # self.segments.append((A, B))
         return self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
 
 
-    def parameterize_on_line(self, p, p_args):
+    def parameterize_on_line(self, p, p_args, save_name=True):
         [l] = p_args
         # A, B = self.line2twoPts(l)
         A, B = self.lnf2pp(self.line2nf(l))
@@ -596,8 +612,8 @@ class Optimizer(ABC):
         s = 3.0
         P1 = A + (A - B).smul(s)
         P2 = B + (B - A).smul(s)
-        self.segments.append((A, B))
-        return self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)))
+        # self.segments.append((A, B))
+        return self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)), save_name=save_name)
 
 
     def parameterize_on_ray(self, p, ps):
@@ -698,8 +714,8 @@ class Optimizer(ABC):
         elif pred == "coll":
             coll_args = self.lookup_pts(args)
             diffs = [self.coll_phi(A, B, C) for A, B, C in itertools.combinations(coll_args, 3)]
-            for i in range(len(coll_args)-1):
-                self.segments.append((coll_args[i], coll_args[i+1]))
+            # for i in range(len(coll_args)-1):
+                # self.segments.append((coll_args[i], coll_args[i+1]))
             return diffs
         elif pred == "concur":
             l1, l2, l3 = args

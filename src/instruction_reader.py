@@ -241,6 +241,9 @@ class InstructionReader:
         elif pred == "throughc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
+        elif pred == "tangentcc":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Circle))
         else:
             raise NotImplementedError(f"[process_param_circ] unrecognized param {param}")
         return CASE_FIX[pred], args
@@ -256,7 +259,7 @@ class InstructionReader:
         if pred == "throughl":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
-        if pred == "tangentlc":
+        elif pred == "tangentlc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))
         else:

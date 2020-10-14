@@ -1,2 +1,2 @@
 (param Gamma circle)
-(param myLine line (tangentLC Gamma))
+(param myCirc circle (tangentCC Gamma))
