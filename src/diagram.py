@@ -7,11 +7,11 @@ import math
 
 
 
-class Diagram(collections.namedtuple("Diagram", ["points", "named_lines", "segments", "circles", "ndgs", "goals", "no_plot_pts", "named_circles"])):
+class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
-        xs = [p.x for p_name, p in self.points.items() if p_name not in self.no_plot_pts]
-        ys = [p.y for p_name, p in self.points.items() if p_name not in self.no_plot_pts]
-        names = [n for n in self.points.keys() if n not in self.no_plot_pts]
+        xs = [p.x for p in self.named_points.values()]
+        ys = [p.y for p in self.named_points.values()]
+        names = [n for n in self.named_points.keys()]
 
         fig, ax = plt.subplots()
 
@@ -22,7 +22,7 @@ class Diagram(collections.namedtuple("Diagram", ["points", "named_lines", "segme
         for p1, p2 in self.segments:
             plt.plot([p1.x, p2.x],[p1.y, p2.y])
 
-        for O, r in self.circles:
+        for O, r in self.unnamed_circles:
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
                                 fill=False

@@ -24,12 +24,6 @@ LineNF = collections.namedtuple("LineNF", ["n", "r"])
 class Optimizer(ABC):
     def __init__(self, instructions, opts):
 
-        self.name2pt = dict()
-        self.name2line = dict()
-        self.name2circ = dict()
-
-        self.no_plot_pts = list()
-
         self.losses = dict()
         self.has_loss = False
         self.opts = opts
@@ -38,13 +32,16 @@ class Optimizer(ABC):
         self.ndgs = dict()
         self.goals = dict()
 
-        self.circles = list()
+        self.name2pt = dict()
+        self.name2line = dict()
+        self.name2circ = dict()
+
         self.segments = list()
-        self.lines = list()
+        self.unnamed_points = list()
+        self.unnamed_lines = list()
+        self.unnamed_circles = list()
 
         super().__init__()
-
-        # self.preprocess()
 
     def preprocess(self):
         for i in self.instructions:
@@ -357,10 +354,11 @@ class Optimizer(ABC):
         elif s_method == "triangle": self.sample_triangle(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
-    def sample_uniform(self, p, lo=-1.0, hi=1.0):
+    def sample_uniform(self, p, lo=-1.0, hi=1.0, register=True):
         P   = self.get_point(x=self.mkvar(str(p)+"x", lo=lo, hi=hi),
                              y=self.mkvar(str(p)+"y", lo=lo, hi=hi))
-        self.register_pt(p, P)
+        if register:
+            self.register_pt(p, P)
         return P
 
 
@@ -465,19 +463,19 @@ class Optimizer(ABC):
                 self.segments.append((P, A))
             elif c_method == "circumcenter":
                 A, _, _ = self.lookup_pts(c_args[1])
-                self.circles.append((P, self.dist(P, A))) # P is the circumcenter
+                # self.unnamed_circles.append((P, self.dist(P, A))) # P is the circumcenter
             elif c_method == "incenter":
                 A, B, C = self.lookup_pts(c_args[1])
-                self.circles.append((P, self.inradius(A, B, C))) # P is the incenter
+                # self.unnamed_circles.append((P, self.inradius(A, B, C))) # P is the incenter
             elif c_method == "excenter":
                 A, B, C = self.lookup_pts(c_args[1])
-                self.circles.append((P, self.exradius(A, B, C))) # P is the excenter
+                # self.unnamed_circles.append((P, self.exradius(A, B, C))) # P is the excenter
             elif c_method == "mixtilinearIncenter":
                 A, B, C = self.lookup_pts(c_args[1])
-                self.circles.append((P, self.mixtilinear_inradius(A, B, C))) # P is the mixtilinearIncenter
+                # self.unnamed_circles.append((P, self.mixtilinear_inradius(A, B, C))) # P is the mixtilinearIncenter
             elif c_method == "inverse":
                 X, O, A = self.lookup_pts(c_args[1])
-                self.circles.append((O, self.dist(O, A)))
+                # self.unnamed_circles.append((O, self.dist(O, A)))
             elif c_method == "harmonicLConj":
                 X, A, B = self.lookup_pts(ps)
                 self.segments.append((A, B))
@@ -522,10 +520,9 @@ class Optimizer(ABC):
     def parameterize_line(self, l):
         p1 = Point(l.val + "_p1")
         p2 = Point(l.val + "_p2")
-        self.no_plot_pts += [p1, p2]
 
-        P1 = self.sample_uniform(p1)
-        P2 = self.sample_uniform(p2)
+        P1 = self.sample_uniform(p1, register=False)
+        P2 = self.sample_uniform(p2, register=False)
 
         self.register_line(l, self.pp2lnf(P1, P2))
 
@@ -534,15 +531,13 @@ class Optimizer(ABC):
         through_p = self.lookup_pt(through_p)
 
         p2 = Point(l.val + "_p2")
-        P2 = self.sample_uniform(p2)
-        self.no_plot_pts.append(p2)
+        P2 = self.sample_uniform(p2, register=False)
 
         self.register_line(l, self.pp2lnf(through_p, P2))
 
     def parameterize_circ(self, c):
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o)
-        self.no_plot_pts.append(o)
+        O = self.sample_uniform(o, register=False)
         circ_nf = CircleNF(center=O, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
         self.register_circ(c, circ_nf)
 
@@ -557,8 +552,7 @@ class Optimizer(ABC):
         through_p = self.lookup_pt(through_p)
 
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o)
-        self.no_plot_pts.append(o)
+        O = self.sample_uniform(o, register=False)
 
         radius = self.dist(through_p, O)
         circ_nf = CircleNF(center=O, radius=radius)
@@ -569,8 +563,7 @@ class Optimizer(ABC):
         radius = self.eval_num(radius)
 
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o)
-        self.no_plot_pts.append(o)
+        O = self.sample_uniform(o, register=False)
 
         circ_nf = CircleNF(center=O, radius=radius)
         self.register_circ(c, circ_nf)
@@ -619,7 +612,7 @@ class Optimizer(ABC):
         theta = rot * 2 * self.const(math.pi)
         X = self.get_point(x=O.x + r * self.cos(theta), y=O.y + r * self.sin(theta))
         self.register_pt(p, X)
-        self.circles.append((O, r))
+        # self.unnamed_circles.append((O, r))
 
     def parameterize_in_poly(self, p, ps):
         Ps = self.lookup_pts(ps)
@@ -689,7 +682,7 @@ class Optimizer(ABC):
         elif pred == "between": return self.between_gap(*self.lookup_pts(args))
         elif pred == "circumcenter":
             O, A, B, C = self.lookup_pts(args)
-            self.circles.append((O, self.dist(O, A)))
+            # self.unnamed_circles.append((O, self.dist(O, A)))
             return [self.dist(O, self.circumcenter(A, B, C))]
         elif pred == "coll":
             coll_args = self.lookup_pts(args)
@@ -703,8 +696,8 @@ class Optimizer(ABC):
             return self.assertion_vals("onLine", [inter_12, l3])
         elif pred == "cong":
             A, B, C, D = self.lookup_pts(args)
-            if A in [C, D]: self.circles.append((A, self.dist(A, B)))
-            elif B in [C, D]: self.circles.append((B, self.dist(A, B)))
+            # if A in [C, D]: self.unnamed_circles.append((A, self.dist(A, B)))
+            # elif B in [C, D]: self.unnamed_circles.append((B, self.dist(A, B)))
             return [self.cong_diff(A, B, C, D)]
         elif pred == "contri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
@@ -720,7 +713,7 @@ class Optimizer(ABC):
             assert(len(cycl_args) > 3)
             O = self.circumcenter(*cycl_args[:3])
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_args, 4)]
-            self.circles.append((O, self.dist(O, cycl_args[0])))
+            # self.unnamed_circles.append((O, self.dist(O, cycl_args[0])))
             return diffs
         elif pred == "distLt":
             X, Y, A, B = self.lookup_pts(args)
@@ -1046,20 +1039,14 @@ class Optimizer(ABC):
 
         return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
 
-    def inter_lc(self, lnf, c, root_select, draw=True):
-        self.lines.append(lnf)
+    def inter_lc(self, lnf, c, root_select):
         p1, p2 = self.lnf2pp(lnf)
         I1, I2 = self.inter_pp_c(p1, p2, c)
-        if draw:
-            self.circles.append(c)
         return self.process_rs(I1, I2, root_select)
 
-    def inter_cc(self, cnf1, cnf2, root_select, draw=True):
+    def inter_cc(self, cnf1, cnf2, root_select):
         l = self.radical_axis(cnf1, cnf2)
         result = self.inter_lc(l, cnf1, root_select)
-        if draw:
-            self.circles.append(cnf1)
-            self.circles.append(cnf2)
         return result
 
     def make_lc_intersect(self, name, lnf, c):

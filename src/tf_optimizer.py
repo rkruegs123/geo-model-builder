@@ -259,9 +259,14 @@ class TfOptimizer(Optimizer):
     ####################
 
     def get_model(self):
-        pt_assn, line_assn, circ_assn, segments, circles, ndgs, goals = self.run([
-            self.name2pt, self.name2line, self.name2circ, self.segments, self.circles, self.ndgs, self.goals])
-        return Diagram(points=pt_assn, named_lines=line_assn, segments=segments, circles=circles, ndgs=ndgs, goals=goals, no_plot_pts=self.no_plot_pts, named_circles=circ_assn)
+        named_pt_assn, named_line_assn, named_circ_assn, segments, unnamed_circles_assn, ndgs, goals = self.run([
+            self.name2pt, self.name2line, self.name2circ,
+            self.segments, self.unnamed_circles, self.ndgs, self.goals
+        ])
+
+        return Diagram(
+            named_points=named_pt_assn, named_lines=named_line_assn, named_circles=named_circ_assn,
+            segments=segments, unnamed_circles=unnamed_circles_assn, ndgs=ndgs, goals=goals)
 
     def run(self, x):
         return self.sess.run(x)
