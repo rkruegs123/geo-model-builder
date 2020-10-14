@@ -23,11 +23,11 @@ class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
 
 class TfOptimizer(Optimizer):
 
-    def __init__(self, instructions, opts, graph):
+    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, graph):
         tfcfg = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
         self.sess = tf.Session(graph=graph, config=tfcfg)
 
-        super().__init__(instructions, opts)
+        super().__init__(instructions, opts, unnamed_points, unnamed_lines, unnamed_circles)
 
     def get_point(self, x, y):
         return TfPoint(x, y)
@@ -257,14 +257,17 @@ class TfOptimizer(Optimizer):
     ####################
 
     def get_model(self):
-        named_pt_assn, named_line_assn, named_circ_assn, segments, unnamed_circles_assn, ndgs, goals = self.run([
-            self.name2pt, self.name2line, self.name2circ,
-            self.segments, self.unnamed_circles, self.ndgs, self.goals
-        ])
+        named_pt_assn, named_line_assn, named_circ_assn, segments, \
+            unnamed_points, unnamed_lines, unnamed_circles_assn, ndgs, goals = self.run([
+                self.name2pt, self.name2line, self.name2circ,
+                self.segments, self.unnamed_points, self.unnamed_lines, self.unnamed_circles,
+                self.ndgs, self.goals
+            ])
 
         return Diagram(
             named_points=named_pt_assn, named_lines=named_line_assn, named_circles=named_circ_assn,
-            segments=segments, unnamed_circles=unnamed_circles_assn, ndgs=ndgs, goals=goals)
+            segments=segments, unnamed_points=unnamed_points, unnamed_lines=unnamed_lines,
+            unnamed_circles=unnamed_circles_assn, ndgs=ndgs, goals=goals)
 
     def run(self, x):
         return self.sess.run(x)

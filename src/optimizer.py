@@ -22,7 +22,7 @@ LineNF = collections.namedtuple("LineNF", ["n", "r"])
 
 
 class Optimizer(ABC):
-    def __init__(self, instructions, opts):
+    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles):
 
         self.losses = dict()
         self.has_loss = False
@@ -39,15 +39,20 @@ class Optimizer(ABC):
         self.name2circ = dict()
 
         self.segments = list()
-        self.unnamed_points = list()
-        self.unnamed_lines = list()
-        self.unnamed_circles = list()
+        self.unnamed_points = unnamed_points
+        self.unnamed_lines = unnamed_lines
+        self.unnamed_circles = unnamed_circles
 
         super().__init__()
 
     def preprocess(self):
         for i in self.instructions:
             self.process_instruction(i)
+
+        # After we've processed the instructions, process all the unnamed things
+        self.unnamed_points = [self.lookup_pt(p) for p in self.unnamed_points]
+        self.unnamed_lines = [self.line2nf(l) for l in self.unnamed_lines]
+        self.unnamed_circles = [self.circ2nf(c) for c in self.unnamed_circles]
 
     def process_instruction(self, i):
 
@@ -772,7 +777,10 @@ class Optimizer(ABC):
             return [self.angle(A, B, C) - self.angle(P, Q, R)]
         elif pred == "eqratio": return [self.eqratio_diff(*self.lookup_pts(args))]
         elif pred == "foot":
-            F, X, A, B = self.lookup_pts(args)
+            f, x, l = args
+            F, X = self.lookup_pts([f, x])
+            lnf = self.line2nf(l)
+            A, B = self.lnf2pp(lnf)
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
         elif pred == "ibisector":
             X, B, A, C = self.lookup_pts(args)

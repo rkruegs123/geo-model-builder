@@ -35,9 +35,10 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
         print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
 
     if reader.problem_type == "compile":
-        compiler = PointCompiler(instructions, reader.points, opts)
-        compiler.compile()
-        final_instructions = compiler.instructions
+        raise RuntimeError("Compilation is deprecated")
+        # compiler = PointCompiler(instructions, reader.points, opts)
+        # compiler.compile()
+        # final_instructions = compiler.instructions
     elif reader.problem_type == "instructions":
         final_instructions = instructions
     else:
@@ -50,7 +51,9 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
         g = tf.Graph()
         with g.as_default():
 
-            solver = TfOptimizer(final_instructions, opts, g)
+            solver = TfOptimizer(final_instructions, opts,
+                                 reader.unnamed_points, reader.unnamed_lines, reader.unnamed_circles,
+                                 g)
             solver.preprocess()
             filtered_models = solver.solve()
             # print(filtered_models)

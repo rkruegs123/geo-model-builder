@@ -7,8 +7,10 @@ import math
 
 
 
-class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_circles", "ndgs", "goals"])):
+class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
+
+        # Plot named points
         xs = [p.x for p in self.named_points.values()]
         ys = [p.y for p in self.named_points.values()]
         names = [n for n in self.named_points.keys()]
@@ -19,13 +21,20 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         for i, n in enumerate(names):
             ax.annotate(str(n), (xs[i], ys[i]))
 
+        # Plot unnamed points
+        u_xs = [p.x for p in self.unnamed_points]
+        u_ys = [p.y for p in self.unnamed_points]
+        ax.scatter(u_xs, u_ys, c="black", alpha=0.5)
+
+        # Plot segments (never named)
         for p1, p2 in self.segments:
             plt.plot([p1.x, p2.x],[p1.y, p2.y])
 
         for O, r in self.unnamed_circles:
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
-                                fill=False
+                                fill=False,
+                                color="black"
             )
             ax.add_patch(circle)
 
@@ -41,46 +50,48 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         plt.axis('scaled')
         plt.axis('square')
 
-
         # Plot lines AFTER all bounds are set
-        if not names and not self.named_circles:
+
+        have_points = self.named_points or self.unnamed_points
+        have_circles = self.named_circles or self.unnamed_circles
+
+        if not (have_points or have_circles):
             plt.xlim(-2, 2)
             plt.ylim(-2, 2)
 
-        for l, L in self.named_lines.items():
-            # ax + by = c
-            l_name = l.val
+
+        def plot_line(L, name=None):
             (nx, ny), r = L
             l_angle = math.atan(ny / nx) % math.pi
             if l_angle == 0:
-                plt.axvline(x=r, label=l_name) # FIXME: Check if this labrel works
+                if name is not None:
+                    plt.axvline(x=r, label=name) # FIXME: Check if this labrel works
+                else:
+                    plt.axvline(x=r)
             else:
                 slope = -1 / math.tan(l_angle)
                 intercept = r / math.sin(l_angle)
 
-                x_vals = np.array(ax.get_xlim())
+                eps = 0.2
+                (lo_x_lim, hi_x_lim) = ax.get_xlim()
+                x_vals = np.array((lo_x_lim - 0.2, hi_x_lim + 0.2))
                 y_vals = intercept + slope * x_vals
-                # plt.plot(x_vals, y_vals, '--', label=l_name)
-                plt.plot(x_vals, y_vals, label=l_name)
+                if name is not None:
+                    # plt.plot(x_vals, y_vals, '--', label=l_name)
+                    plt.plot(x_vals, y_vals, label=name)
+                else:
+                    # plt.plot(x_vals, y_vals, '--', c="black")
+                    plt.plot(x_vals, y_vals, c="black", alpha=0.5)
 
+        # Plot named lines
+        for l, L in self.named_lines.items():
+            # ax + by = c
+            l_name = l.val
+            plot_line(L, l_name)
 
-            '''
-            la, lb, lc, _, _ = L
-
-            if la == 0: # 0x + by = c --> y = c / b
-                plt.axhline(x=(lc / lb))
-            elif lb == 0: # ax + 0y = c --> x = c / a
-                plt.axvline(x=(lc / la))
-            else:
-                # ax + by = c ---> y = (-ax + c) / b
-                slope = -la / lb
-                intercept = lc / lb
-
-                x_vals = np.array(ax.get_xlim())
-                y_vals = intercept + slope * x_vals
-                # plt.plot(x_vals, y_vals, '--', label=l_name)
-                plt.plot(x_vals, y_vals, label=l_name)
-            '''
+        # Plot unnamed lines
+        for L in self.unnamed_lines:
+            plot_line(L)
 
         if self.named_lines or self.named_circles:
             plt.legend()

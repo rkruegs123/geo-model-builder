@@ -22,6 +22,10 @@ class InstructionReader:
 
         self.problem_type = None
 
+        self.unnamed_points = list()
+        self.unnamed_lines = list()
+        self.unnamed_circles = list()
+
         cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
             self.process_command(cmd)
@@ -140,7 +144,7 @@ class InstructionReader:
             p = Point(obj_name)
             self.register_pt(p)
 
-            computation = self.process_point(cmd[3])
+            computation = self.process_point(cmd[3], unnamed=False)
             assert(not isinstance(computation.val, str))
 
             c_instr = Compute(p, computation)
@@ -149,7 +153,7 @@ class InstructionReader:
             l = Line(obj_name)
             self.register_line(l)
 
-            computation = self.process_line(cmd[3])
+            computation = self.process_line(cmd[3], unnamed=False)
             assert(not isinstance(computation.val, str))
 
             c_instr = Compute(l, computation)
@@ -159,7 +163,7 @@ class InstructionReader:
             c = Circle(obj_name)
             self.register_circ(c)
 
-            computation = self.process_circle(cmd[3])
+            computation = self.process_circle(cmd[3], unnamed=False)
             assert(not isinstance(computation.val, str))
 
             c_instr = Compute(c, computation)
@@ -340,8 +344,9 @@ class InstructionReader:
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
         elif pred == "foot":
-            assert(len(args) == 4)
-            assert(all([isinstance(t, Point) for t in args]))
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Point) and isinstance(args[1], Point))
+            assert(isinstance(args[2], Line))
         elif pred == "gt" or pred == ">":
             pred = "gt"
             assert(len(args) == 2)
@@ -435,7 +440,7 @@ class InstructionReader:
                     except:
                         raise RuntimeError(f"Term {term} not a point/line/circle")
 
-    def process_point(self, p_info):
+    def process_point(self, p_info, unnamed=True):
         if isinstance(p_info, str) and not is_number(p_info):
             assert(Point(p_info) in self.points)
             return Point(p_info)
@@ -446,69 +451,68 @@ class InstructionReader:
         p_pred = CASE_FIX[p_pred_lower]
         p_args = p_info[1:]
 
+        p_val = None
+
         if p_pred_lower == "interll":
             if len(p_args) == 2:
                 l1 = self.process_line(p_args[0])
                 l2 = self.process_line(p_args[1])
                 p_val = FuncInfo(p_pred, (l1, l2))
-                return Point(p_val)
             elif len(p_args) == 4:
                 p1, p2, p3, p4 = [self.process_point(p) for p in p_args]
                 l1 = Line(FuncInfo("connecting", [p1, p2]))
                 l2 = Line(FuncInfo("connecting", [p3, p4]))
                 p_val = FuncInfo("interLL", (l1, l2))
-                return Point(p_val)
             else:
                 raise RuntimeError("invalid interLL")
         elif p_pred_lower in ["incenter", "excenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-            return Point(p_val)
         elif p_pred_lower == "interlc":
             assert(len(p_args) == 3)
             l = self.process_line(p_args[0])
             c = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
             p_val = FuncInfo("interLC", (l, c, rs))
-            return Point(p_val)
         elif p_pred_lower == "intercc":
             assert(len(p_args) == 3)
             c1 = self.process_circle(p_args[0])
             c2 = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
             p_val = FuncInfo("interCC", (c1, c2, rs))
-            return Point(p_val)
         elif p_pred_lower in ["midp", "midpfrom"]:
             assert(len(p_args) == 2)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-            return Point(p_val)
         elif p_pred_lower == "reflectpl":
             assert(len(p_args) == 2)
             p = self.process_point(p_args[0])
             l = self.process_line(p_args[1])
             p_val = FuncInfo(p_pred, (p, l))
-            return Point(p_val)
         elif p_pred_lower in ["orthocenter", "circumcenter", "centroid", "incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-            return Point(p_val)
         elif p_pred_lower == "origin":
             assert(len(p_args) == 1)
             circ = self.process_circle(p_args[0])
             p_val = FuncInfo("origin", (circ,))
-            return Point(p_val)
         elif p_pred_lower in ["amidpopp", "amidpsame"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-            return Point(p_val)
+
+        if p_val is not None:
+            P = Point(p_val)
+            if unnamed:
+                self.unnamed_points.append(P)
+            return P
         else:
             raise NotImplementedError(f"[process_point] Unrecognized p_pred {p_pred}")
 
-    def process_line(self, l_info):
+
+    def process_line(self, l_info, unnamed=True):
         if isinstance(l_info, str) and not is_number(l_info):
             assert(Line(l_info) in self.lines)
             return Line(l_info)
@@ -549,11 +553,14 @@ class InstructionReader:
 
         if l_val is not None:
             self.update_problem_type("instructions")
-            return Line(l_val)
+            L = Line(l_val)
+            if unnamed:
+                self.unnamed_lines.append(L)
+            return L
         else:
             raise NotImplementedError(f"[process_line] Unsupported line pred: {l_pred}")
 
-    def process_circle(self, c_info):
+    def process_circle(self, c_info, unnamed=True):
         if isinstance(c_info, str) and not is_number(c_info):
             assert(Circle(c_info) in self.circles)
             return Circle(c_info)
@@ -589,7 +596,10 @@ class InstructionReader:
 
         if c_val is not None:
             self.update_problem_type("instructions")
-            return Circle(c_val)
+            C = Circle(c_val)
+            if unnamed:
+                self.unnamed_circles.append(C)
+            return C
         else:
             raise NotImplementedError(f"[process_circle] Unsupported circle pred: {c_pred}")
 
