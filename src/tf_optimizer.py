@@ -195,8 +195,9 @@ class TfOptimizer(Optimizer):
 
 
     def gen_inits(self):
-        n_tries = self.opts['n_models'] * self.opts['n_tries_per_model']
-        n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
+        n_tries = self.opts['n_tries']
+        # n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
+        n_inits = n_tries
 
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
@@ -271,7 +272,7 @@ class TfOptimizer(Optimizer):
             # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         models = list()
-        n_tries = self.opts['n_models'] * self.opts['n_tries_per_model']
+        n_tries = self.opts['n_tries']
 
         for i in range(n_tries):
 

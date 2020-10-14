@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('--ndg_loss', action='store', dest='ndg_loss', type=float, default=DEFAULTS["ndg_loss"])
 
     parser.add_argument('--n_models', action='store', dest='n_models', type=int, default=DEFAULTS['n_models'])
-    parser.add_argument('--n_tries_per_model', action='store', dest='n_tries_per_model', type=int, default=DEFAULTS['n_tries_per_model'])
+    parser.add_argument('--n_tries', action='store', dest='n_tries', type=int, default=DEFAULTS['n_tries'])
     parser.add_argument('--verbosity', action='store', dest='verbosity', type=int, default=DEFAULTS['verbosity'])
 
     # Tensorflow arguments

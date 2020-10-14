@@ -1,3 +1,3 @@
-(param (A B C) triangle)
-(compute gamma circle (circumcircle A B C))
+(PARAM (A B C) (isoTri A))
+(compute gamma CIRCLE (circumciRcle A B C))
 (param D point (onCirc gamma))
