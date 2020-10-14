@@ -125,18 +125,22 @@ class TfOptimizer(Optimizer):
         self.all_points.append(P_checked)
         if save_name:
             self.name2pt[p] = P_checked
+        return P_checked
 
     def register_line(self, l, L):
         assert(l not in self.name2line)
         assert(isinstance(l.val, str))
         # FIXME: Check numerics
         self.name2line[l] = L
+        return L
 
     def register_circ(self, c, C):
         assert(c not in self.name2circ)
         assert(isinstance(c.val, str))
         r = tf.debugging.check_numerics(C.radius, message=str(c))
-        self.name2circ[c] = CircleNF(center=C.center, radius=r)
+        C_checked = CircleNF(center=C.center, radius=r)
+        self.name2circ[c] = C_checked
+        return C_checked
 
 
     def register_loss(self, key, val, weight=1.0):

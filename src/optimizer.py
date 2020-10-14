@@ -502,6 +502,7 @@ class Optimizer(ABC):
         elif p_method == "onSeg": self.parameterize_on_seg(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
         elif p_method == "throughL": self.parameterize_line_through(p_name, p_args[1])
+        elif p_method == "tangentLC": self.parameterize_line_tangentC(p_name, p_args[1])
         elif p_method == "throughC": self.parameterize_circ_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
         elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
@@ -509,7 +510,7 @@ class Optimizer(ABC):
         else: raise NotImplementedError(f"FIXME: Finish parameterize: {i}")
 
     def parameterize_coords(self, p):
-        self.sample_uniform(p)
+        return self.sample_uniform(p)
 
     def parameterize_line(self, l):
         p1 = Point(l.val + "_p1")
@@ -518,7 +519,7 @@ class Optimizer(ABC):
         P1 = self.sample_uniform(p1, save_name=False)
         P2 = self.sample_uniform(p2, save_name=False)
 
-        self.register_line(l, self.pp2lnf(P1, P2))
+        return self.register_line(l, self.pp2lnf(P1, P2))
 
     def parameterize_line_through(self, l, ps):
         [through_p] = ps
@@ -527,19 +528,31 @@ class Optimizer(ABC):
         p2 = Point(l.val + "_p2")
         P2 = self.sample_uniform(p2, save_name=False)
 
-        self.register_line(l, self.pp2lnf(through_p, P2))
+        return self.register_line(l, self.pp2lnf(through_p, P2))
+
+    def parameterize_line_tangentC(self, l, args):
+        [c] = args
+        cnf = self.circ2nf(c)
+
+        P1 = self.parameterize_on_circ(Point(f"{l.val}_p1"), [c], save_name=False)
+        P1 = Point(FuncInfo('__val__', [P1]))
+        L = self.line2nf(Line(FuncInfo("perpAt", [P1, Point(FuncInfo("origin", [c])), P1])))
+
+        return self.register_line(l, L)
+
+
 
     def parameterize_circ(self, c):
         o = Point(c.val + "_origin")
         O = self.sample_uniform(o, save_name=False)
         circ_nf = CircleNF(center=O, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
-        self.register_circ(c, circ_nf)
+        return self.register_circ(c, circ_nf)
 
     def parameterize_circ_centered_at(self, c, ps):
         [origin] = ps
         origin = self.lookup_pt(origin)
         circ_nf = CircleNF(center=origin, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
-        self.register_circ(c, circ_nf)
+        return self.register_circ(c, circ_nf)
 
     def parameterize_circ_through(self, c, ps):
         [through_p] = ps
@@ -550,7 +563,7 @@ class Optimizer(ABC):
 
         radius = self.dist(through_p, O)
         circ_nf = CircleNF(center=O, radius=radius)
-        self.register_circ(c, circ_nf)
+        return self.register_circ(c, circ_nf)
 
     def parameterize_circ_with_radius(self, c, rs):
         [radius] = rs
@@ -560,7 +573,7 @@ class Optimizer(ABC):
         O = self.sample_uniform(o, save_name=False)
 
         circ_nf = CircleNF(center=O, radius=radius)
-        self.register_circ(c, circ_nf)
+        return self.register_circ(c, circ_nf)
 
 
     def parameterize_on_seg(self, p, ps):
@@ -568,8 +581,9 @@ class Optimizer(ABC):
         z = self.mkvar(name=f"{p}_seg")
         z = 0.2 * z
         self.register_loss(f"{p}_seg_regularization", z, weight=1e-4)
-        self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
         self.segments.append((A, B))
+        return self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
+
 
     def parameterize_on_line(self, p, p_args):
         [l] = p_args
@@ -582,30 +596,33 @@ class Optimizer(ABC):
         s = 3.0
         P1 = A + (A - B).smul(s)
         P2 = B + (B - A).smul(s)
-        self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)))
         self.segments.append((A, B))
+        return self.register_pt(p, P1 + (P2 - P1).smul(self.sigmoid(z)))
+
 
     def parameterize_on_ray(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_ray", hi=2.0)
         P = A + (B - A).smul(self.exp(z))
-        self.register_pt(p, P)
         self.segments.extend([(A, B), (A, P)])
+        return self.register_pt(p, P)
+
 
     def parameterize_on_ray_opp(self, p, ps):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(f"{p}_ray_opp")
         P = A + (A - B).smul(self.exp(z))
-        self.register_pt(p, P)
         self.segments.extend([(A, B), (A, P)])
+        return self.register_pt(p, P)
 
-    def parameterize_on_circ(self, p, p_args):
+
+    def parameterize_on_circ(self, p, p_args, save_name=True):
         [circ] = p_args
         O, r = self.circ2nf(circ)
         rot = self.mkvar(name=f"{p}_rot")
         theta = rot * 2 * self.const(math.pi)
         X = self.get_point(x=O.x + r * self.cos(theta), y=O.y + r * self.sin(theta))
-        self.register_pt(p, X)
+        return self.register_pt(p, X, save_name=save_name)
         # self.unnamed_circles.append((O, r))
 
     def parameterize_in_poly(self, p, ps):
@@ -615,7 +632,7 @@ class Optimizer(ABC):
         Px = self.sum([P.x * w for (P, w) in zip(Ps, ws)])
         Py = self.sum([P.y * w for (P, w) in zip(Ps, ws)])
         P = self.get_point(Px, Py)
-        self.register_pt(p, P)
+        return self.register_pt(p, P)
 
     #####################
     ## Assert
