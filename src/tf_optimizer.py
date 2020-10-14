@@ -116,12 +116,15 @@ class TfOptimizer(Optimizer):
         tf.check_numerics(res, message="mk_zero")
         return res
 
-    def register_pt(self, p, P):
+    def register_pt(self, p, P, save_name=True):
         assert(p not in self.name2pt)
         assert(isinstance(p.val, str))
         Px = tf.debugging.check_numerics(P.x, message=str(p))
         Py = tf.debugging.check_numerics(P.y, message=str(p))
-        self.name2pt[p] = self.get_point(Px, Py)
+        P_checked = self.get_point(Px, Py)
+        self.all_points.append(P_checked)
+        if save_name:
+            self.name2pt[p] = P_checked
 
     def register_line(self, l, L):
         assert(l not in self.name2line)
@@ -154,16 +157,14 @@ class TfOptimizer(Optimizer):
         self.goals[key] = self.mk_zero(val)
 
     def regularize_points(self):
-        norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
+        norms = tf.cast([p.norm() for p in self.all_points], dtype=tf.float64)
         self.register_loss("points", tf.reduce_mean(norms), self.opts['regularize_points'])
-        # self.losses["points"] = self.opts.regularize_points * tf.reduce_mean(norms)
 
     def make_points_distinct(self):
         if random.random() < self.opts['distinct_prob']:
-            distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)], tf.float64)
+            distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.all_points, 2)], tf.float64)
             dloss     = tf.reduce_mean(self.mk_non_zero(distincts))
             self.register_loss("distinct", dloss, self.opts['make_distinct'])
-            # self.losses["distinct"] = self.opts.make_distinct * dloss
 
     def freeze(self):
         opts = self.opts
@@ -237,14 +238,7 @@ class TfOptimizer(Optimizer):
                 print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
                 if self.verbosity > 1:
                     self.print_losses()
-            # self.get_model().plot()
             if loss_v < opts['eps']:
-                '''
-                check_points_far_enough_away(self.run(self.name2pt), self.opts.min_dist)
-                if opts.verbose: print("DONE: %f" % loss_v)
-                if opts.verbose: self.print_losses()
-                if opts.plot: self.plot()
-                '''
                 if self.verbosity > 1:
                     self.print_losses()
                 return loss_v

@@ -392,15 +392,20 @@ class InstructionReader:
         elif pred == "sameside":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "tangent":
+        elif pred == "tangentcc":
             assert(len(args) == 2)
-            assert(isinstance(args[0], Line) or isinstance(args[1], Circle))
-            assert(isinstance(args[1], Circle))
-        elif pred == "tangentat":
+            assert(all([isinstance(t, Circle) for t in args]))
+        elif pred == "tangentlc":
+            assert(len(args) == 2)
+            assert(isinstance(args[0], Line) and isinstance(args[1], Circle))
+        elif pred == "tangentatcc":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point))
-            assert(isinstance(args[1], Line) or isinstance(args[1], Circle))
-            assert(isinstance(args[2], Circle))
+            assert(isinstance(args[1], Circle) and isinstance(args[2], Circle))
+        elif pred == "tangentatlc":
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Point))
+            assert(isinstance(args[1], Line) and isinstance(args[2], Circle))
         else:
             raise NotImplementedError(f"[process_constraint] Unsupported pred {pred}")
 

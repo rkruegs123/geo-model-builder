@@ -32,6 +32,8 @@ class Optimizer(ABC):
         self.ndgs = dict()
         self.goals = dict()
 
+        self.all_points = list()
+
         self.name2pt = dict()
         self.name2line = dict()
         self.name2circ = dict()
@@ -48,13 +50,6 @@ class Optimizer(ABC):
             self.process_instruction(i)
 
     def process_instruction(self, i):
-
-        '''
-        for p_name, p_val in self.name2pt.items():
-            if not p_val.x.is_real or not p_val.y.is_real:
-                pdb.set_trace()
-        pdb.set_trace()
-        '''
 
         if isinstance(i, Sample):
             self.sample(i)
@@ -217,7 +212,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def register_pt(self, p, P):
+    def register_pt(self, p, P, save_name=True):
         pass
 
     @abstractmethod
@@ -354,11 +349,10 @@ class Optimizer(ABC):
         elif s_method == "triangle": self.sample_triangle(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
-    def sample_uniform(self, p, lo=-1.0, hi=1.0, register=True):
+    def sample_uniform(self, p, lo=-1.0, hi=1.0, save_name=True):
         P   = self.get_point(x=self.mkvar(str(p)+"x", lo=lo, hi=hi),
                              y=self.mkvar(str(p)+"y", lo=lo, hi=hi))
-        if register:
-            self.register_pt(p, P)
+        self.register_pt(p, P, save_name=save_name)
         return P
 
 
@@ -521,8 +515,8 @@ class Optimizer(ABC):
         p1 = Point(l.val + "_p1")
         p2 = Point(l.val + "_p2")
 
-        P1 = self.sample_uniform(p1, register=False)
-        P2 = self.sample_uniform(p2, register=False)
+        P1 = self.sample_uniform(p1, save_name=False)
+        P2 = self.sample_uniform(p2, save_name=False)
 
         self.register_line(l, self.pp2lnf(P1, P2))
 
@@ -531,13 +525,13 @@ class Optimizer(ABC):
         through_p = self.lookup_pt(through_p)
 
         p2 = Point(l.val + "_p2")
-        P2 = self.sample_uniform(p2, register=False)
+        P2 = self.sample_uniform(p2, save_name=False)
 
         self.register_line(l, self.pp2lnf(through_p, P2))
 
     def parameterize_circ(self, c):
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o, register=False)
+        O = self.sample_uniform(o, save_name=False)
         circ_nf = CircleNF(center=O, radius=self.mkvar(name=f"{c.val}_origin", lo=0.25, hi=3.0))
         self.register_circ(c, circ_nf)
 
@@ -552,7 +546,7 @@ class Optimizer(ABC):
         through_p = self.lookup_pt(through_p)
 
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o, register=False)
+        O = self.sample_uniform(o, save_name=False)
 
         radius = self.dist(through_p, O)
         circ_nf = CircleNF(center=O, radius=radius)
@@ -563,7 +557,7 @@ class Optimizer(ABC):
         radius = self.eval_num(radius)
 
         o = Point(c.val + "_origin")
-        O = self.sample_uniform(o, register=False)
+        O = self.sample_uniform(o, save_name=False)
 
         circ_nf = CircleNF(center=O, radius=radius)
         self.register_circ(c, circ_nf)
@@ -817,36 +811,42 @@ class Optimizer(ABC):
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
             return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
-        elif pred == "tangent":
-            obj1, obj2 = args
-            if isinstance(obj1, Line) and isinstance(obj2, Circle):
-                inter_point = Point(FuncInfo("interLC", [obj1, obj2, Root("arbitrary", list())]))
-                return self.assertion_vals("tangentAt", [inter_point, obj1, obj2])
-            elif isinstance(obj1, Circle) and isinstance(obj2, Circle):
-                inter_point = Point(FuncInfo("interCC", [obj1, obj2, Root("arbitrary", list())]))
-                return self.assertion_vals("tangentAt", [inter_point, obj1, obj2])
-            else:
-                raise RuntimeError("Invalid arguments to tangent")
-        elif pred == "tangentAt":
-            p, obj1, obj2 = args
-            if isinstance(obj1, Line) and isinstance(obj2, Circle):
-                circ_center = Point(FuncInfo("origin", [obj2]))
-                circ_center_to_p = Line(FuncInfo("connecting", [circ_center, p]))
+        elif pred == "tangentCC":
+            # https://mathworld.wolfram.com/TangentCircles.html
+            # Could distinguish b/w internally and externally if desired
+            c1, c2 = args
+            cnf1 ,cnf2 = self.circ2nf(c1), self.circ2nf(c2)
+            (x1, y1) = cnf1.center
+            (x2, y2) = cnf2.center
+            r1, r2 = cnf1.radius, cnf2.radius
+            lhs = (x1 - x2) ** 2 + (y1 - y2) ** 2
+            rhs_1 = (r1 - r2) ** 2
+            rhs_2 = (r1 + r2) ** 2
+            return [self.min(lhs - rhs_1, lhs - rhs_2)]
+            # inter_point = Point(FuncInfo("interCC", [c1, c2, Root("arbitrary", list())]))
+            # return self.assertion_vals("tangentAtCC", [inter_point, c1, c2])
+        elif pred == "tangentLC":
+            l, c = args
+            inter_point = Point(FuncInfo("interLC", [l, c, Root("arbitrary", list())]))
+            return self.assertion_vals("tangentAtLC", [inter_point, l, c])
+        elif pred == "tangentAtCC":
+            p, c1, c2 = args
+            c1_center = Point(FuncInfo("origin", [c1]))
+            c2_center = Point(FuncInfo("origin", [c2]))
 
-                p_on_line = self.assertion_vals("onLine", [p, obj1])
-                p_on_circ = self.assertion_vals("onCirc", [p, obj2])
-                tangency = self.assertion_vals("perp", [obj1, circ_center_to_p])
-                return p_on_line + p_on_circ + tangency
-            elif isinstance(obj1, Circle) and isinstance(obj2, Circle):
-                c1_center = Point(FuncInfo("origin", [obj1]))
-                c2_center = Point(FuncInfo("origin", [obj2]))
+            p_on_c1 = self.assertion_vals("onCirc", [p, c1])
+            p_on_c2 = self.assertion_vals("onCirc", [p, c2])
+            tangency = self.assertion_vals("coll", [p, c1_center, c2_center])
+            return p_on_c1 + p_on_c2 + tangency
+        elif pred == "tangentAtLC":
+            p, l, c = args
+            circ_center = Point(FuncInfo("origin", [c]))
+            circ_center_to_p = Line(FuncInfo("connecting", [circ_center, p]))
 
-                p_on_c1 = self.assertion_vals("onCirc", [p, obj1])
-                p_on_c2 = self.assertion_vals("onCirc", [p, obj2])
-                tangency = self.assertion_vals("coll", [p, c1_center, c2_center])
-                return p_on_c1 + p_on_c2 + tangency
-            else:
-                raise RuntimeError("Invalid arguments to tangentAt")
+            p_on_line = self.assertion_vals("onLine", [p, l])
+            p_on_circ = self.assertion_vals("onCirc", [p, c])
+            tangency = self.assertion_vals("perp", [l, circ_center_to_p])
+            return p_on_line + p_on_circ + tangency
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
 
 

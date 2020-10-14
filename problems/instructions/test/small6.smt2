@@ -1,3 +1,3 @@
 (param circA circle)
 (param circB circle)
-(assert (tangent circA circB))
+(assert (tangentCC circA circB))
