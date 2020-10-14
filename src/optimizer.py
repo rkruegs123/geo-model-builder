@@ -491,106 +491,6 @@ class Optimizer(ABC):
         else:
             raise NotImplementedError(f"[compute] NYI: {c_method} not supported")
 
-    def compute_midp(self, m, ps):
-        A, B = self.lookup_pts(ps)
-        M = self.midp(A, B)
-        self.register_pt(m, M)
-        self.segments.append((A, B))
-
-    def compute_midp_from(self, p, ps):
-        M, A = self.lookup_pts(ps)
-        P = self.midp_from(M, A)
-        self.register_pt(p, P)
-        self.segments.append((P, A))
-
-    def compute_amidp_opp(self, p, ps):
-        B, C, A = self.lookup_pts(ps)
-        P = self.amidp_opp(B, C, A)
-        self.register_pt(p, P)
-
-
-    def compute_amidp_same(self, p, ps):
-        B, C, A = self.lookup_pts(ps)
-        P = self.amidp_same(B, C, A)
-        self.register_pt(p, P)
-
-    def compute_circumcenter(self, o, ps):
-        A, B, C = self.lookup_pts(ps)
-        O = self.circumcenter(A, B, C)
-        self.register_pt(o, O)
-        self.circles.append((O, self.dist(O, A)))
-
-    def compute_orthocenter(self, h, ps):
-        A, B, C = self.lookup_pts(ps)
-        H = self.orthocenter(A, B, C)
-        self.register_pt(h, H)
-
-    def compute_centroid(self, g, ps):
-        A, B, C = self.lookup_pts(ps)
-        G = self.centroid(A, B, C)
-        self.register_pt(g, G)
-
-    def compute_incenter(self, i, ps):
-        A, B, C = self.lookup_pts(ps)
-        I = self.incenter(A, B, C)
-        self.register_pt(i, I)
-        self.circles.append((I, self.inradius(A, B, C)))
-
-    def compute_excenter(self, i, ps):
-        A, B, C = self.lookup_pts(ps)
-        I = self.excenter(A, B, C)
-        self.register_pt(i, I)
-        self.circles.append((I, self.exradius(A, B, C)))
-
-    def compute_inter_ll(self, p, l1, l2):
-        lnf1 = self.line2nf(l1)
-        lnf2 = self.line2nf(l2)
-        P = self.inter_ll(lnf1, lnf2)
-        self.register_pt(p, P)
-
-    def compute_inter_lc(self, p, l, c, root_select):
-        l_sf = self.line2nf(l)
-        cnf = self.circ2nf(c)
-        P = self.inter_lc(l_sf, cnf, root_select)
-        self.make_lc_intersect(p, l_sf, cnf)
-        self.register_pt(p, P)
-
-    def compute_inter_cc(self, p, c1, c2, root_select):
-        cnf1 = self.circ2nf(c1)
-        cnf2 = self.circ2nf(c2)
-        P = self.inter_cc(cnf1, cnf2, root_select)
-        self.make_lc_intersect(p, self.radical_axis(cnf1, cnf2), cnf1)
-        self.register_pt(p, P)
-
-    def compute_mixtilinear_incenter(self, i, ps):
-        A, B, C = self.lookup_pts(ps)
-        I = self.mixtilinear_incenter(A, B, C)
-        self.register_pt(i, I)
-        self.circles.append((I, self.mixtilinear_inradius(A, B, C)))
-
-
-    def compute_isogonal(self, y, ps):
-        X, A, B, C = self.lookup_pts(ps)
-        Y = self.isogonal(X, A, B, C)
-        self.register_pt(y, Y)
-
-    def compute_isotomic(self, y, ps):
-        X, A, B, C = self.lookup_pts(ps)
-        Y = self.isotomic(X, A, B, C)
-        self.register_pt(y, Y)
-
-    def compute_inverse(self, y, ps):
-        X, O, A = self.lookup_pts(ps)
-        Y = self.inverse(X, O, A)
-        self.register_pt(y, Y)
-        self.circles.append((O, self.dist(O, A)))
-
-    def compute_harmonic_l_conj(self, y, ps):
-        X, A, B = self.lookup_pts(ps)
-        Y = self.harmonic_l_conj(X, A, B)
-        self.register_pt(y, Y)
-        self.segments.append((A, B))
-        self.segments.append((X, Y))
 
     #####################
     ## Parameterize
@@ -1154,11 +1054,12 @@ class Optimizer(ABC):
             self.circles.append(c)
         return self.process_rs(I1, I2, root_select)
 
-    def inter_cc(self, cnf1, cnf2, root_select):
+    def inter_cc(self, cnf1, cnf2, root_select, draw=True):
         l = self.radical_axis(cnf1, cnf2)
         result = self.inter_lc(l, cnf1, root_select)
-        self.circles.append(cnf1)
-        self.circles.append(cnf2)
+        if draw:
+            self.circles.append(cnf1)
+            self.circles.append(cnf2)
         return result
 
     def make_lc_intersect(self, name, lnf, c):
