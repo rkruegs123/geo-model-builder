@@ -1,2 +1,2 @@
 (param (A B C) triangle)
-(param myLine line (through A))
+(param myLine line (throughL A))

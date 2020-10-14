@@ -25,6 +25,7 @@ class InstructionReader:
         self.unnamed_points = list()
         self.unnamed_lines = list()
         self.unnamed_circles = list()
+        self.segments = list()
 
         cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
@@ -129,6 +130,9 @@ class InstructionReader:
             self.instructions.append(instr)
         else:
             raise RuntimeError("Invalid joint param method")
+
+        for i in range(len(ps)):
+            self.segments.append((ps[i], ps[(i+1) % (len(ps))]))
 
 
     def compute(self, cmd):

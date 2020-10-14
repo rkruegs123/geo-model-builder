@@ -10,6 +10,7 @@ class Root(collections.namedtuple("Root", ["pred", "vars"])):
 
 
 Bucket = collections.namedtuple("Bucket", ["points", "assertions"])
+
 FuncInfo = collections.namedtuple("FuncInfo", ["head", "args"])
 
 def is_sample_pred(pred):

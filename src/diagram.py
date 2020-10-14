@@ -6,6 +6,9 @@ import numpy as np
 import math
 
 
+UNNAMED_ALPHA = 0.1
+MIN_AXIS_VAL = -5
+MAX_AXIS_VAL = 5
 
 class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
@@ -24,20 +27,23 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         # Plot unnamed points
         u_xs = [p.x for p in self.unnamed_points]
         u_ys = [p.y for p in self.unnamed_points]
-        ax.scatter(u_xs, u_ys, c="black", alpha=0.5)
+        ax.scatter(u_xs, u_ys, c="black", alpha=UNNAMED_ALPHA)
 
         # Plot segments (never named)
         for p1, p2 in self.segments:
             plt.plot([p1.x, p2.x],[p1.y, p2.y])
 
+        # Plot unnamed circles (always unnamed before named)
         for O, r in self.unnamed_circles:
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
                                 fill=False,
-                                color="black"
+                                color="black",
+                                alpha=UNNAMED_ALPHA
             )
             ax.add_patch(circle)
 
+        # Plot named circles
         for (c_name, (O, r)) in self.named_circles.items():
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
@@ -67,7 +73,7 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
                 if name is not None:
                     plt.axvline(x=r, label=name) # FIXME: Check if this labrel works
                 else:
-                    plt.axvline(x=r)
+                    plt.axvline(x=r, c="black", alpha=UNNAMED_ALPHA)
             else:
                 slope = -1 / math.tan(l_angle)
                 intercept = r / math.sin(l_angle)
@@ -81,7 +87,11 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
                     plt.plot(x_vals, y_vals, label=name)
                 else:
                     # plt.plot(x_vals, y_vals, '--', c="black")
-                    plt.plot(x_vals, y_vals, c="black", alpha=0.5)
+                    plt.plot(x_vals, y_vals, c="black", alpha=UNNAMED_ALPHA)
+
+        # Plot unnamed lines
+        for L in self.unnamed_lines:
+            plot_line(L)
 
         # Plot named lines
         for l, L in self.named_lines.items():
@@ -89,9 +99,12 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
             l_name = l.val
             plot_line(L, l_name)
 
-        # Plot unnamed lines
-        for L in self.unnamed_lines:
-            plot_line(L)
+
+        # Make our plot small -- max dims are (-5, 5)
+        (lo_x_lim, hi_x_lim) = ax.get_xlim()
+        (lo_y_lim, hi_y_lim) = ax.get_ylim()
+        ax.set_xlim([max(MIN_AXIS_VAL, lo_x_lim), min(MAX_AXIS_VAL, hi_x_lim)])
+        ax.set_ylim([max(MIN_AXIS_VAL, lo_y_lim), min(MAX_AXIS_VAL, hi_y_lim)])
 
         if self.named_lines or self.named_circles:
             plt.legend()

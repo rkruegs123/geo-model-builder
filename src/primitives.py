@@ -23,6 +23,7 @@ class Primitive(ABC):
     def __hash__(self):
         return hash(self.val)
 
+
     @abstractmethod
     def __str__(self):
         pass

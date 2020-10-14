@@ -14,6 +14,6 @@
 (compute M point (midp C F))
 
 ;; X is s.t. AMXE is a parallelogram
-(compute X point (interLL (paraAt E M A) (paraAt M A E)))
+(compute X point (interLL (paraAt E (line M A)) (paraAt M (line A E))))
 
 (confirm (concur (line B D) (line F X) (line M E)))

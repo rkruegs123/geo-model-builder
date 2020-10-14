@@ -4,7 +4,7 @@
 (param B1 point (onSeg A C))
 
 (param P point (onSeg A A1))
-(compute Q point (interLL (line B B1) (paraAt P A B)))
+(compute Q point (interLL (line B B1) (paraAt P (line A B))))
 
 ;; P1 is a point on line PB1 s.t. B1 lies strictly between P and P1
 (param P1 point (onRayOpp B1 P))

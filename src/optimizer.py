@@ -22,7 +22,7 @@ LineNF = collections.namedtuple("LineNF", ["n", "r"])
 
 
 class Optimizer(ABC):
-    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles):
+    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments):
 
         self.losses = dict()
         self.has_loss = False
@@ -38,7 +38,7 @@ class Optimizer(ABC):
         self.name2line = dict()
         self.name2circ = dict()
 
-        self.segments = list()
+        self.segments = segments
         self.unnamed_points = unnamed_points
         self.unnamed_lines = unnamed_lines
         self.unnamed_circles = unnamed_circles
@@ -53,6 +53,7 @@ class Optimizer(ABC):
         self.unnamed_points = [self.lookup_pt(p) for p in self.unnamed_points]
         self.unnamed_lines = [self.line2nf(l) for l in self.unnamed_lines]
         self.unnamed_circles = [self.circ2nf(c) for c in self.unnamed_circles]
+        self.segments = [(self.lookup_pt(a), self.lookup_pt(b)) for (a, b) in self.segments]
 
     def process_instruction(self, i):
 
@@ -427,7 +428,7 @@ class Optimizer(ABC):
         self.register_pt(nB, B)
         self.register_pt(nC, C)
 
-        self.segments.extend([(A, B), (B, C), (C, A)])
+        # self.segments.extend([(A, B), (B, C), (C, A)])
 
     #####################
     ## Compute
@@ -626,7 +627,7 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_ray", hi=2.0)
         P = A + (B - A).smul(self.exp(z))
-        self.segments.extend([(A, B), (A, P)])
+        # self.segments.extend([(A, B), (A, P)])
         return self.register_pt(p, P)
 
 
@@ -634,7 +635,7 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(f"{p}_ray_opp")
         P = A + (A - B).smul(self.exp(z))
-        self.segments.extend([(A, B), (A, P)])
+        # self.segments.extend([(A, B), (A, P)])
         return self.register_pt(p, P)
 
 
@@ -734,7 +735,7 @@ class Optimizer(ABC):
             return [self.cong_diff(A, B, C, D)]
         elif pred == "contri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
-            self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
+            # self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             return [self.eqangle6_diff(A, B, C, P, Q, R),
                     self.eqangle6_diff(B, C, A, Q, R, P),
                     self.eqangle6_diff(C, A, B, R, P, Q),
@@ -784,7 +785,7 @@ class Optimizer(ABC):
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
         elif pred == "ibisector":
             X, B, A, C = self.lookup_pts(args)
-            self.segments.extend([(B, A), (A, X), (A, C)])
+            # self.segments.extend([(B, A), (A, X), (A, C)])
             return [self.eqangle8_diff(B, A, A, X, X, A, A, C)]
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(args)
@@ -849,7 +850,7 @@ class Optimizer(ABC):
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
         elif pred == "simtri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
-            self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
+            # self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
             return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
@@ -1292,7 +1293,7 @@ class Optimizer(ABC):
                 B, C, D, E, F = self.lookup_pts(args)
                 theta = self.angle(D, E, F)
                 X = B + self.rotate_counterclockwise(theta, C - B)
-                self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
+                # self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
                 return B, X
             elif pred == "reflectLL":
                 l1, l2 = args
