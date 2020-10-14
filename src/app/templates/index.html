@@ -408,6 +408,13 @@
         <li><code>L1</code>, <code>L2</code>, and <code>L3</code> are instances of <code>LINE</code></li>
         <li><code>C1</code> and <code>C2</code> are instances of <code>CIRCLE</code></li>
       </ul>
+      <span>
+        Names of geometric objects are <em>case sensitive</em>. All other identifiers in our DSL (e.g., commands, types, functions, predicates) are <em>case insensitive</em>:
+      </span>
+        <ul>
+          <li>Example: <code>(COMPUTE P (MIDP A B))</code> and <code>(compute P (MiDp A B))</code> are equivalent</li>
+          <li>Example: <code>(COMPUTE P (MIDP A B))</code> and <code>(COMPUTE p (MIDP A B))</code> are <em>not</em> equivalent</li>
+        </ul>
 
       <h2 id="commands">Commands</h2>
       <p>GeoBuilder generates models by translating a geometric constraint problem into a <strong>numerical optimization problem</strong> and solving it with off-the-shelf optimizers. The following four commands reflect this, and comprise the primary component of the DSL</p>
@@ -593,6 +600,12 @@
                         </ul>
                       </li>
                       <li>
+                        <code>(PAraM (P Q R) trIaNglE)</code>
+                        <ul>
+                          <li>All identifiers other than names of geometric objects are case insensitive</li>
+                        </ul>
+                      </li>
+                      <li>
                         <code>(PARAM (P Q R) (ISOTRI Q))</code>
                         <ul>
                           <li>Introduce three points that form an isosceles triangle with <var>QP = QR</var></li>
@@ -623,6 +636,12 @@
                         <code>(PARAM (P Q R) (ISOTRI A))</code>
                         <ul>
                           <li>The argument to <code>ISOTRI</code> must be a point in the isosceles triangle (i.e., a point being introduced)</li>
+                        </ul>
+                      </li>
+                      <li>
+                        <code>(PARAM (P Q R) (ISOTRI p))</code>
+                        <ul>
+                          <li>Names of geometric objects are case sensitive</li>
                         </ul>
                       </li>
                       <li>
