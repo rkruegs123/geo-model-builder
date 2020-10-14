@@ -91,9 +91,8 @@ class Optimizer(ABC):
             elif head == "amidpSame": return self.amidp_same(*self.lookup_pts(args))
             elif head == "excenter": return self.excenter(*self.lookup_pts(args))
             elif head == "foot":
-                X, A, B = args
-                foot_p = Point(FuncInfo("interLL", [Line(FuncInfo("connecting", [A, B])),
-                                                    Line(FuncInfo("perpAt", [X, A, B]))]))
+                X, l = args
+                foot_p = Point(FuncInfo("interLL", [l, Line(FuncInfo("perpAt", [X, l]))]))
                 return self.lookup_pt(foot_p)
             elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
             elif head == "origin":
@@ -132,23 +131,12 @@ class Optimizer(ABC):
             elif head == "isotomic": return self.isotomic(*self.lookup_pts(args))
             elif head == "inverse": return self.inverse(*self.lookup_pts(args))
             elif head == "reflectPL":
-                if len(args) == 3:
-                    # reflection of X over line AB
-                    X, A, B = args
-                elif len(args) == 2:
-                    X, l = args
-                    lnf = self.line2nf(l)
-                    p1, p2 = self.lnf2pp(lnf)
-                    A = Point(FuncInfo("__val__", [p1]))
-                    B = Point(FuncInfo("__val__", [p2]))
-                else:
-                    raise RuntimeError("invalid reflectPL")
-                p_val = Point(FuncInfo("interLC", [
-                    Line(FuncInfo("perpAt", [X, A, B])),
-                    Circle(FuncInfo("coa", [A, X])),
-                    Root("neq", [X])
-                ]))
-                return self.lookup_pt(p_val)
+                x, l = args
+                X = self.lookup_pt(x)
+                foot_X = self.lookup_pt(Point(FuncInfo("foot", [x, l])))
+                vec_X_to_l = foot_X - X
+                return X + vec_X_to_l.smul(2)
+
             elif head == "midpFrom": return self.midp_from(*self.lookup_pts(args))
             elif head == "mixtilinearIncenter": return self.mixtilinear_incenter(*self.lookup_pts(args))
 
@@ -476,6 +464,7 @@ class Optimizer(ABC):
                 self.segments.append((A, B))
                 self.segments.append((X, P))
             """
+
         elif isinstance(i.computation, Line):
             L = self.line2nf(i.computation)
             self.register_line(obj_name, L)
@@ -506,6 +495,7 @@ class Optimizer(ABC):
         elif p_method == "throughL": self.parameterize_line_through(p_name, p_args[1])
         elif p_method == "tangentLC": self.parameterize_line_tangentC(p_name, p_args[1])
         elif p_method == "tangentCC": self.parameterize_circ_tangentC(p_name, p_args[1])
+        elif p_method == "tangentCL": self.parameterize_circ_tangentL(p_name, p_args[1])
         elif p_method == "throughC": self.parameterize_circ_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
         elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
@@ -587,6 +577,17 @@ class Optimizer(ABC):
                                                      [interP, Point(FuncInfo("origin", [circ2]))]))],
                                       save_name=False)
 
+        C = CircleNF(center=O, radius=self.dist(O, interP.val.args[0]))
+        return self.register_circ(c, C)
+
+
+    def parameterize_circ_tangentL(self, c, args):
+        [l] = args
+        interP = self.parameterize_on_line(Point(f"{c.val}_{l.val}_tangency"), [l], save_name=False)
+        interP = Point(FuncInfo('__val__', [interP]))
+        O = self.parameterize_on_line(Point(f"{c.val}_origin"),
+                                      [Line(FuncInfo("perpAt",
+                                                     [interP, l]))], save_name=False)
         C = CircleNF(center=O, radius=self.dist(O, interP.val.args[0]))
         return self.register_circ(c, C)
 
@@ -1248,15 +1249,22 @@ class Optimizer(ABC):
             if pred == "connecting":
                 return self.lookup_pts(args)
             elif pred == "paraAt":
-                X, A, B = self.lookup_pts(args)
+                x, l = args
+                X = self.lookup_pt(x)
+                L = self.line2nf(l)
+                A, B = self.lnf2pp(L)
                 return X, X + B - A
             elif pred == "perpAt":
-                X, A, B = self.lookup_pts(args)
+                x, l = args
+                X = self.lookup_pt(x)
+                L = self.line2nf(l)
+                A, B = self.lnf2pp(L)
                 return X, X + self.rotate_counterclockwise_90(A - B)
             elif pred == "perpBis":
                 a, b = args
+                l_ab = Line(FuncInfo("connecting", [a, b]))
                 m_ab = Point(FuncInfo("midp", [a, b]))
-                return self.line2twoPts(Line(FuncInfo("perpAt", [m_ab, a, b])))
+                return self.line2twoPts(Line(FuncInfo("perpAt", [m_ab, l_ab])))
             elif pred == "mediator":
                 A, B = self.lookup_pts(args)
                 M = self.midp(A, B)

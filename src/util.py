@@ -143,6 +143,7 @@ CASE_FIX = {
     "sqrt": "sqrt",
     "sub": "sub",
     "tangentcc": "tangentCC",
+    "tangentcl": "tangentCL",
     "tangentlc": "tangentLC",
     "tangentatcc": "tangentAtCC",
     "tangentatlc": "tangentAtLC",

@@ -244,6 +244,9 @@ class InstructionReader:
         elif pred == "tangentcc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))
+        elif pred == "tangentcl":
+            assert(len(args) == 1)
+            assert(isinstance(args[0], Line))
         else:
             raise NotImplementedError(f"[process_param_circ] unrecognized param {param}")
         return CASE_FIX[pred], args
@@ -482,18 +485,12 @@ class InstructionReader:
             p_val = FuncInfo(p_pred, tuple(ps))
             return Point(p_val)
         elif p_pred_lower == "reflectpl":
-            if len(p_args) == 3:
-                ps = [self.process_point(p) for p in p_args]
-                p_val = FuncInfo(p_pred, tuple(ps))
-                return Point(p_val)
-            elif len(p_args) == 2:
-                p = self.process_point(p_args[0])
-                l = self.process_line(p_args[1])
-                p_val = FuncInfo(p_pred, (p, l))
-                return Point(p_val)
-            else:
-                raise RuntimeError("invalid reflectPL")
-        elif p_pred_lower in ["orthocenter", "circumcenter", "centroid", "incenter", "foot"]:
+            assert(len(p_args) == 2)
+            p = self.process_point(p_args[0])
+            l = self.process_line(p_args[1])
+            p_val = FuncInfo(p_pred, (p, l))
+            return Point(p_val)
+        elif p_pred_lower in ["orthocenter", "circumcenter", "centroid", "incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
@@ -518,7 +515,7 @@ class InstructionReader:
         if not isinstance(l_info, tuple):
             raise NotImplementedError(f"[process_line] l_info must be tuple or string")
 
-        l_pred_lower == l_info[0].lower()
+        l_pred_lower = l_info[0].lower()
         l_pred = CASE_FIX[l_pred_lower]
         l_args = l_info[1:]
 
@@ -528,14 +525,11 @@ class InstructionReader:
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("connecting", ps)
-        elif l_pred_lower == "perpat":
-            assert(len(l_args) == 3)
-            ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo("perpAt", ps)
-        elif l_pred_lower == "paraat":
-            assert(len(l_args) == 3)
-            ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo("paraAt", ps)
+        elif l_pred_lower in ["perpat", "paraat", "foot"]:
+            assert(len(l_args) == 2)
+            p = self.process_point(l_args[0])
+            l = self.process_line(l_args[1])
+            l_val = FuncInfo(CASE_FIX[l_pred_lower], [p, l])
         elif l_pred_lower == "perpbis":
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
