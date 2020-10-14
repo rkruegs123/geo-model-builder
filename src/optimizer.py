@@ -4,6 +4,7 @@ import pdb
 import collections
 import itertools
 import tensorflow.compat.v1 as tf
+import random
 
 from instruction import *
 from primitives import Line, Point, Circle, Num
@@ -42,6 +43,11 @@ class Optimizer(ABC):
         self.unnamed_points = unnamed_points
         self.unnamed_lines = unnamed_lines
         self.unnamed_circles = unnamed_circles
+
+        self.n_tries = opts['n_tries']
+        if opts['n_tries'] < opts['n_models']:
+            print("WARNING: n_tries should be at least as big as n_models")
+            self.n_tries = opts['n_models']
 
         super().__init__()
 
@@ -203,6 +209,10 @@ class Optimizer(ABC):
 
     @abstractmethod
     def mkvar(self, name, shape=[], lo=-1.0, hi=1.0, trainable=None):
+        pass
+
+    @abstractmethod
+    def mk_normal_var(self, name, shape=[], mean=0.0, std=1.0, trainable=None):
         pass
 
     @abstractmethod
@@ -393,10 +403,30 @@ class Optimizer(ABC):
         for p, P in zip(ps, Ps[:-1]):
             self.register_pt(p, P)
 
+    def sample_triangle_on_unit_circ(self, ps):
+        [nA, nB, nC] = ps
+
+        theta_a = self.mk_normal_var(f"{nA}_unit_angle", mean=(2*math.pi) * (1 / 3), std=(2*math.pi) * (1 / 6))
+        theta_b = self.mk_normal_var(f"{nB}_unit_angle", mean=(2*math.pi) * (2 / 3), std=(2*math.pi) * (1 / 6))
+        theta_c = self.mk_normal_var(f"{nC}_unit_angle", mean=(2*math.pi) * (3 / 3), std=(2*math.pi) * (1 / 6))
+        A = self.get_point(self.cos(theta_a), self.sin(theta_a))
+        B = self.get_point(self.cos(theta_b), self.sin(theta_b))
+        C = self.get_point(self.cos(theta_c), self.sin(theta_c))
+
+        # randomly rotate them to get diversity
+        if random.random() < (1 / 3):
+            (C, A, B) = (A, B, C)
+        elif random.random() < (1 / 3):
+            (B, C, A) = (A, B, C)
+
+        self.register_pt(nA, A)
+        self.register_pt(nB, B)
+        self.register_pt(nC, C)
 
     def sample_triangle(self, ps, iso=None, right=None, acute=False, equi=False):
         if not (iso or right or acute or equi):
-            return self.sample_polygon(ps)
+            # return self.sample_polygon(ps)
+            return self.sample_triangle_on_unit_circ(ps)
 
         [nA, nB, nC] = ps
         B = self.get_point(self.const(-2.0), self.const(0.0))

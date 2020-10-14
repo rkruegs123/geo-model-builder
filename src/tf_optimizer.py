@@ -39,6 +39,10 @@ class TfOptimizer(Optimizer):
         init = tf.random_uniform_initializer(minval=lo, maxval=hi)
         return tf.compat.v1.get_variable(name=name, shape=shape, dtype=tf.float64, initializer=init, trainable=trainable)
 
+    def mk_normal_var(self, name, shape=[], mean=0.0, std=1.0, trainable=None):
+        init = tf.random_normal_initializer(mean=mean, stddev=std)
+        return tf.compat.v1.get_variable(name=name, shape=shape, dtype=tf.float64, initializer=init, trainable=trainable)
+
     #####################
     ## Math Utilities
     ####################
@@ -200,9 +204,8 @@ class TfOptimizer(Optimizer):
 
 
     def gen_inits(self):
-        n_tries = self.opts['n_tries']
         # n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
-        n_inits = n_tries
+        n_inits = self.n_tries
 
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
@@ -278,9 +281,8 @@ class TfOptimizer(Optimizer):
             # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         models = list()
-        n_tries = self.opts['n_tries']
 
-        for i in range(n_tries):
+        for i in range(self.n_tries):
 
             # Stop when we have enough
             if len(models) >= self.opts['n_models']:
