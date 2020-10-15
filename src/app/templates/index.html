@@ -464,14 +464,23 @@
                 <li>... parameterize a <code>LINE</code>:
                   <ul>
                     <li>
-                      <code>(THROUGH A)</code>: Parameterizes a line that passes through <code>A</code>
+                      <code>(TANGENTLC C1)</code>: Parameterizes a line that is tangent to <code>C1</code>
+                    </li>
+                    <li>
+                      <code>(THROUGHL A)</code>: Parameterizes a line that passes through <code>A</code>
                     </li>
                   </ul>
                 </li>
                 <li>... parameterize a <code>CIRCLE</code>:
                   <ul>
                     <li>
-                      <code>(THROUGH A)</code>: Parameterizes a circle passing through <code>A</code>
+                      <code>(TANGENTCC C1)</code>: Parameterizes a circle that is tangent to <code>C1</code>
+                    </li>
+                    <li>
+                      <code>(TANGENTCL L1)</code>: Parameterizes a circle that is tangent to <code>L1</code>
+                    </li>
+                    <li>
+                      <code>(THROUGHC A)</code>: Parameterizes a circle passing through <code>A</code>
                     </li>
                     <li>
                       <code>(ORIGIN A)</code>: Parameterized a circle centered at <code>A</code>
@@ -517,7 +526,7 @@
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM L LINE (THROUGH A))</code>
+                          <code>(PARAM L LINE (THROUGHL A))</code>
                           <ul>
                             <li>Introduces a line <code>L</code> that passes through the point <code>A</code></li>
                           </ul>
@@ -868,7 +877,7 @@
             <ul>
               <li><code>(line A B)</code>: The line connecting <code>A</code> and <code>B</code></li>
               <li><code>(perpBis A B)</code>: The perpendicular bisector of line <code><span style="text-decoration:overline">AB</span></code></li>
-              <li><code>(perpAt C A B)</code>: The line through <code>C</code> that is perpendicular to line <code><span style="text-decoration:overline">AB</span></code></li>
+              <li><code>(perpAt A L1)</code>: The line through <code>A</code> that is perpendicular to <code>L1</code></li>
             </ul>
           </li>
           <li>
@@ -898,8 +907,8 @@
         <ul>
           <li><code>(cong A B C D)</code>: True i.f.f. the segments <code><span style="text-decoration:overline">AB</span></code> and <code><span style="text-decoration:overline">CD</span></code> are congruent</li>
           <li><code>(coll A B C)</code>: True i.f.f. <code>A</code>, <code>B</code>, and <code>C</code> are collinear</li>
-          <li><code>(eq A B)</code>: True i.f.f. <code>A</code> = <code>B</code></li>
-          <li><code>(eq N1 N2)</code>: True i.f.f. <code>N1</code> = <code>N2</code>, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
+          <li><code>(eqP A B)</code>: True i.f.f. <code>A</code> = <code>B</code></li>
+          <li><code>(eqN N1 N2)</code>: True i.f.f. <code>N1</code> = <code>N2</code>, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
           <li><code>(onLine A L1)</code>: True i.f.f. <code>A</code> is on line <code>L1</code></li>
           <li><code>(onCirc A C1)</code>: True i.f.f. <code>A</code> is on circle <code>C1</code></li>
           <li><code>(onSeg C A B)</code>: True i.f.f. <code>C</code> is on the segment <code><span style="text-decoration:overline">AB</span></code></li>
@@ -942,7 +951,7 @@
                     </ul>
                   </li>
                   <li>
-                    <code>(ASSERT (eq C (midp A B)))</code>
+                    <code>(ASSERT (eqP C (midp A B)))</code>
                     <ul>
                       <li>Assert that <code>C</code> is the midpoint of the segment <code><span style="text-decoration:overline">AB</span></code></li>
                     </ul>
@@ -970,7 +979,7 @@
                     </ul>
                   </li>
                   <li>
-                    <code>(ASSERT (eq A B))</code>
+                    <code>(ASSERT (eqP A B))</code>
                     <ul>
                       <li>While technically a valid command, duplicate points are not allowed so this assertion will prevent a model from being found</li>
                     </ul>
