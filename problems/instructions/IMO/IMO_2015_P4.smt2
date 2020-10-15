@@ -1,13 +1,12 @@
 (param (A B C) triangle)
 (compute Omega circle (circumcircle A B C))
 (compute O point (circumcenter A B C))
-(param Gamma circle (origin A))
 
-(compute D point (interLC (line B C) Gamma rsArbitrary))
-(assert (onSeg D B C))
+(param D point (onSeg B C))
+(compute Gamma circle (coa A D))
+
 (compute E point (interLC (line B C) Gamma (rsNeq D)))
 (assert (onSeg E B C))
-;; Could enforce with a different root selector
 (assert (onSeg E D C))
 
 ;; Note that order isn't explicitly stated

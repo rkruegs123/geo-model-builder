@@ -121,8 +121,10 @@ class TfOptimizer(Optimizer):
         return res
 
     def register_pt(self, p, P, save_name=True):
-        assert(p not in self.name2pt)
-        assert(isinstance(p.val, str))
+        if save_name:
+            assert(isinstance(p.val, str))
+            assert(p not in self.name2pt)
+
         Px = tf.debugging.check_numerics(P.x, message=str(p))
         Py = tf.debugging.check_numerics(P.y, message=str(p))
         P_checked = self.get_point(Px, Py)
@@ -165,12 +167,12 @@ class TfOptimizer(Optimizer):
         self.goals[key] = self.mk_zero(val)
 
     def regularize_points(self):
-        norms = tf.cast([p.norm() for p in self.all_points], dtype=tf.float64)
+        norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
         self.register_loss("points", tf.reduce_mean(norms), self.opts['regularize_points'])
 
     def make_points_distinct(self):
         if random.random() < self.opts['distinct_prob']:
-            distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.all_points, 2)], tf.float64)
+            distincts = tf.cast([self.dist(A, B) for A, B in itertools.combinations(self.name2pt.values(), 2)], tf.float64)
             dloss     = tf.reduce_mean(self.mk_non_zero(distincts))
             self.register_loss("distinct", dloss, self.opts['make_distinct'])
 

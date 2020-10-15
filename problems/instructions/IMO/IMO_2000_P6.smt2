@@ -1,8 +1,8 @@
 (param (A1 A2 A3) acuteTri)
 
-(compute K1 point (foot A1 A2 A3))
-(compute K2 point (foot A2 A1 A3))
-(compute K3 point (foot A3 A1 A2))
+(compute K1 point (foot A1 (line A2 A3)))
+(compute K2 point (foot A2 (line A1 A3)))
+(compute K3 point (foot A3 (line A1 A2)))
 
 (compute L1 point (interLC (line A2 A3) (incircle A1 A2 A3) rsArbitrary))
 (compute L2 point (interLC (line A1 A3) (incircle A1 A2 A3) rsArbitrary))

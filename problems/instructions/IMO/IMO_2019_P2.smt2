@@ -8,9 +8,9 @@
 
 ;; P1 is a point on line PB1 s.t. B1 lies strictly between P and P1
 (param P1 point (onRayOpp B1 P))
-(assert (= (uangle P P1 C) (uangle B A C)))
+(assert (eqN (uangle P P1 C) (uangle B A C)))
 
 (param Q1 point (onRayOpp A1 Q))
-(assert (= (uangle C Q1 Q) (uangle C B A)))
+(assert (eqN (uangle C Q1 Q) (uangle C B A)))
 
 (confirm (onCirc P (circ Q P1 Q1)))

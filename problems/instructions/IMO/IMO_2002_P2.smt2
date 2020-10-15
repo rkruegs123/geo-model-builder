@@ -9,6 +9,6 @@
 (compute F point (interLC (perpBis A O) (coa O B) (rsNeq E)))
 
 (compute D point (amidpOpp A B C))
-(compute J point (interLL (paraAt O A D) (line A C)))
+(compute J point (interLL (paraAt O (line A D)) (line A C)))
 
 (confirm (incenter J C E F))

@@ -344,11 +344,11 @@ class InstructionReader:
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "eqn" or pred == "=":
-            pred = "eqN"
+            pred = "eqn"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
         elif pred == "eqp" or pred == "=":
-            pred = "eqP"
+            pred = "eqp"
             assert(len(args) == 2)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "foot":
@@ -403,12 +403,8 @@ class InstructionReader:
             assert(isinstance(args[0], Point) and isinstance(args[1], Point))
             assert(isinstance(args[2], Line))
         elif pred == "para" or pred == "perp":
-            if len(args) == 2:
-                assert(all([isinstance(t, Line) for t in args]))
-            elif len(args) == 4:
-                assert(all([isinstance(t, Point) for t in args]))
-            else:
-                raise RuntimeError(f"Invalid para constraint {constraint}")
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Line) for t in args]))
         elif pred == "right":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
@@ -466,22 +462,11 @@ class InstructionReader:
 
         p_val = None
 
-        if p_pred_lower in ["amidpopp", "amidpsame"]:
-            assert(len(p_args) == 4)
-            ps = [self.process_point(p) for p in p_args]
-            p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower == "interll":
+        if p_pred_lower == "interll":
             assert(len(p_args) == 2)
             l1 = self.process_line(p_args[0])
             l2 = self.process_line(p_args[1])
             p_val = FuncInfo(p_pred, (l1, l2))
-            """
-            elif len(p_args) == 4:
-                p1, p2, p3, p4 = [self.process_point(p) for p in p_args]
-                l1 = Line(FuncInfo("connecting", [p1, p2]))
-                l2 = Line(FuncInfo("connecting", [p3, p4]))
-                p_val = FuncInfo("interLL", (l1, l2))
-            """
         elif p_pred_lower in ["isogonalconj", "isotomicconj"]:
             assert(len(p_args) == 4)
             ps = [self.process_point(p) for p in p_args]
@@ -510,6 +495,11 @@ class InstructionReader:
             assert(len(p_args) == 2)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
+        elif p_pred_lower == "foot":
+            assert(len(p_args) == 2)
+            p = self.process_point(p_args[0])
+            l = self.process_line(p_args[1])
+            p_val = FuncInfo(p_pred, (p, l))
         elif p_pred_lower == "reflectpl":
             assert(len(p_args) == 2)
             p = self.process_point(p_args[0])
@@ -554,7 +544,7 @@ class InstructionReader:
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("connecting", ps)
-        elif l_pred_lower in ["perpat", "paraat", "foot"]:
+        elif l_pred_lower in ["perpat", "paraat"]:
             assert(len(l_args) == 2)
             p = self.process_point(l_args[0])
             l = self.process_line(l_args[1])

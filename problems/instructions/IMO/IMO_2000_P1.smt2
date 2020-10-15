@@ -6,15 +6,15 @@
 (param B point)
 (param D point (onCirc (circ N M B)))
 
-(assert (tangent (line A B) (circ C A M)))
-(assert (tangent (line A B) (circ N M B)))
+(assert (tangentLC (line A B) (circ C A M)))
+(assert (tangentLC (line A B) (circ N M B)))
 
 (assert (onSeg M C D))
-(assert (para C D A B))
+(assert (para (line C D) (line A B)))
 
-(compute P point (interLL N A C M))
-(compute Q point (interLL N B M D))
-(compute E point (interLL C A D B))
+(compute P point (interLL (line N A) (line C M)))
+(compute Q point (interLL (line N B) (line M D)))
+(compute E point (interLL (line C A) (line D B)))
 (assert (onRay E D B))
 (assert (onRay E C A))
 

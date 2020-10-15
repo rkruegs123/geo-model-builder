@@ -9,5 +9,5 @@
 (compute M point (midp P Q))
 (compute Gamma circle (circ K L M))
 
-(assert (tangent (line P Q) Gamma))
+(assert (tangentLC (line P Q) Gamma))
 (confirm (cong O P O Q))

@@ -562,7 +562,7 @@ class Optimizer(ABC):
     def parameterize_line_tangentC(self, l, args):
         [c] = args
 
-        P1 = self.parameterize_on_circ(Point(f"{l.val}_p1"), [c], save_name=False)
+        P1 = self.parameterize_on_circ(Point(f"p1"), [c], save_name=False)
         P1 = Point(FuncInfo('__val__', [P1]))
         L = self.line2nf(Line(FuncInfo("perpAt", [P1, Point(FuncInfo("origin", [c])), P1])))
 
@@ -585,7 +585,7 @@ class Optimizer(ABC):
         [through_p] = ps
         through_p = self.lookup_pt(through_p)
 
-        o = Point(c.val + "_origin")
+        o = Point("origin")
         O = self.sample_uniform(o, save_name=False)
 
         radius = self.dist(through_p, O)
@@ -596,7 +596,7 @@ class Optimizer(ABC):
         [radius] = rs
         radius = self.eval_num(radius)
 
-        o = Point(c.val + "_origin")
+        o = Point("origin")
         O = self.sample_uniform(o, save_name=False)
 
         circ_nf = CircleNF(center=O, radius=radius)
@@ -605,10 +605,10 @@ class Optimizer(ABC):
     def parameterize_circ_tangentC(self, c, args):
         [circ2] = args
 
-        interP = self.parameterize_on_circ(Point(f"{c.val}_{circ2.val}_tangency"), [circ2], save_name=False)
+        interP = self.parameterize_on_circ(Point(f"tangency_point"), [circ2], save_name=False)
         interP = Point(FuncInfo('__val__', [interP]))
 
-        O = self.parameterize_on_line(Point(f"{c.val}_origin"),
+        O = self.parameterize_on_line(Point(f"origin"),
                                       [Line(FuncInfo("connecting",
                                                      [interP, Point(FuncInfo("origin", [circ2]))]))],
                                       save_name=False)
@@ -619,9 +619,9 @@ class Optimizer(ABC):
 
     def parameterize_circ_tangentL(self, c, args):
         [l] = args
-        interP = self.parameterize_on_line(Point(f"{c.val}_{l.val}_tangency"), [l], save_name=False)
+        interP = self.parameterize_on_line(Point(f"tangency_point"), [l], save_name=False)
         interP = Point(FuncInfo('__val__', [interP]))
-        O = self.parameterize_on_line(Point(f"{c.val}_origin"),
+        O = self.parameterize_on_line(Point(f"origin"),
                                       [Line(FuncInfo("perpAt",
                                                      [interP, l]))], save_name=False)
         C = CircleNF(center=O, radius=self.dist(O, interP.val.args[0]))
@@ -846,10 +846,10 @@ class Optimizer(ABC):
         elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
         elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
         elif pred == "oppSides":
-            a, b, l = arg
+            a, b, l = args
             A, B = self.lookup_pts([a, b])
             lnf = self.line2nf(l)
-            X, Y = self.lnf2pp(l)
+            X, Y = self.lnf2pp(lnf)
             return [self.max(self.const(0.0), self.side_score_prod(A, B, X, Y))]
         elif pred == "orthocenter":
             H, A, B, C = self.lookup_pts(args)
@@ -882,10 +882,10 @@ class Optimizer(ABC):
                                    # self.right_phi(A, B, C),
                                    # self.right_phi(B, C, A)])]
         elif pred == "sameSide":
-            a, b, l = arg
+            a, b, l = args
             A, B = self.lookup_pts([a, b])
             lnf = self.line2nf(l)
-            X, Y = self.lnf2pp(l)
+            X, Y = self.lnf2pp(lnf)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
         elif pred == "simtri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
