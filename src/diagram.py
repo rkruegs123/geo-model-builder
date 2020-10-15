@@ -7,8 +7,8 @@ import math
 
 
 UNNAMED_ALPHA = 0.1
-MIN_AXIS_VAL = -5
-MAX_AXIS_VAL = 5
+MIN_AXIS_VAL = -8
+MAX_AXIS_VAL = 8
 
 class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
