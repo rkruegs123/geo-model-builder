@@ -482,8 +482,12 @@ class InstructionReader:
                 l2 = Line(FuncInfo("connecting", [p3, p4]))
                 p_val = FuncInfo("interLL", (l1, l2))
             """
-        if p_pred_lower in ["isogonalconj", "isotomicconj"]:
+        elif p_pred_lower in ["isogonalconj", "isotomicconj"]:
             assert(len(p_args) == 4)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = FuncInfo(p_pred, tuple(ps))
+        elif p_pred_lower == "harmonicconj":
+            assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
         elif p_pred_lower in ["incenter", "excenter", "mixtilinearincenter"]:

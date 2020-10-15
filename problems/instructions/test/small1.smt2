@@ -1,5 +1,5 @@
 ;; (param (A B C) acuteTri))
 ;; (param X point (onSeg A B))
 (param (A B C) triangle)
-(param D point)
-(compute myLine line (isotomic D A B C))
+(compute D point (harmonicConj C A B))
+;; (compute myLine line (isotomic D A B C))

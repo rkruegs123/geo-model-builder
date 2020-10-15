@@ -106,6 +106,7 @@ CASE_FIX = {
     "foot": "foot",
     "gt": "gt",
     "gte": "gte",
+    "harmonicconj": "harmonicConj",
     "ibisector": "ibisector",
     "incenter": "incenter",
     "incircle": "incircle",

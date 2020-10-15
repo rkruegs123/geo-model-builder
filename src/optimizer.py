@@ -106,7 +106,7 @@ class Optimizer(ABC):
                 X, l = args
                 foot_p = Point(FuncInfo("interLL", [l, Line(FuncInfo("perpAt", [X, l]))]))
                 return self.lookup_pt(foot_p)
-            elif head == "harmonicLConj": return self.harmonic_l_conj(*self.lookup_pts(args))
+            elif head == "harmonicConj": return self.harmonic_l_conj(*self.lookup_pts(args))
             elif head == "origin":
                 assert(len(args) == 1)
                 circ = args[0]
@@ -1267,7 +1267,7 @@ class Optimizer(ABC):
         # see picture in https://en.wikipedia.org/wiki/Projective_harmonic_conjugate
         # L is arbitrary here, not on the line X A B
         # (could also do case analysis and cross-ratio)
-        L = A + self.rotate_counterclockwise(const(math.pi / 3), X - A).smul(0.5)
+        L = A + self.rotate_counterclockwise(self.const(math.pi / 3), X - A).smul(0.5)
         M = self.midp(A, L)
         N = self.inter_ll(self.pp2lnf(B, L), self.pp2lnf(X, M))
         K = self.inter_ll(self.pp2lnf(A, N), self.pp2lnf(B, M))
