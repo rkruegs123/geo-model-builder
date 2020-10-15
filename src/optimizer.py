@@ -406,9 +406,9 @@ class Optimizer(ABC):
     def sample_triangle_on_unit_circ(self, ps):
         [nA, nB, nC] = ps
 
-        theta_a = self.mk_normal_var(f"{nA}_unit_angle", mean=(2*math.pi) * (1 / 3), std=(2*math.pi) * (1 / 6))
-        theta_b = self.mk_normal_var(f"{nB}_unit_angle", mean=(2*math.pi) * (2 / 3), std=(2*math.pi) * (1 / 6))
-        theta_c = self.mk_normal_var(f"{nC}_unit_angle", mean=(2*math.pi) * (3 / 3), std=(2*math.pi) * (1 / 6))
+        theta_a = self.mk_normal_var(f"{nA}_unit_angle", mean=(2*math.pi) * (1 / 3), std=(2*math.pi) * (1 / 8))
+        theta_b = self.mk_normal_var(f"{nB}_unit_angle", mean=(2*math.pi) * (2 / 3), std=(2*math.pi) * (1 / 8))
+        theta_c = self.mk_normal_var(f"{nC}_unit_angle", mean=(2*math.pi) * (3 / 3), std=(2*math.pi) * (1 / 8))
         A = self.get_point(self.cos(theta_a), self.sin(theta_a))
         B = self.get_point(self.cos(theta_b), self.sin(theta_b))
         C = self.get_point(self.cos(theta_c), self.sin(theta_c))
