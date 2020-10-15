@@ -139,8 +139,8 @@ class Optimizer(ABC):
                     rand_name = get_random_string(6)
                     self.make_lc_intersect(rand_name, self.radical_axis(cnf1, cnf2), cnf1)
                 return self.inter_cc(cnf1, cnf2, root_select)
-            elif head == "isogonal": return self.isogonal(*self.lookup_pts(args))
-            elif head == "isotomic": return self.isotomic(*self.lookup_pts(args))
+            elif head == "isogonalConj": return self.isogonal_conj(*self.lookup_pts(args))
+            elif head == "isotomicConj": return self.isotomic_conj(*self.lookup_pts(args))
             elif head == "inverse": return self.inverse(*self.lookup_pts(args))
             elif head == "reflectPL":
                 x, l = args
@@ -785,9 +785,12 @@ class Optimizer(ABC):
         elif pred == "distGt":
             X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
-        elif pred == "eq":
+        elif pred == "eqN":
             n1, n2 = [self.eval_num(n) for n in args]
             return [100 * (n1 - n2)]
+        elif pred == "eqP":
+            A, B = self.lookup_pts(args)
+            return [self.dist(A, B)]
         elif pred == "gte":
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.max(self.const(0.0), n2 - n1)]
@@ -824,9 +827,9 @@ class Optimizer(ABC):
         elif pred == "interLL":
             X, A, B, C, D = self.lookup_pts(args)
             return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]
-        elif pred == "isogonal":
+        elif pred == "isogonalConj":
             X, Y, A, B, C = self.lookup_pts(args)
-            return [self.dist(X, self.isogonal(Y, A, B, C))]
+            return [self.dist(X, self.isogonal_conj(Y, A, B, C))]
         elif pred == "midp":
             M, A, B = self.lookup_pts(args)
             return [self.dist(M, self.midp(A, B))]
@@ -843,7 +846,10 @@ class Optimizer(ABC):
         elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
         elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
         elif pred == "oppSides":
-            A, B, X, Y = self.lookup_pts(args)
+            a, b, l = arg
+            A, B = self.lookup_pts([a, b])
+            lnf = self.line2nf(l)
+            X, Y = self.lnf2pp(l)
             return [self.max(self.const(0.0), self.side_score_prod(A, B, X, Y))]
         elif pred == "orthocenter":
             H, A, B, C = self.lookup_pts(args)
@@ -876,7 +882,10 @@ class Optimizer(ABC):
                                    # self.right_phi(A, B, C),
                                    # self.right_phi(B, C, A)])]
         elif pred == "sameSide":
-            A, B, X, Y = self.lookup_pts(args)
+            a, b, l = arg
+            A, B = self.lookup_pts([a, b])
+            lnf = self.line2nf(l)
+            X, Y = self.lnf2pp(l)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
         elif pred == "simtri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
@@ -1241,11 +1250,11 @@ class Optimizer(ABC):
     def invert_or_zero(self, x):
         return self.cond(self.abs(x) < 1e-5, lambda: self.const(0.0), lambda: self.const(1) / x)
 
-    def isogonal(self, P, A, B, C):
+    def isogonal_conj(self, P, A, B, C):
         x, y, z = self.to_trilinear(P, A, B, C)
         return self.trilinear(A, B, C, self.invert_or_zero(x), self.invert_or_zero(y), self.invert_or_zero(z))
 
-    def isotomic(self, P, A, B, C):
+    def isotomic_conj(self, P, A, B, C):
         a, b, c = self.side_lengths(A, B, C)
         x, y, z = self.to_trilinear(P, A, B, C)
         return self.trilinear(A, B, C, (a**2) * self.invert_or_zero(x), (b**2) * self.invert_or_zero(y), (c**2) * self.invert_or_zero(z))
@@ -1287,6 +1296,12 @@ class Optimizer(ABC):
             pred, args = l.val
             if pred == "connecting":
                 return self.lookup_pts(args)
+            elif pred == "isogonal":
+                D, A, B, C = self.lookup_pts(args)
+                return A, self.isogonal_conj(D, A, B, C)
+            elif pred == "isotomic":
+                D, A, B, C = self.lookup_pts(args)
+                return A, self.isotomic_conj(D, A, B, C)
             elif pred == "paraAt":
                 x, l = args
                 X = self.lookup_pt(x)

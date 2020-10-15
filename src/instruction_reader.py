@@ -343,10 +343,14 @@ class InstructionReader:
         elif pred == "cycl":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "eq" or pred == "=":
-            pred = "eq"
+        elif pred == "eqn" or pred == "=":
+            pred = "eqN"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
+        elif pred == "eqp" or pred == "=":
+            pred = "eqP"
+            assert(len(args) == 2)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "foot":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point) and isinstance(args[1], Point))
@@ -367,9 +371,9 @@ class InstructionReader:
             pred = "lte"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
-        elif pred == "eqangle":
-            assert(len(args) == 8)
-            assert(all([isinstance(t, Point) for t in args]))
+        # elif pred == "eqangle":
+            # assert(len(args) == 8)
+            # assert(all([isinstance(t, Point) for t in args]))
         elif pred == "eqratio":
             assert(len(args) == 8)
             assert(all([isinstance(t, Point) for t in args]))
@@ -394,6 +398,10 @@ class InstructionReader:
         elif pred == "oncirc":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Circle))
+        elif pred == "oppsides":
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Point) and isinstance(args[1], Point))
+            assert(isinstance(args[2], Line))
         elif pred == "para" or pred == "perp":
             if len(args) == 2:
                 assert(all([isinstance(t, Line) for t in args]))
@@ -408,8 +416,9 @@ class InstructionReader:
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "sameside":
-            assert(len(args) == 4)
-            assert(all([isinstance(t, Point) for t in args]))
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Point) and isinstance(args[1], Point))
+            assert(isinstance(args[2], Line))
         elif pred == "tangentcc":
             assert(len(args) == 2)
             assert(all([isinstance(t, Circle) for t in args]))
@@ -457,19 +466,27 @@ class InstructionReader:
 
         p_val = None
 
-        if p_pred_lower == "interll":
-            if len(p_args) == 2:
-                l1 = self.process_line(p_args[0])
-                l2 = self.process_line(p_args[1])
-                p_val = FuncInfo(p_pred, (l1, l2))
+        if p_pred_lower in ["amidpopp", "amidpsame"]:
+            assert(len(p_args) == 4)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = FuncInfo(p_pred, tuple(ps))
+        elif p_pred_lower == "interll":
+            assert(len(p_args) == 2)
+            l1 = self.process_line(p_args[0])
+            l2 = self.process_line(p_args[1])
+            p_val = FuncInfo(p_pred, (l1, l2))
+            """
             elif len(p_args) == 4:
                 p1, p2, p3, p4 = [self.process_point(p) for p in p_args]
                 l1 = Line(FuncInfo("connecting", [p1, p2]))
                 l2 = Line(FuncInfo("connecting", [p3, p4]))
                 p_val = FuncInfo("interLL", (l1, l2))
-            else:
-                raise RuntimeError("invalid interLL")
-        elif p_pred_lower in ["incenter", "excenter"]:
+            """
+        if p_pred_lower in ["isogonalconj", "isotomicconj"]:
+            assert(len(p_args) == 4)
+            ps = [self.process_point(p) for p in p_args]
+            p_val = FuncInfo(p_pred, tuple(ps))
+        elif p_pred_lower in ["incenter", "excenter", "mixtilinearincenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
@@ -542,6 +559,10 @@ class InstructionReader:
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("perpBis", ps)
+        elif l_pred_lower in ["isogonal", "isotomic"]:
+            assert(len(l_args) == 4)
+            ps = [self.process_point(p) for p in l_args]
+            l_val = FuncInfo(CASE_FIX[l_pred_lower], ps)
         elif l_pred_lower == "ibisector":
             assert(len(l_args) == 3)
             ps = [self.process_point(p) for p in l_args]
