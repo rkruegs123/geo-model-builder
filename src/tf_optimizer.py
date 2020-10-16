@@ -285,6 +285,9 @@ class TfOptimizer(Optimizer):
         return self.sess.run(x)
 
     def satisfies_goals(self):
+        if not self.opts['enforce_goals']:
+            return True
+
         goals = self.run(self.goals)
         for k, x in goals.items():
             if x > self.opts['eps'] * 10:

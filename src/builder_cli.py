@@ -22,6 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('--n_models', action='store', dest='n_models', type=int, default=DEFAULTS['n_models'])
     parser.add_argument('--n_tries', action='store', dest='n_tries', type=int, default=DEFAULTS['n_tries'])
     parser.add_argument('--verbosity', action='store', dest='verbosity', type=int, default=DEFAULTS['verbosity'])
+    parser.add_argument('--enforce_goals', dest='enforce_goals', action='store_true')
 
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=DEFAULTS["learning_rate"])

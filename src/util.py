@@ -45,6 +45,8 @@ DEFAULTS = {
     "decay_rate": 0.7,
     "distinct_prob": 1.0, # Note this
     "eps": 1e-3,
+    "enforce_goals": False,
+    "experiment": False,
     "learning_rate": 1e-1,
     "make_distinct": 1e-2,
     "min_dist": 0.1,
