@@ -5,11 +5,9 @@
 (compute N point (foot C (line A B)))
 
 (compute omega_1 circle (circumcircle B W N))
-(param X point (onCirc omega_1))
-(assert (eqN (diam omega_1) (dist W X)))
+(compute X point (interLC (line W (origin omega_1)) omega_1 (rsNeq W)))
 
 (compute omega_2 circle (circumcircle C W M))
-(param Y point (onCirc omega_2))
-(assert (eqN (diam omega_2) (dist W Y)))
+(compute Y point (interLC (line W (origin omega_2)) omega_2 (rsNeq W)))
 
 (confirm (coll X Y H))

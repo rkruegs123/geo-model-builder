@@ -792,7 +792,7 @@ class Optimizer(ABC):
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
         elif pred == "eqN":
             n1, n2 = [self.eval_num(n) for n in args]
-            return [n1 - n2]
+            return [(n1 - n2) ** 2]
         elif pred == "eqP":
             A, B = self.lookup_pts(args)
             return [self.dist(A, B)]
@@ -909,9 +909,7 @@ class Optimizer(ABC):
             lhs = (x1 - x2) ** 2 + (y1 - y2) ** 2
             rhs_1 = (r1 - r2) ** 2
             rhs_2 = (r1 + r2) ** 2
-            return [self.min(lhs - rhs_1, lhs - rhs_2)]
-            # inter_point = Point(FuncInfo("interCC", [c1, c2, Root("arbitrary", list())]))
-            # return self.assertion_vals("tangentAtCC", [inter_point, c1, c2])
+            return [tf.reduce_min([self.abs(lhs - rhs_1), self.abs(lhs - rhs_2)])]
         elif pred == "tangentLC":
             l, c = args
             inter_point = Point(FuncInfo("interLC", [l, c, Root("arbitrary", list())]))
