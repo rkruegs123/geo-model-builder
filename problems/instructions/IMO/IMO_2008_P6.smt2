@@ -4,15 +4,12 @@
 (compute omega_1 circle (incircle A B C))
 (compute omega_2 circle (incircle A D C))
 
-(param Z point (onRay B A))
-(assert (not (onSeg Z B A)))
+(param omega circle (tangentCL (line B A)))
+(assert (onRay (interLC (line B A) omega rsArbitrary) B A))
+(assert (not (onSeg (interLC (line B A) omega rsArbitrary) B A)))
 
-(param omega circle (throughC Z))
-(assert (tangentAtLC Z (line A B) omega))
-
-(param W point (onRay B C))
-(assert (not (onSeg W B C)))
-(assert (tangentAtLC W (line B C) omega))
+(assert (tangentLC (line B C) omega))
+(assert (onRay (interLC (line B C) omega rsArbitrary) B C))
 
 (assert (tangentLC (line A D) omega))
 (assert (tangentLC (line C D) omega))

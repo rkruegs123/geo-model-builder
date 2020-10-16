@@ -1,5 +1,5 @@
-(param A point)
-(param B point)
-(param C point (onLine (line A B)))
-;; (assert (not (between C A B)))
-(assert (not (onSeg C A B)))
+(param (A B C) triangle)
+
+(param E point (onLine (line A B)))
+(assert (onRay E A B))
+(assert (not (onSeg E A B)))

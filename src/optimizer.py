@@ -228,7 +228,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def register_loss(self, key, var, weight=1.0):
+    def register_loss(self, key, var, weight=1.0, requires_train=True):
         pass
 
     @abstractmethod
@@ -633,20 +633,19 @@ class Optimizer(ABC):
         A, B = self.lookup_pts(ps)
         z = self.mkvar(name=f"{p}_seg", lo=-2, hi=2)
         # z = 0.9 * z
-        self.register_loss(f"{p}_seg_regularization", z, weight=1e-4)
+        self.register_loss(f"{p}_seg_regularization", z, weight=1e-4, requires_train=False)
         # self.segments.append((A, B))
         return self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
 
 
     def parameterize_on_line(self, p, p_args, save_name=True):
         [l] = p_args
-        # A, B = self.line2twoPts(l)
         A, B = self.lnf2pp(self.line2nf(l))
-        z = self.mkvar(name=f"{p}_line")
-        z = 0.2 * z
-        self.register_loss(f"{p}_line_regularization", z, weight=1e-4)
+        z = self.mkvar(name=f"{p}_line", lo=-2, hi=2)
+        # z = 0.2 * z
+        self.register_loss(f"{p}_line_regularization", z, weight=1e-4, requires_train=False)
         # TODO: arbitrary and awkward. Better to sample "zones" first?
-        s = 3.0
+        s = 10.0
         P1 = A + (A - B).smul(s)
         P2 = B + (B - A).smul(s)
         # self.segments.append((A, B))
@@ -1111,7 +1110,6 @@ class Optimizer(ABC):
             def sgnstar(x):
                 return self.cond(self.lt(x, self.const(0.0)), lambda: self.const(-1.0), lambda: self.const(1.0))
 
-            # NEXT: Change to self....
             Q1 = self.get_point((D * dy + sgnstar(dy) * dx * self.sqrt(radicand)) / (dr**2),
                                 (-D * dx + self.abs(dy) * self.sqrt(radicand)) / (dr**2))
 
@@ -1126,7 +1124,7 @@ class Optimizer(ABC):
             Q = self.midp(F, X)
             return self.unshift(O, [Q, Q])
 
-        return self.cond(self.lt(radicand, self.const(0.0)), on_neg, on_nneg)
+        return self.cond(self.lte(radicand, self.const(0.0)), on_neg, on_nneg)
 
     def inter_lc(self, lnf, c, root_select):
         p1, p2 = self.lnf2pp(lnf)
