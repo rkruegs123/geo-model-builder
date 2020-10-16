@@ -631,8 +631,8 @@ class Optimizer(ABC):
 
     def parameterize_on_seg(self, p, ps):
         A, B = self.lookup_pts(ps)
-        z = self.mkvar(name=f"{p}_seg")
-        z = 0.2 * z
+        z = self.mkvar(name=f"{p}_seg", lo=-2, hi=2)
+        # z = 0.9 * z
         self.register_loss(f"{p}_seg_regularization", z, weight=1e-4)
         # self.segments.append((A, B))
         return self.register_pt(p, A + (B - A).smul(self.sigmoid(z)))
@@ -787,7 +787,7 @@ class Optimizer(ABC):
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
         elif pred == "eqN":
             n1, n2 = [self.eval_num(n) for n in args]
-            return [100 * (n1 - n2)]
+            return [n1 - n2]
         elif pred == "eqP":
             A, B = self.lookup_pts(args)
             return [self.dist(A, B)]
