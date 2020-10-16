@@ -166,9 +166,12 @@ class TfOptimizer(Optimizer):
             # self.register_loss(key, err, self.opts['ndg_loss'])
 
 
-    def register_goal(self, key, val):
+    def register_goal(self, key, val, negate):
         assert(key not in self.goals)
-        self.goals[key] = self.mk_zero(val)
+        if negate:
+            self.goals[key] = self.mk_non_zero(val)
+        else:
+            self.goals[key] = self.mk_zero(val)
 
     def regularize_points(self):
         norms = tf.cast([p.norm() for p in self.name2pt.values()], dtype=tf.float64)
@@ -281,10 +284,23 @@ class TfOptimizer(Optimizer):
     def run(self, x):
         return self.sess.run(x)
 
+    def satisfies_goals(self):
+        goals = self.run(self.goals)
+        for k, x in goals.items():
+            if x > self.opts['eps']:
+                return False
+        return True
+
+    def valid_model(self):
+        if self.verbosity > 0:
+            self.print_losses()
+        if self.points_far_enough_away() and self.satisfies_goals():
+            return True
+        return False
+
     def solve(self):
         if self.has_loss:
             self.freeze()
-            # raise NotImplementedError("[tf_optimizer.solve] Cannot solve with loss")
 
         models = list()
 
@@ -297,10 +313,7 @@ class TfOptimizer(Optimizer):
 
             if not self.has_loss:
                 self.run(tf.compat.v1.global_variables_initializer())
-                pt_assn = self.run(self.name2pt)
-                if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
-                    if self.verbosity > 0:
-                        self.print_losses()
+                if self.valid_model():
                     models.append(self.get_model())
             else:
                 loss = None
@@ -311,8 +324,7 @@ class TfOptimizer(Optimizer):
                         print(f"ERROR: {e}")
 
                 if loss is not None and loss < self.opts['eps']:
-                    pt_assn = self.run(self.name2pt)
-                    if self.points_far_enough_away(pt_assn, self.opts['min_dist']):
+                    if self.valid_model():
                         models.append(self.get_model())
         if self.has_loss: self.remove_inits()
         return models

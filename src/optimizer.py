@@ -236,7 +236,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def register_goal(self, key, var):
+    def register_goal(self, key, var, negate):
         pass
 
     @abstractmethod
@@ -734,13 +734,12 @@ class Optimizer(ABC):
         vals = self.assertion_vals(pred, args)
         g_str = f"{pred}_{'_'.join([str(a) for a in args])}"
         if negate:
-            if self.verbosity > 0:
-                print("WARNING: Satisfied NDG goals will have non-zero values")
             g_str = f"not_{g_str}"
+            vals = [tf.reduce_max(vals)]
 
         for i, val in enumerate(vals):
             goal_str = g_str if len(vals) == 1 else f"{g_str}_{i}"
-            self.register_goal(goal_str, val)
+            self.register_goal(goal_str, val, negate)
 
     def assertion_vals(self, pred, args):
         if pred == "amidpOpp":
@@ -1499,7 +1498,9 @@ class Optimizer(ABC):
         else:
             raise NotImplementedError(f"[process_rs] NYI: {pred}")
 
-    def points_far_enough_away(self, name2pt, min_dist):
+    def points_far_enough_away(self):
+        name2pt = self.run(self.name2pt)
+        min_dist = self.opts['min_dist']
         for a, b in itertools.combinations(name2pt.keys(), 2):
             A, B = name2pt[a], name2pt[b]
             d = self.dist(A, B)

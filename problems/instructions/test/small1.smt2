@@ -1,5 +1,5 @@
 (param (A B C) triangle)
+(param D point (onSeg B C))
 
-(param E point (onLine (line A B)))
-(assert (onRay E A B))
-(assert (not (onSeg E A B)))
+;; (confirm (cong A B A C))
+;; (confirm (not (onSeg D B C)))
