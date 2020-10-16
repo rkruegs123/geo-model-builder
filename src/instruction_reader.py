@@ -20,8 +20,6 @@ class InstructionReader:
         self.instructions = list()
         self.problem_lines = problem_lines
 
-        self.problem_type = None
-
         self.unnamed_points = list()
         self.unnamed_lines = list()
         self.unnamed_circles = list()
@@ -30,15 +28,6 @@ class InstructionReader:
         cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
             self.process_command(cmd)
-
-    def update_problem_type(self, p_type):
-        if p_type not in ["compile", "instructions"]:
-            raise RuntimeError(f"Invalid problem type: {p_type}")
-        if self.problem_type == "compile" and p_type == "instructions":
-            raise RuntimeError(f"Invalid problem statement")
-        elif self.problem_type == "instructions" and p_type == "compile":
-            raise RuntimeError(f"Invalid problem statement")
-        self.problem_type = p_type
 
     def register_pt(self, p):
         if p in self.points:
@@ -71,15 +60,10 @@ class InstructionReader:
         if not isinstance(cmd[0], str):
             raise RuntimeError(f"[process_cmd] command must be a string")
         head = cmd[0].lower()
-        if head == "sample":
-            raise NotImplementedError("Sample is deprecated")
-            # self.sample(cmd)
-            # self.update_problem_type("instructions")
-        elif head == "assert":
+        if head == "assert":
             self.add(cmd)
         elif head == "compute":
             self.compute(cmd)
-            self.update_problem_type("instructions")
         elif head == "confirm":
             self.confirm(cmd)
         elif head == "param":
@@ -89,18 +73,6 @@ class InstructionReader:
                 self.process_param_special(cmd)
             else:
                 raise RuntimeError("Invalid param input type")
-            self.update_problem_type("instructions")
-        elif head == "declare-points":
-            assert(len(cmd) > 1)
-            ps = cmd[1:]
-            for p in ps:
-                self.register_pt(Point(p))
-            self.update_problem_type("compile")
-        elif head == "declare-point":
-            assert(len(cmd) == 2)
-            p = cmd[1]
-            self.register_pt(Point(p))
-            self.update_problem_type("compile")
         else:
             raise NotImplementedError(f"[InstructionReader.process_command] Command not supported: {head}")
 
@@ -571,7 +543,6 @@ class InstructionReader:
             l_val = FuncInfo("reflectLL", ls)
 
         if l_val is not None:
-            self.update_problem_type("instructions")
             L = Line(l_val)
             if unnamed:
                 self.unnamed_lines.append(L)
@@ -614,7 +585,6 @@ class InstructionReader:
             c_val = FuncInfo("mixtilinearIncircle", ps)
 
         if c_val is not None:
-            self.update_problem_type("instructions")
             C = Circle(c_val)
             if unnamed:
                 self.unnamed_circles.append(C)

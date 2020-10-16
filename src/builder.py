@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import time
 
-from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
 from parse import parse_sexprs
 from instruction_reader import InstructionReader
@@ -32,23 +31,11 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
     if verbosity > 0:
         print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
 
-    if reader.problem_type == "compile":
-        raise RuntimeError("Compilation is deprecated")
-        # compiler = PointCompiler(instructions, reader.points, opts)
-        # compiler.compile()
-        # final_instructions = compiler.instructions
-    elif reader.problem_type == "instructions":
-        final_instructions = instructions
-    else:
-        raise RuntimeError("[build] Did not properly set problem type")
-
-
-
 
     g = tf.Graph()
     with g.as_default():
 
-        solver = TfOptimizer(final_instructions, opts,
+        solver = TfOptimizer(instructions, opts,
                              reader.unnamed_points, reader.unnamed_lines, reader.unnamed_circles,
                              reader.segments, g)
         solver.preprocess()
