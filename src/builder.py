@@ -9,7 +9,7 @@ import time
 
 from point_compiler import PointCompiler
 from tf_optimizer import TfOptimizer
-from sp_optimizer import ScipyOptimizer
+# from sp_optimizer import ScipyOptimizer
 from parse import parse_sexprs
 from instruction_reader import InstructionReader
 
