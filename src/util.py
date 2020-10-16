@@ -51,7 +51,6 @@ DEFAULTS = {
     "n_iterations": 5000,
     "ndg_loss": 1e-3,
     "regularize_points": 1e-6,
-    "solver": "tensorflow",
     "n_models": 1,
     "n_tries": 1,
     "verbosity": 1,

@@ -13,7 +13,6 @@ if __name__ == "__main__":
     # General arguments
     parser.add_argument('--problem', '-p', action='store', type=str, help='Name of the file defining the set of constraints')
     parser.add_argument('--dir', '-d', action='store', type=str, help='Directory containing problem files.')
-    parser.add_argument('--solver', action='store', type=str, help='Name of the constraint solving method -- options are scipy or tensorflow', default=DEFAULTS["solver"])
     parser.add_argument('--regularize_points', action='store', dest='regularize_points', type=float, default=DEFAULTS["regularize_points"])
     parser.add_argument('--make_distinct', action='store', dest='make_distinct', type=float, default=DEFAULTS["make_distinct"])
     parser.add_argument('--distinct_prob', action='store', dest='distinct_prob', type=float, default=DEFAULTS["distinct_prob"])
