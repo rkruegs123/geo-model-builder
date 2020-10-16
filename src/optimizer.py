@@ -714,12 +714,19 @@ class Optimizer(ABC):
 
         vals = self.assertion_vals(pred, args)
 
+        # We only have to violate one!
+        ndg_val = tf.reduce_max(vals) # Note how we reduce MAX because we are trying to make non-zero
+        ndg_str = f"not_{pred}_{'_'.join([str(a) for a in args])}"
+        self.register_ndg(ndg_str, ndg_val, weight=1.0)
+
+        """
         a_str = f"not_{pred}_{'_'.join([str(a) for a in args])}"
         weight = 1 / len(vals)
 
         for i, val in enumerate(vals):
             ndg_str = a_str if len(vals) == 1 else f"{a_str}_{i}"
             self.register_ndg(ndg_str, val, weight=weight)
+        """
 
     def confirm(self, goal):
         goal_cons = goal.constraint

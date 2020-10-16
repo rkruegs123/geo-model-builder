@@ -364,7 +364,7 @@ class InstructionReader:
         elif pred == "online":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Line))
-        elif pred in ["onseg", "onray", "between"]:
+        elif pred in ["onseg", "onray"]: # no more between
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "oncirc":

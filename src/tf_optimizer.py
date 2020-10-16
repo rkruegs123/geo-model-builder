@@ -159,8 +159,11 @@ class TfOptimizer(Optimizer):
         assert(key not in self.ndgs)
         err = weight * self.mk_non_zero(val)
         self.ndgs[key] = err
-        if self.opts['ndg_loss'] > 0:
-            self.register_loss(key, err, self.opts['ndg_loss'])
+
+        self.register_loss(key, err, weight)
+        # if self.opts['ndg_loss'] > 0:
+            # self.register_loss(key, err, self.opts['ndg_loss'])
+
 
     def register_goal(self, key, val):
         assert(key not in self.goals)

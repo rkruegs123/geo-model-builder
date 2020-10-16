@@ -57,7 +57,7 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
 
 def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=False):
     if opts['n_models'] > 10:
-        raise RuntimeError("Max n_models is 10")
+        raise RuntimeError("Max # of models is 10")
 
     problem_given = ('lines' in opts or bool(opts['problem']))
     dir_given = 'dir' in opts and bool(opts['dir'])
@@ -88,7 +88,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             all_trial_success_times = list()
             all_trial_fail_times = list()
 
-            n_trials = 2
+            n_trials = 1
             opts['verbosity'] = 0
 
             for _ in tqdm(range(n_trials), desc="Trials"):
@@ -119,6 +119,9 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                 all_trial_success_times.append(trial_success_times)
                 all_trial_fail_times.append(trial_fail_times)
 
+            print(f"\n\nAll Trial Data:\n{all_trial_data}")
+            print(f"\n\nSolve Map:\n{solve_map}")
+            print("\n\n")
 
             all_n_models_per_file = [mean(t_data) for t_data in all_trial_data] # should have length 2
             avg_models_per_file = mean(all_n_models_per_file)
@@ -143,9 +146,6 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             avg_fail_time = mean(all_avg_fail_times)
             std_fail_time = stdev(all_avg_fail_times)
 
-            print(f"\n\nAll Trial Data:\n{all_trial_data}")
-            print(f"\n\nSolve Map:\n{solve_map}")
-            print("\n\n")
             print(f"Models per File: Avg {avg_models_per_file}, Sd {std_models_per_file}")
             print(f"% Problems with atleast 1 Model: Avg {avg_perc_success}, Sd {std_perc_success}")
             print(f"Avg Time per Problem (all): Avg {avg_time}, Sd {std_time}")
