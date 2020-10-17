@@ -5,6 +5,7 @@ import random
 import itertools
 from tqdm import tqdm
 import os
+import glob
 
 from optimizer import Optimizer, LineSF, CircleNF
 from diagram import Diagram
@@ -214,6 +215,15 @@ class TfOptimizer(Optimizer):
 
 
     def gen_inits(self):
+
+        if not os.path.exists('.checkpoints'):
+            os.makedirs('.checkpoints')
+
+        # delete old checkpoints
+        ckpt_list = glob.glob('.checkpoints/*')
+        for ckpt_file in ckpt_list:
+            os.remove(ckpt_file)
+
         # n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
         n_inits = self.n_tries
 
@@ -223,7 +233,7 @@ class TfOptimizer(Optimizer):
         for _ in range(n_inits):
             self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)
-            init_name = get_random_string(8)
+            init_name = f".checkpoints/{get_random_string(8)}"
             saver.save(self.sess, init_name)
             init_map[init_name] = init_loss
 
