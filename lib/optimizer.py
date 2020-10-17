@@ -5,6 +5,7 @@ import collections
 import itertools
 import tensorflow.compat.v1 as tf
 import random
+from tqdm import tqdm
 
 from instruction import *
 from primitives import Line, Point, Circle, Num
@@ -52,7 +53,7 @@ class Optimizer(ABC):
         super().__init__()
 
     def preprocess(self):
-        for i in self.instructions:
+        for i in tqdm(self.instructions, desc="Processing instructions..."):
             self.process_instruction(i)
 
         # After we've processed the instructions, process all the unnamed things
