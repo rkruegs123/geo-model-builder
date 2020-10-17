@@ -659,6 +659,10 @@ class InstructionReader:
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
             return Root("closerToP", [p_neq])
+        elif rs_pred_lower == "rsclosertol":
+            assert(len(rs_args) == 1)
+            p_neq = self.process_line(rs_args[0])
+            return Root("closerToL", [p_neq])
         elif rs_pred_lower == "rsoppsides":
             assert(len(rs_args) == 2)
             opp_p = self.process_point(rs_args[0])

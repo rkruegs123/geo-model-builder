@@ -1480,6 +1480,14 @@ class Optimizer(ABC):
             [pt] = self.lookup_pts(rs_args)
             test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
             return self.cond(test, lambda: P1, lambda: P2)
+        elif pred == "closerToL":
+            [l] = rs_args
+            P1_foot = Point(FuncInfo("foot", [Point(FuncInfo("__val__", [P1])), l]))
+            P1_foot = self.lookup_pt(P1_foot)
+            P2_foot = Point(FuncInfo("foot", [Point(FuncInfo("__val__", [P2])), l]))
+            P2_foot = self.lookup_pt(P2_foot)
+            test = self.lte(self.sqdist(P1, P1_foot), self.sqdist(P2, P2_foot))
+            return self.cond(test, lambda: P1, lambda: P2)
         elif pred == "furtherFrom":
             [pt] = self.lookup_pts(rs_args)
             test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
