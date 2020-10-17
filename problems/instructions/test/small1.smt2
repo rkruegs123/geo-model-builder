@@ -2,4 +2,5 @@
 (compute Gamma circle (circumcircle A B C))
 (param D point)
 (param E point)
-(compute F point (interLC (line D E) Gamma (rsCloserToP A)))
+(compute F point (interLC (line D E) Gamma (rsCloserToL (line A B))))
+(compute G point (interLC (line D E) Gamma (rsCloserToP A)))
