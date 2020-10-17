@@ -269,8 +269,7 @@ class TfOptimizer(Optimizer):
                 self.get_model().plot()
 
             if loss_v < opts['eps']:
-                if self.verbosity > 1:
-                    self.print_losses()
+                self.print_losses()
                 return loss_v
             else:
                 self.sess.run(self.apply_grads)
