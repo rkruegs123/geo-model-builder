@@ -48,6 +48,8 @@ DEFAULTS = {
     "enforce_goals": False,
     "experiment": False,
     "learning_rate": 1e-1,
+    "loss_freq": 100,
+    "losses_freq": 1000,
     "make_distinct": 1e-2,
     "min_dist": 0.1,
     "n_iterations": 5000,
@@ -56,7 +58,7 @@ DEFAULTS = {
     "regularize_points": 1e-6,
     "n_models": 1,
     "n_tries": 1,
-    "verbosity": 1,
+    "verbosity": 0,
 }
 
 def is_number(s):

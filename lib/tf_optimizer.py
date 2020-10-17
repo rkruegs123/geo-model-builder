@@ -261,12 +261,13 @@ class TfOptimizer(Optimizer):
 
             loss_v, learning_rate_v = self.sess.run([self.loss, self.learning_rate])
 
-            if self.verbosity > 0:
+            if self.verbosity > 0 or i % self.opts['loss_freq'] == 0:
                 print("[%6d] %16.12f || %10.6f" % (i, loss_v, learning_rate_v))
-                if self.verbosity > 1:
-                    self.print_losses()
-                if self.verbosity > 2 and i % self.opts['plot_freq'] == 0:
-                    self.get_model().plot()
+            if self.verbosity > 1 or i % self.opts['losses_freq'] == 0:
+                self.print_losses()
+            if i % self.opts['plot_freq'] == 0:
+                self.get_model().plot()
+
             if loss_v < opts['eps']:
                 if self.verbosity > 1:
                     self.print_losses()
