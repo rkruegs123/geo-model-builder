@@ -10,7 +10,8 @@ def parse_sexprs(lines):
 
         # discard comments
         for i, tk in enumerate(result):
-          if tk == ";;":
+          # if tk == ";;":
+          if tk[0] == ";":
             return result[:i]
 
         return result

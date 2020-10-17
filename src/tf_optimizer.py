@@ -24,6 +24,7 @@ class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
 class TfOptimizer(Optimizer):
 
     def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, graph):
+        # tfcfg = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 3})
         tfcfg = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
         self.sess = tf.Session(graph=graph, config=tfcfg)
 
