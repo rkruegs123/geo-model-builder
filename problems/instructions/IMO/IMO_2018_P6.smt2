@@ -1,6 +1,6 @@
 (param (A B C D) polygon)
-(assert (eqratio A B B C D A C D))
-(param X point (inPoly A B C D))
+(assert (eq-ratio A B B C D A C D))
+(param X point (in-poly A B C D))
 
 (assert (= (uangle X A B) (uangle X C D)))
 (assert (= (uangle X B C) (uangle X D A)))

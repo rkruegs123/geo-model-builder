@@ -230,7 +230,8 @@ class TfOptimizer(Optimizer):
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
 
-        for _ in tqdm(range(n_inits), desc="Sampling initializations..."):
+        # for _ in tqdm(range(n_inits), desc="Sampling initializations..."):
+        for _ in range(n_inits):
             self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)
             init_name = f".checkpoints/{get_random_string(8)}"
@@ -269,7 +270,8 @@ class TfOptimizer(Optimizer):
                 self.get_model().plot()
 
             if loss_v < opts['eps']:
-                self.print_losses()
+                if opts['verbosity'] >= 0:
+                    self.print_losses()
                 return loss_v
             else:
                 self.sess.run(self.apply_grads)

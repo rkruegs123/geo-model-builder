@@ -2,13 +2,13 @@
 (param C point)
 (compute O point (midp B C))
 
-(param A point (onCirc (coa O B)))
+(param A point (on-circ (coa O B)))
 (assert (gt (uangle A O C) (div pi 3)))
 
-(compute E point (interLC (perpBis A O) (coa O B) rsArbitrary))
-(compute F point (interLC (perpBis A O) (coa O B) (rsNeq E)))
+(compute E point (inter-lc (perp-bis A O) (coa O B) rs-arbitrary))
+(compute F point (inter-lc (perp-bis A O) (coa O B) (rs-neq E)))
 
-(compute D point (amidpOpp A B C))
-(compute J point (interLL (paraAt O (line A D)) (line A C)))
+(compute D point (amidp-opp A B C))
+(compute J point (inter-ll (para-at O (line A D)) (line A C)))
 
 (confirm (incenter J C E F))

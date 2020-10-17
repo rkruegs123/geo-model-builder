@@ -28,7 +28,8 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
 
     verbosity = opts['verbosity']
 
-    print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
+    if verbosity >= 0:
+        print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
 
 
     g = tf.Graph()
@@ -42,7 +43,9 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
         # print(filtered_models)
 
 
-    print(f"\n\nFound {len(filtered_models)} models")
+    if verbosity >= 0:
+        print(f"\n\nFound {len(filtered_models)} models")
+
     figs = list()
     for i, m in enumerate(filtered_models):
         # FIXME: Inconsistent return type
@@ -87,7 +90,10 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             all_trial_fail_times = list()
 
             n_trials = 1
-            opts['verbosity'] = 0
+            opts['verbosity'] = -1
+            opts['plot_freq'] = -1
+            opts['loss_freq'] = -1
+            opts['losses_freq'] = -1
 
             for _ in tqdm(range(n_trials), desc="Trials"):
                 trial_data = list()

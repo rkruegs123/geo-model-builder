@@ -1,11 +1,11 @@
-(param (A B C) acuteTri)
+(param (A B C) acute-tri)
 (compute Gamma circle (circumcircle A B C))
 
 (param l line)
-(assert (tangentLC l Gamma))
+(assert (tangent-lc l Gamma))
 
-(compute la line (reflectLL l (line B C)))
-(compute lb line (reflectLL l (line C A)))
-(compute lc line (reflectLL l (line A B)))
+(compute la line (reflect-ll l (line B C)))
+(compute lb line (reflect-ll l (line C A)))
+(compute lc line (reflect-ll l (line A B)))
 
-(confirm (tangentCC Gamma (circumcircle (interLL la lb) (interLL la lc) (interLL lb lc))))
+(confirm (tangent-cc Gamma (circumcircle (inter-ll la lb) (inter-ll la lc) (inter-ll lb lc))))

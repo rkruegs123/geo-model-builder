@@ -1,4 +1,4 @@
-(param (A B C) acuteTri)
+(param (A B C) acute-tri)
 (compute O point (circumcenter A B C))
 (compute P point (foot A (line B C)))
 

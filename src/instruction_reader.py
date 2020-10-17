@@ -7,7 +7,7 @@ from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Comput
 from constraint import Constraint
 from parse import parse_sexprs
 from primitives import Point, Line, Circle, Num
-from util import Root, is_number, FuncInfo, CASE_FIX
+from util import Root, is_number, FuncInfo
 
 RESERVED_NAMES = ["pi"]
 
@@ -94,16 +94,18 @@ class InstructionReader:
         param_method = cmd[2]
 
         if isinstance(param_method, str):
-            assert(param_method.lower() in ["triangle", "acutetri", "equitri", "polygon"])
-            instr = Sample(ps, CASE_FIX[param_method.lower()]) # No extra args here
+            p_method = param_method.lower()
+            assert(p_method in ["triangle", "acute-tri", "equi-tri", "polygon"])
+            instr = Sample(ps, p_method) # No extra args here
             self.instructions.append(instr)
         elif isinstance(param_method, tuple):
             assert(len(param_method) == 2)
             head, arg = param_method
-            assert(head.lower() in ["righttri", "isotri", "acuteisotri"])
+            head = head.lower()
+            assert(head in ["right-tri", "iso-tri", "acute-iso-tri"])
             assert(isinstance(arg, str) and Point(arg) in ps)
             special_p = Point(arg) # Not coming in as Point
-            instr = Sample(ps, CASE_FIX[head.lower()], (special_p,))
+            instr = Sample(ps, head, (special_p,))
             self.instructions.append(instr)
         else:
             raise RuntimeError("Invalid joint param method")
@@ -213,7 +215,7 @@ class InstructionReader:
 
     def process_param_circ(self, param):
         if isinstance(param, str) and param.lower() == "circle":
-            return CASE_FIX[param.lower()], None
+            return "circle", None
 
         pred = param[0].lower()
         args = param[1:]
@@ -225,41 +227,41 @@ class InstructionReader:
         elif pred == "radius":
             assert(len(args) == 1)
             assert(isinstance(args[0], Num))
-        elif pred == "throughc":
+        elif pred == "through-c":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
-        elif pred == "tangentcc":
+        elif pred == "tangent-cc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))
-        elif pred == "tangentcl":
+        elif pred == "tangent-cl":
             assert(len(args) == 1)
             assert(isinstance(args[0], Line))
         else:
             raise NotImplementedError(f"[process_param_circ] unrecognized param {param}")
-        return CASE_FIX[pred], args
+        return pred, args
 
     def process_param_line(self, param):
         if isinstance(param, str) and param.lower() == "line":
-            return CASE_FIX[param.lower()], None
+            return "line", None
 
         pred = param[0].lower()
         args = param[1:]
         args = [self.process_term(t) for t in args]
 
-        if pred == "throughl":
+        if pred == "through-l":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
-        elif pred == "tangentlc":
+        elif pred == "tangent-lc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))
         else:
             raise NotImplementedError(f"[process_param_line] unrecognized param {param}")
-        return CASE_FIX[pred], args
+        return pred, args
 
 
     def process_param_point(self, param):
         if isinstance(param, str) and param.lower() == "coords":
-            return CASE_FIX[param.lower()], None
+            return "coords", None
 
         pred = param[0].lower()
         args = param[1:]
@@ -269,24 +271,24 @@ class InstructionReader:
         ls = [t for t in args if isinstance(t, Line)]
         cs = [t for t in args if isinstance(t, Circle)]
 
-        if pred == "onseg":
+        if pred == "on-seg":
             assert(len(args) == 2)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "online":
+        elif pred == "on-line":
             assert(len(args) == 1)
             assert(all([isinstance(t, Line) for t in args]))
-        elif pred in ["onray", "onrayopp"]:
+        elif pred in ["on-ray", "on-ray-opp"]:
             assert(len(args) == 2)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "oncirc":
+        elif pred == "on-circ":
             assert(len(args) == 1)
             assert(all([isinstance(t, Circle) for t in args]))
-        elif pred == "inpoly":
+        elif pred == "in-poly":
             assert(len(args) >= 3)
             assert(all([isinstance(t, Point) for t in args]))
         else:
             raise NotImplementedError(f"[process_param_point] unrecognized param {param}")
-        return CASE_FIX[pred], args
+        return pred, args
 
 
     def process_constraint(self, constraint):
@@ -310,6 +312,9 @@ class InstructionReader:
         if pred in ["circumcenter", "orthocenter", "incenter", "centroid"]:
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred in ["con-tri", "sim-tri"]:
+            assert(len(args) == 6)
+            assert(all([isinstance(t, Point) for t in args]))
         elif pred == "coll":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
@@ -325,9 +330,9 @@ class InstructionReader:
         elif pred == "eq" or pred == "=":
             assert(len(args) == 2)
             if all([isinstance(t, Num) for t in args]):
-                pred = "eqn"
+                pred = "eq-n"
             elif all([isinstance(t, Point) for t in args]):
-                pred = "eqp"
+                pred = "eq-p"
             else:
                 raise RuntimeError("Invalid usage of eq")
         elif pred == "foot":
@@ -350,34 +355,34 @@ class InstructionReader:
             pred = "lte"
             assert(len(args) == 2)
             assert(all([isinstance(t, Num) for t in args]))
-        # elif pred == "eqangle":
+        # elif pred == "eq-angle":
             # assert(len(args) == 8)
             # assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "eqratio":
+        elif pred == "eq-ratio":
             assert(len(args) == 8)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "ibisector":
+        elif pred == "i-bisector":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "interll":
+        elif pred == "inter-ll":
             assert(len(args) == 5)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "inpoly":
+        elif pred == "in-poly":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "midp":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "online":
+        elif pred == "on-line":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Line))
-        elif pred in ["onseg", "onray"]: # no more between
+        elif pred in ["on-seg", "on-ray"]: # no more between
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "oncirc":
+        elif pred == "on-circ":
             assert(len(args) == 2)
             assert(isinstance(args[0], Point) and isinstance(args[1], Circle))
-        elif pred == "oppsides":
+        elif pred == "opp-sides":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point) and isinstance(args[1], Point))
             assert(isinstance(args[2], Line))
@@ -387,31 +392,31 @@ class InstructionReader:
         elif pred == "right":
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "reflectpl":
+        elif pred == "reflect-pl":
             assert(len(args) == 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "sameside":
+        elif pred == "same-side":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point) and isinstance(args[1], Point))
             assert(isinstance(args[2], Line))
-        elif pred == "tangentcc":
+        elif pred == "tangent-cc":
             assert(len(args) == 2)
             assert(all([isinstance(t, Circle) for t in args]))
-        elif pred == "tangentlc":
+        elif pred == "tangent-lc":
             assert(len(args) == 2)
             assert(isinstance(args[0], Line) and isinstance(args[1], Circle))
-        elif pred == "tangentatcc":
+        elif pred == "tangent-at-cc":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point))
             assert(isinstance(args[1], Circle) and isinstance(args[2], Circle))
-        elif pred == "tangentatlc":
+        elif pred == "tangent-at-lc":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point))
             assert(isinstance(args[1], Line) and isinstance(args[2], Circle))
         else:
             raise NotImplementedError(f"[process_constraint] Unsupported pred {pred}")
 
-        return negate, CASE_FIX[pred], args
+        return negate, pred, args
 
     def process_term(self, term):
         try:
@@ -435,64 +440,63 @@ class InstructionReader:
         if not isinstance(p_info, tuple):
             raise NotImplementedError(f"[process_point] p_info must be tuple or string")
 
-        p_pred_lower = p_info[0].lower()
-        p_pred = CASE_FIX[p_pred_lower]
+        p_pred = p_info[0].lower()
         p_args = p_info[1:]
 
         p_val = None
 
-        if p_pred_lower == "interll":
+        if p_pred == "inter-ll":
             assert(len(p_args) == 2)
             l1 = self.process_line(p_args[0])
             l2 = self.process_line(p_args[1])
             p_val = FuncInfo(p_pred, (l1, l2))
-        elif p_pred_lower in ["isogonalconj", "isotomicconj"]:
+        elif p_pred in ["isogonal-conj", "isotomic-conj"]:
             assert(len(p_args) == 4)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower == "harmonicconj":
+        elif p_pred == "harmonic-conj":
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower in ["incenter", "excenter", "mixtilinearincenter"]:
+        elif p_pred in ["incenter", "excenter", "mixtilinear-incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower == "interlc":
+        elif p_pred == "inter-lc":
             assert(len(p_args) == 3)
             l = self.process_line(p_args[0])
             c = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = FuncInfo("interLC", (l, c, rs))
-        elif p_pred_lower == "intercc":
+            p_val = FuncInfo(p_pred, (l, c, rs))
+        elif p_pred == "inter-cc":
             assert(len(p_args) == 3)
             c1 = self.process_circle(p_args[0])
             c2 = self.process_circle(p_args[1])
             rs = self.process_rs(p_args[2])
-            p_val = FuncInfo("interCC", (c1, c2, rs))
-        elif p_pred_lower in ["midp", "midpfrom"]:
+            p_val = FuncInfo(p_pred, (c1, c2, rs))
+        elif p_pred in ["midp", "midp-from"]:
             assert(len(p_args) == 2)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower == "foot":
+        elif p_pred == "foot":
             assert(len(p_args) == 2)
             p = self.process_point(p_args[0])
             l = self.process_line(p_args[1])
             p_val = FuncInfo(p_pred, (p, l))
-        elif p_pred_lower == "reflectpl":
+        elif p_pred == "reflect-pl":
             assert(len(p_args) == 2)
             p = self.process_point(p_args[0])
             l = self.process_line(p_args[1])
             p_val = FuncInfo(p_pred, (p, l))
-        elif p_pred_lower in ["orthocenter", "circumcenter", "centroid", "incenter"]:
+        elif p_pred in ["orthocenter", "circumcenter", "centroid", "incenter"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
-        elif p_pred_lower == "origin":
+        elif p_pred == "origin":
             assert(len(p_args) == 1)
             circ = self.process_circle(p_args[0])
-            p_val = FuncInfo("origin", (circ,))
-        elif p_pred_lower in ["amidpopp", "amidpsame"]:
+            p_val = FuncInfo(p_pred, (circ,))
+        elif p_pred in ["amidp-opp", "amidp-same"]:
             assert(len(p_args) == 3)
             ps = [self.process_point(p) for p in p_args]
             p_val = FuncInfo(p_pred, tuple(ps))
@@ -513,41 +517,36 @@ class InstructionReader:
         if not isinstance(l_info, tuple):
             raise NotImplementedError(f"[process_line] l_info must be tuple or string")
 
-        l_pred_lower = l_info[0].lower()
-        l_pred = CASE_FIX[l_pred_lower]
+        l_pred = l_info[0].lower()
         l_args = l_info[1:]
 
         l_val = None
 
-        if l_pred_lower == "line":
+        if l_pred == "line":
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
             l_val = FuncInfo("connecting", ps)
-        elif l_pred_lower in ["perpat", "paraat"]:
+        elif l_pred in ["perp-at", "para-at"]:
             assert(len(l_args) == 2)
             p = self.process_point(l_args[0])
             l = self.process_line(l_args[1])
-            l_val = FuncInfo(CASE_FIX[l_pred_lower], [p, l])
-        elif l_pred_lower == "perpbis":
+            l_val = FuncInfo(l_pred, [p, l])
+        elif l_pred == "perp-bis":
             assert(len(l_args) == 2)
             ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo("perpBis", ps)
-        elif l_pred_lower in ["isogonal", "isotomic"]:
+            l_val = FuncInfo(l_pred, ps)
+        elif l_pred in ["isogonal", "isotomic"]:
             assert(len(l_args) == 4)
             ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo(CASE_FIX[l_pred_lower], ps)
-        elif l_pred_lower == "ibisector":
+            l_val = FuncInfo(l_pred, ps)
+        elif l_pred in ["i-bisector", "e-bisector"]:
             assert(len(l_args) == 3)
             ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo("ibisector", ps)
-        elif l_pred_lower == "ebisector":
-            assert(len(l_args) == 3)
-            ps = [self.process_point(p) for p in l_args]
-            l_val = FuncInfo("ebisector", ps)
-        elif l_pred_lower == "reflectll":
+            l_val = FuncInfo(l_pred, ps)
+        elif l_pred == "reflect-ll":
             assert(len(l_args) == 2)
             ls = [self.process_line(l) for l in l_args]
-            l_val = FuncInfo("reflectLL", ls)
+            l_val = FuncInfo(l_pred, ls)
 
         if l_val is not None:
             L = Line(l_val)
@@ -564,32 +563,31 @@ class InstructionReader:
         if not isinstance(c_info, tuple):
             raise NotImplementedError(f"[process_circle] c_info must be tuple or string")
 
-        c_pred_lower = c_info[0].lower()
-        c_pred = CASE_FIX[c_pred_lower]
+        c_pred = c_info[0].lower()
         ps = [self.process_point(p) for p in c_info[1:]]
         c_val = None
 
-        if c_pred_lower == "circ":
+        if c_pred == "circ":
             assert(len(ps) == 3)
             c_val = FuncInfo("c3", ps)
-        elif c_pred_lower == "coa":
+        elif c_pred == "coa":
             assert(len(ps) == 2)
-            c_val = FuncInfo("coa", ps)
-        elif c_pred_lower == "diam":
+            c_val = FuncInfo(c_pred, ps)
+        elif c_pred == "diam":
             assert(len(ps) == 2)
             c_val = FuncInfo("diam", ps)
-        elif c_pred_lower == "circumcircle":
+        elif c_pred == "circumcircle":
             assert(len(ps) == 3)
             c_val = FuncInfo("circumcircle", ps)
-        elif c_pred_lower == "incircle":
+        elif c_pred == "incircle":
             assert(len(ps) == 3)
             c_val = FuncInfo("incircle", ps)
-        elif c_pred_lower == "excircle":
+        elif c_pred == "excircle":
             assert(len(ps) == 3)
             c_val = FuncInfo("excircle", ps)
-        elif c_pred_lower == "mixtilinearincircle":
+        elif c_pred == "mixtilinear-incircle":
             assert(len(ps) == 3)
-            c_val = FuncInfo("mixtilinearIncircle", ps)
+            c_val = FuncInfo(c_pred, ps)
 
         if c_val is not None:
             C = Circle(c_val)
@@ -607,37 +605,36 @@ class InstructionReader:
         if not isinstance(n_info, tuple):
             raise NotImplementedError(f"[process_number] n_info must be tuple or string")
 
-        n_pred_lower = n_info[0].lower()
-        n_pred = CASE_FIX[n_pred_lower]
+        n_pred = n_info[0].lower()
         n_args = n_info[1:]
 
-        if n_pred_lower == "dist":
+        if n_pred == "dist":
             assert(len(n_args) == 2)
             p1 = self.process_point(n_args[0])
             p2 = self.process_point(n_args[1])
             n_val = FuncInfo("dist", [p1, p2])
             return Num(n_val)
-        elif n_pred_lower in ["uangle", "area"]:
+        elif n_pred in ["uangle", "area"]:
             assert(len(n_args) == 3)
             p1, p2, p3 = [self.process_point(p) for p in n_args]
             n_val = FuncInfo(n_pred, [p1, p2, p3])
             return Num(n_val)
-        elif n_pred_lower == "radius":
+        elif n_pred == "radius":
             assert(len(n_args) == 1)
             circ = self.process_circle(n_args[0])
             n_val = FuncInfo("radius", [circ])
             return Num(n_val)
-        elif n_pred_lower == "diam":
+        elif n_pred == "diam":
             assert(len(n_args) == 1)
             circ = self.process_circle(n_args[0])
             n_val = FuncInfo("diam", [circ])
             return Num(n_val)
-        elif n_pred_lower in ["div", "add", "sub", "mul", "pow"]:
+        elif n_pred in ["div", "add", "sub", "mul", "pow"]:
             assert(len(n_args) == 2)
             n1, n2 = [self.process_number(n) for n in n_args]
             n_val = FuncInfo(n_pred, [n1, n2])
             return Num(n_val)
-        elif n_pred_lower in ["neg", "sqrt"]:
+        elif n_pred in ["neg", "sqrt"]:
             assert(len(n_args) == 1)
             n = self.process_number(n_args[0])
             n_val = FuncInfo(n_pred, [n])
@@ -648,30 +645,29 @@ class InstructionReader:
 
     def process_rs(self, rs_info):
 
-        if isinstance(rs_info, str) and rs_info.lower() == "rsarbitrary":
+        if isinstance(rs_info, str) and rs_info.lower() == "rs-arbitrary":
             return Root("arbitrary", list())
 
-        rs_pred_lower = rs_info[0].lower()
-        rs_pred = CASE_FIX[rs_pred_lower]
+        rs_pred = rs_info[0].lower()
         rs_args = rs_info[1:]
 
-        if rs_pred_lower == "rsneq":
+        if rs_pred == "rs-neq":
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
             return Root("neq", [p_neq])
-        elif rs_pred_lower == "rsclosertop":
+        elif rs_pred == "rs-closer-to-p":
             assert(len(rs_args) == 1)
             p_neq = self.process_point(rs_args[0])
-            return Root("closerToP", [p_neq])
-        elif rs_pred_lower == "rsclosertol":
+            return Root("closer-to-p", [p_neq])
+        elif rs_pred == "rs-closer-to-l":
             assert(len(rs_args) == 1)
             p_neq = self.process_line(rs_args[0])
-            return Root("closerToL", [p_neq])
-        elif rs_pred_lower == "rsoppsides":
+            return Root("closer-to-l", [p_neq])
+        elif rs_pred == "rs-opp-sides":
             assert(len(rs_args) == 2)
             opp_p = self.process_point(rs_args[0])
             dividing_line = self.process_line(rs_args[1])
-            return Root("oppSides", [opp_p, dividing_line])
+            return Root("opp-sides", [opp_p, dividing_line])
         else:
             raise NotImplementedError(f"[process_rs] Unsupported rs pred: {rs_pred}")
 

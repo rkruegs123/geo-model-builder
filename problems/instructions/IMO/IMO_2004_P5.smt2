@@ -1,8 +1,8 @@
 (param (A B C D) polygon)
-(assert (not (onLine D (ibisector A B C))))
-(assert (not (onLine B (ibisector C D A))))
+(assert (not (on-line D (i-bisector A B C))))
+(assert (not (on-line B (i-bisector C D A))))
 
-(param P point (inPoly A B C D))
+(param P point (in-poly A B C D))
 (assert (= (uangle P B C) (uangle D B A)))
 (assert (= (uangle P D C) (uangle B D A)))
 

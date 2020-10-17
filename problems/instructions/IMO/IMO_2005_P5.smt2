@@ -2,10 +2,10 @@
 (assert (cong B C D A))
 (assert (not (para (line B C) (line D A))))
 
-(param E point (onSeg B C))
-(param F point (onSeg D A))
+(param E point (on-seg B C))
+(param F point (on-seg D A))
 (assert (cong B E D F))
 
-(compute P point (interLL (line A C) (line B D)))
-(compute Q point (interLL (line B D) (line E F)))
-(compute R point (interLL (line E F) (line A C)))
+(compute P point (inter-ll (line A C) (line B D)))
+(compute Q point (inter-ll (line B D) (line E F)))
+(compute R point (inter-ll (line E F) (line A C)))

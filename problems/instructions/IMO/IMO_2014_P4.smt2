@@ -1,14 +1,14 @@
-(param (A B C) acuteTri)
-(param P point (onSeg B C))
-(param Q point (onSeg B C))
+(param (A B C) acute-tri)
+(param P point (on-seg B C))
+(param Q point (on-seg B C))
 
 (assert (= (uangle P A B) (uangle B C A)))
 (assert (= (uangle C A Q) (uangle A B C)))
 
-;; (assert (eqangle P A A B B C C A))
-;; (assert (eqangle C A A Q A B B C))
+;; (assert (eq-angle P A A B B C C A))
+;; (assert (eq-angle C A A Q A B B C))
 
-(compute M point (midpFrom P A))
-(compute N point (midpFrom Q A))
+(compute M point (midp-from P A))
+(compute N point (midp-from Q A))
 
-(confirm (onCirc (interLL (line B M) (line C N)) (circumcircle A B C)))
+(confirm (on-circ (inter-ll (line B M) (line C N)) (circumcircle A B C)))

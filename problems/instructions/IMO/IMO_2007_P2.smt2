@@ -1,12 +1,12 @@
 (param (B C D) polygon)
-(param E point (onCirc (circumcircle B C D)))
+(param E point (on-circ (circumcircle B C D)))
 
-(compute A point (interLL (paraAt D (line B C)) (paraAt B (line D C))))
+(compute A point (inter-ll (para-at D (line B C)) (para-at B (line D C))))
 
-(compute F point (interLC (line D C) (coa E C) (rsNeq C)))
-(assert (onSeg F D C))
+(compute F point (inter-lc (line D C) (coa E C) (rs-neq C)))
+(assert (on-seg F D C))
 
 (compute l line (line F A))
-(compute G point (interLL l (line B C)))
+(compute G point (inter-ll l (line B C)))
 
 (assert (cong E F E G))

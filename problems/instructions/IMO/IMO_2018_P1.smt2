@@ -1,12 +1,12 @@
-(param (A B C) acuteTri)
+(param (A B C) acute-tri)
 
 (compute Gamma circle (circumcircle A B C))
 
-(param D point (onSeg A B))
-(param E point (onSeg A C))
+(param D point (on-seg A B))
+(param E point (on-seg A C))
 (assert (cong A D A E))
 
-(compute F point (interLC (perpBis B D) Gamma (rsOppSides C (line A B))))
-(compute G point (interLC (perpBis C E) Gamma (rsOppSides B (line A C))))
+(compute F point (inter-lc (perp-bis B D) Gamma (rs-opp-sides C (line A B))))
+(compute G point (inter-lc (perp-bis C E) Gamma (rs-opp-sides B (line A C))))
 
 (confirm (para (line D E) (line F G)))

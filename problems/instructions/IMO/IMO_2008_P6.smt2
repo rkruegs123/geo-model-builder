@@ -4,12 +4,12 @@
 (compute omega_1 circle (incircle A B C))
 (compute omega_2 circle (incircle A D C))
 
-(param omega circle (tangentCL (line B A)))
-(assert (onRay (interLC (line B A) omega rsArbitrary) B A))
-(assert (not (onSeg (interLC (line B A) omega rsArbitrary) B A)))
+(param omega circle (tangent-cl (line B A)))
+(assert (on-ray (inter-lc (line B A) omega rs-arbitrary) B A))
+(assert (not (on-seg (inter-lc (line B A) omega rs-arbitrary) B A)))
 
-(assert (tangentLC (line B C) omega))
-(assert (onRay (interLC (line B C) omega rsArbitrary) B C))
+(assert (tangent-lc (line B C) omega))
+(assert (on-ray (inter-lc (line B C) omega rs-arbitrary) B C))
 
-(assert (tangentLC (line A D) omega))
-(assert (tangentLC (line C D) omega))
+(assert (tangent-lc (line A D) omega))
+(assert (tangent-lc (line C D) omega))

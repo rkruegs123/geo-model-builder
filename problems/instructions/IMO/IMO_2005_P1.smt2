@@ -1,13 +1,13 @@
-(param (A B C) equiTri)
+(param (A B C) equi-tri)
 
-(param A1 point (onSeg B C))
-(param A2 point (onSeg A1 C))
+(param A1 point (on-seg B C))
+(param A2 point (on-seg A1 C))
 
-(param B1 point (onSeg C A))
-(param B2 point (onSeg B1 A))
+(param B1 point (on-seg C A))
+(param B2 point (on-seg B1 A))
 
-(param C1 point (onSeg A B))
-(param C2 point (onSeg C1 B))
+(param C1 point (on-seg A B))
+(param C2 point (on-seg C1 B))
 
 (assert (cong A1 A2 A2 B1))
 (assert (cong A1 A2 B1 B2))

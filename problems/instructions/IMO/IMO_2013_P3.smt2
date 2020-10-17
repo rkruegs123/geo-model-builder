@@ -4,6 +4,6 @@
 (compute B1 point (foot (excenter B A C) (line C A)))
 (compute C1 point (foot (excenter C B A) (line A B)))
 
-(assert (onCirc (circumcenter A1 B1 C1) (circumcircle A B C)))
+(assert (on-circ (circumcenter A1 B1 C1) (circumcircle A B C)))
 
 ;; (confirm (rightTri A B C))

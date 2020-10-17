@@ -1,11 +1,11 @@
 (param (A B C) triangle)
-(param P point (inPoly A B C))
+(param P point (in-poly A B C))
 (compute Gamma circle (circumcircle A B C))
 
-(compute K point (interLC (line A P) Gamma (rsNeq A)))
-(compute L point (interLC (line B P) Gamma (rsNeq B)))
-(compute M point (interLC (line C P) Gamma (rsNeq C)))
+(compute K point (inter-lc (line A P) Gamma (rs-neq A)))
+(compute L point (inter-lc (line B P) Gamma (rs-neq B)))
+(compute M point (inter-lc (line C P) Gamma (rs-neq C)))
 
-(compute S point (interLL (perpAt C (line C (origin Gamma))) (line A B)))
+(compute S point (inter-ll (perp-at C (line C (origin Gamma))) (line A B)))
 (assert (cong S C S P))
 (confirm (cong M K M L))

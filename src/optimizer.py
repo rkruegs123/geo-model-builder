@@ -54,7 +54,8 @@ class Optimizer(ABC):
         super().__init__()
 
     def preprocess(self):
-        for i in tqdm(self.instructions, desc="Processing instructions..."):
+        for i in self.instructions:
+        # for i in tqdm(self.instructions, desc="Processing instructions..."):
             self.process_instruction(i)
 
         # After we've processed the instructions, process all the unnamed things
@@ -101,25 +102,25 @@ class Optimizer(ABC):
             elif head == "orthocenter": return self.orthocenter(*self.lookup_pts(args))
             elif head == "incenter": return self.incenter(*self.lookup_pts(args))
             elif head == "centroid": return self.centroid(*self.lookup_pts(args))
-            elif head == "amidpOpp": return self.amidp_opp(*self.lookup_pts(args))
-            elif head == "amidpSame": return self.amidp_same(*self.lookup_pts(args))
+            elif head == "amidp-opp": return self.amidp_opp(*self.lookup_pts(args))
+            elif head == "amidp-same": return self.amidp_same(*self.lookup_pts(args))
             elif head == "excenter": return self.excenter(*self.lookup_pts(args))
             elif head == "foot":
                 X, l = args
-                foot_p = Point(FuncInfo("interLL", [l, Line(FuncInfo("perpAt", [X, l]))]))
+                foot_p = Point(FuncInfo("inter-ll", [l, Line(FuncInfo("perp-at", [X, l]))]))
                 return self.lookup_pt(foot_p)
-            elif head == "harmonicConj": return self.harmonic_l_conj(*self.lookup_pts(args))
+            elif head == "harmonic-conj": return self.harmonic_l_conj(*self.lookup_pts(args))
             elif head == "origin":
                 assert(len(args) == 1)
                 circ = args[0]
                 cnf = self.circ2nf(circ)
                 return cnf.center
-            elif head == "interLL":
+            elif head == "inter-ll":
                 l1, l2 = args
                 lnf1 = self.line2nf(l1)
                 lnf2 = self.line2nf(l2)
                 return self.inter_ll(lnf1, lnf2)
-            elif head == "interLC":
+            elif head == "inter-lc":
                 l, c, root_select = args
                 lnf = self.line2nf(l)
                 cnf = self.circ2nf(c)
@@ -130,7 +131,7 @@ class Optimizer(ABC):
                     rand_name = get_random_string(6)
                     self.make_lc_intersect(rand_name, lnf, cnf)
                 return self.inter_lc(lnf, cnf, root_select)
-            elif head == "interCC":
+            elif head == "inter-cc":
                 c1, c2, root_select = args
                 cnf1 = self.circ2nf(c1)
                 cnf2 = self.circ2nf(c2)
@@ -141,18 +142,18 @@ class Optimizer(ABC):
                     rand_name = get_random_string(6)
                     self.make_lc_intersect(rand_name, self.radical_axis(cnf1, cnf2), cnf1)
                 return self.inter_cc(cnf1, cnf2, root_select)
-            elif head == "isogonalConj": return self.isogonal_conj(*self.lookup_pts(args))
-            elif head == "isotomicConj": return self.isotomic_conj(*self.lookup_pts(args))
+            elif head == "isogonal-conj": return self.isogonal_conj(*self.lookup_pts(args))
+            elif head == "isotomic-conj": return self.isotomic_conj(*self.lookup_pts(args))
             elif head == "inverse": return self.inverse(*self.lookup_pts(args))
-            elif head == "reflectPL":
+            elif head == "reflect-pl":
                 x, l = args
                 X = self.lookup_pt(x)
                 foot_X = self.lookup_pt(Point(FuncInfo("foot", [x, l])))
                 vec_X_to_l = foot_X - X
                 return X + vec_X_to_l.smul(2)
 
-            elif head == "midpFrom": return self.midp_from(*self.lookup_pts(args))
-            elif head == "mixtilinearIncenter": return self.mixtilinear_incenter(*self.lookup_pts(args))
+            elif head == "midp-from": return self.midp_from(*self.lookup_pts(args))
+            elif head == "mixtilinear-incenter": return self.mixtilinear_incenter(*self.lookup_pts(args))
 
             else:
                 raise NotImplementedError(f"[lookup_pt] Unsupported head {head}")
@@ -346,12 +347,12 @@ class Optimizer(ABC):
     def sample(self, i):
         s_method = i.sampler
         s_args = i.args
-        if s_method == "acuteIsoTri": self.sample_triangle(i.points, iso=s_args[0], acute=True)
-        elif s_method == "acuteTri": self.sample_triangle(i.points, acute=True)
-        elif s_method == "equiTri": self.sample_triangle(i.points, equi=True)
-        elif s_method == "isoTri": self.sample_triangle(i.points, iso=s_args[0])
+        if s_method == "acute-iso-tri": self.sample_triangle(i.points, iso=s_args[0], acute=True)
+        elif s_method == "acute-tri": self.sample_triangle(i.points, acute=True)
+        elif s_method == "equi-tri": self.sample_triangle(i.points, equi=True)
+        elif s_method == "iso-tri": self.sample_triangle(i.points, iso=s_args[0])
         elif s_method == "polygon": self.sample_polygon(i.points)
-        elif s_method == "rightTri": self.sample_triangle(i.points, right=s_args[0])
+        elif s_method == "right-tri": self.sample_triangle(i.points, right=s_args[0])
         elif s_method == "triangle": self.sample_triangle(i.points)
         else: raise NotImplementedError(f"[sample] NYI: Sampling method {s_method}")
 
@@ -474,35 +475,6 @@ class Optimizer(ABC):
             P = self.lookup_pt(i.computation, str(obj_name))
             self.register_pt(obj_name, P)
 
-            # Add drawings
-            """
-            if c_method == "midp":
-                A, B = self.lookup_pts(c_args[1])
-                self.segments.append((A, B))
-            elif c_method == "midpFrom":
-                M, A = self.lookup_pts(c_args[1])
-                self.segments.append((P, A))
-            elif c_method == "circumcenter":
-                A, _, _ = self.lookup_pts(c_args[1])
-                # self.unnamed_circles.append((P, self.dist(P, A))) # P is the circumcenter
-            elif c_method == "incenter":
-                A, B, C = self.lookup_pts(c_args[1])
-                # self.unnamed_circles.append((P, self.inradius(A, B, C))) # P is the incenter
-            elif c_method == "excenter":
-                A, B, C = self.lookup_pts(c_args[1])
-                # self.unnamed_circles.append((P, self.exradius(A, B, C))) # P is the excenter
-            elif c_method == "mixtilinearIncenter":
-                A, B, C = self.lookup_pts(c_args[1])
-                # self.unnamed_circles.append((P, self.mixtilinear_inradius(A, B, C))) # P is the mixtilinearIncenter
-            elif c_method == "inverse":
-                X, O, A = self.lookup_pts(c_args[1])
-                # self.unnamed_circles.append((O, self.dist(O, A)))
-            elif c_method == "harmonicLConj":
-                X, A, B = self.lookup_pts(ps)
-                self.segments.append((A, B))
-                self.segments.append((X, P))
-            """
-
         elif isinstance(i.computation, Line):
             L = self.line2nf(i.computation)
             self.register_line(obj_name, L)
@@ -523,18 +495,18 @@ class Optimizer(ABC):
         p_args = i.parameterization
         param_method = i.parameterization
         if p_method == "coords": self.parameterize_coords(p_name)
-        elif p_method == "inPoly": self.parameterize_in_poly(p_name, p_args[1])
-        elif p_method == "onCirc": self.parameterize_on_circ(p_name, p_args[1])
-        elif p_method == "onLine": self.parameterize_on_line(p_name, p_args[1])
-        elif p_method == "onRay": self.parameterize_on_ray(p_name, p_args[1])
-        elif p_method == "onRayOpp": self.parameterize_on_ray_opp(p_name, p_args[1])
-        elif p_method == "onSeg": self.parameterize_on_seg(p_name, p_args[1])
+        elif p_method == "in-poly": self.parameterize_in_poly(p_name, p_args[1])
+        elif p_method == "on-circ": self.parameterize_on_circ(p_name, p_args[1])
+        elif p_method == "on-line": self.parameterize_on_line(p_name, p_args[1])
+        elif p_method == "on-ray": self.parameterize_on_ray(p_name, p_args[1])
+        elif p_method == "on-ray-opp": self.parameterize_on_ray_opp(p_name, p_args[1])
+        elif p_method == "on-seg": self.parameterize_on_seg(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
-        elif p_method == "throughL": self.parameterize_line_through(p_name, p_args[1])
-        elif p_method == "tangentLC": self.parameterize_line_tangentC(p_name, p_args[1])
-        elif p_method == "tangentCC": self.parameterize_circ_tangentC(p_name, p_args[1])
-        elif p_method == "tangentCL": self.parameterize_circ_tangentL(p_name, p_args[1])
-        elif p_method == "throughC": self.parameterize_circ_through(p_name, p_args[1])
+        elif p_method == "through-l": self.parameterize_line_through(p_name, p_args[1])
+        elif p_method == "tangent-lc": self.parameterize_line_tangentC(p_name, p_args[1])
+        elif p_method == "tangent-cc": self.parameterize_circ_tangentC(p_name, p_args[1])
+        elif p_method == "tangent-cl": self.parameterize_circ_tangentL(p_name, p_args[1])
+        elif p_method == "through-c": self.parameterize_circ_through(p_name, p_args[1])
         elif p_method == "circle": self.parameterize_circ(p_name)
         elif p_method == "origin": self.parameterize_circ_centered_at(p_name, p_args[1])
         elif p_method == "radius": self.parameterize_circ_with_radius(p_name, p_args[1])
@@ -566,7 +538,7 @@ class Optimizer(ABC):
 
         P1 = self.parameterize_on_circ(Point(f"p1"), [c], save_name=False)
         P1 = Point(FuncInfo('__val__', [P1]))
-        L = self.line2nf(Line(FuncInfo("perpAt", [P1, Point(FuncInfo("origin", [c])), P1])))
+        L = self.line2nf(Line(FuncInfo("perp-at", [P1, Point(FuncInfo("origin", [c])), P1])))
 
         return self.register_line(l, L)
 
@@ -624,7 +596,7 @@ class Optimizer(ABC):
         interP = self.parameterize_on_line(Point(f"tangency_point"), [l], save_name=False)
         interP = Point(FuncInfo('__val__', [interP]))
         O = self.parameterize_on_line(Point(f"origin"),
-                                      [Line(FuncInfo("perpAt",
+                                      [Line(FuncInfo("perp-at",
                                                      [interP, l]))], save_name=False)
         C = CircleNF(center=O, radius=self.dist(O, interP.val.args[0]))
         return self.register_circ(c, C)
@@ -744,13 +716,13 @@ class Optimizer(ABC):
             self.register_goal(goal_str, val, negate)
 
     def assertion_vals(self, pred, args):
-        if pred == "amidpOpp":
+        if pred == "amidp-opp":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_opp(B, C, A))]
-        elif pred == "amidpSame":
+        elif pred == "amidp-same":
             M, B, C, A = self.lookup_pts(args)
             return [self.dist(M, self.amidp_same(B, C, A))]
-        elif pred == "between": return self.between_gap(*self.lookup_pts(args))
+        # elif pred == "between": return self.between_gap(*self.lookup_pts(args))
         elif pred == "circumcenter":
             O, A, B, C = self.lookup_pts(args)
             # self.unnamed_circles.append((O, self.dist(O, A)))
@@ -763,14 +735,14 @@ class Optimizer(ABC):
             return diffs
         elif pred == "concur":
             l1, l2, l3 = args
-            inter_12 = Point(FuncInfo("interLL", [l1, l2]))
-            return self.assertion_vals("onLine", [inter_12, l3])
+            inter_12 = Point(FuncInfo("inter-ll", [l1, l2]))
+            return self.assertion_vals("on-line", [inter_12, l3])
         elif pred == "cong":
             A, B, C, D = self.lookup_pts(args)
             # if A in [C, D]: self.unnamed_circles.append((A, self.dist(A, B)))
             # elif B in [C, D]: self.unnamed_circles.append((B, self.dist(A, B)))
             return [self.cong_diff(A, B, C, D)]
-        elif pred == "contri":
+        elif pred == "con-tri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
             # self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             return [self.eqangle6_diff(A, B, C, P, Q, R),
@@ -786,16 +758,16 @@ class Optimizer(ABC):
             diffs = [self.eqangle6_diff(A, B, D, A, C, D) for A, B, C, D in itertools.combinations(cycl_args, 4)]
             # self.unnamed_circles.append((O, self.dist(O, cycl_args[0])))
             return diffs
-        elif pred == "distLt":
+        elif pred == "dist-lt":
             X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(X, Y) - dist(A, B))]
-        elif pred == "distGt":
+        elif pred == "dist-gt":
             X, Y, A, B = self.lookup_pts(args)
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
-        elif pred == "eqN":
+        elif pred == "eq-n":
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.abs(n1 - n2)]
-        elif pred == "eqP":
+        elif pred == "eq-p":
             A, B = self.lookup_pts(args)
             return [self.dist(A, B)]
         elif pred == "gte":
@@ -812,47 +784,47 @@ class Optimizer(ABC):
             # n1 < n2
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.max(self.const(0.0), (n1 + 1e-1) - n2)]
-        elif pred == "eqangle": return [self.eqangle8_diff(*self.lookup_pts(args))]
-        elif pred == "eqoangle":
-            A, B, C, P, Q, R = self.lookup_pts(args)
-            return [self.angle(A, B, C) - self.angle(P, Q, R)]
-        elif pred == "eqratio": return [self.eqratio_diff(*self.lookup_pts(args))]
+        elif pred == "eq-angle": return [self.eqangle8_diff(*self.lookup_pts(args))]
+        # elif pred == "eqoangle":
+            # A, B, C, P, Q, R = self.lookup_pts(args)
+            # return [self.angle(A, B, C) - self.angle(P, Q, R)]
+        elif pred == "eq-ratio": return [self.eqratio_diff(*self.lookup_pts(args))]
         elif pred == "foot":
             f, x, l = args
             F, X = self.lookup_pts([f, x])
             lnf = self.line2nf(l)
             A, B = self.lnf2pp(lnf)
             return [self.coll_phi(F, A, B), self.perp_phi(F, X, A, B)]
-        elif pred == "ibisector":
+        elif pred == "i-bisector":
             X, B, A, C = self.lookup_pts(args)
             # self.segments.extend([(B, A), (A, X), (A, C)])
             return [self.eqangle8_diff(B, A, A, X, X, A, A, C)]
         elif pred == "incenter":
             I, A, B, C = self.lookup_pts(args)
             return [self.dist(I, self.incenter(A, B, C))]
-        elif pred == "inPoly": return self.in_poly_phis(*self.lookup_pts(args))
-        elif pred == "interLL":
+        elif pred == "in-poly": return self.in_poly_phis(*self.lookup_pts(args))
+        elif pred == "inter-ll":
             X, A, B, C, D = self.lookup_pts(args)
             return [self.coll_phi(X, A, B), self.coll_phi(X, C, D)]
-        elif pred == "isogonalConj":
+        elif pred == "isogonal-conj":
             X, Y, A, B, C = self.lookup_pts(args)
             return [self.dist(X, self.isogonal_conj(Y, A, B, C))]
         elif pred == "midp":
             M, A, B = self.lookup_pts(args)
             return [self.dist(M, self.midp(A, B))]
-        elif pred == "onCirc":
+        elif pred == "on-circ":
             X, C = args
             [X] = self.lookup_pts([X])
             (O, r) = self.circ2nf(C)
             return [self.dist(O, X) - r]
-        elif pred == "onLine":
+        elif pred == "on-line":
             [X, l] = args
             [X] = self.lookup_pts([X])
             lp1, lp2 = self.line2twoPts(l)
             return [self.coll_phi(X, lp1, lp2)]
-        elif pred == "onRay": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
-        elif pred == "onSeg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
-        elif pred == "oppSides":
+        elif pred == "on-ray": return [self.coll_phi(*self.lookup_pts(args))] + self.onray_gap(*self.lookup_pts(args))
+        elif pred == "on-seg": return [self.coll_phi(*self.lookup_pts(args))] + self.between_gap(*self.lookup_pts(args))
+        elif pred == "opp-sides":
             a, b, l = args
             A, B = self.lookup_pts([a, b])
             lnf = self.line2nf(l)
@@ -877,30 +849,25 @@ class Optimizer(ABC):
                 P1, P2 = self.line2twoPts(l1)
                 P3, P4 = self.line2twoPts(l2)
                 return [self.para_phi(P1, P2, P3, P4)]
-        elif pred == "reflectPL":
+        elif pred == "reflect-pl":
             X, Y, A, B = self.lookup_pts(args)
             return [self.perp_phi(X, Y, A, B), self.cong_diff(A, X, A, Y)]
         elif pred == "right":
             A, B, C = self.lookup_pts(args)
             return [self.right_phi(A, B, C)]
-        # elif pred == "rightTri":
-            # A, B, C = self.lookup_pts(args)
-            # return [tf.reduce_min([self.right_phi(B, A, C),
-                                   # self.right_phi(A, B, C),
-                                   # self.right_phi(B, C, A)])]
-        elif pred == "sameSide":
+        elif pred == "same-side":
             a, b, l = args
             A, B = self.lookup_pts([a, b])
             lnf = self.line2nf(l)
             X, Y = self.lnf2pp(lnf)
             return [self.max(self.const(0.0), -self.side_score_prod(A, B, X, Y))]
-        elif pred == "simtri":
+        elif pred == "sim-tri":
             [A, B, C, P, Q, R] = self.lookup_pts(args)
             # self.segments.extend([(A, B), (B, C), (C, A), (P, Q), (Q, R), (R, P)])
             # this is *too* easy to optimize, eqangle properties don't end up holding
             # return [eqratio_diff(A, B, B, C, P, Q, Q, R), eqratio_diff(B, C, C, A, Q, R, R, P), eqratio_diff(C, A, A, B, R, P, P, Q)]
             return [self.eqangle6_diff(A, B, C, P, Q, R), self.eqangle6_diff(B, C, A, Q, R, P), self.eqangle6_diff(C, A, B, R, P, Q)]
-        elif pred == "tangentCC":
+        elif pred == "tangent-cc":
             # https://mathworld.wolfram.com/TangentCircles.html
             # Could distinguish b/w internally and externally if desired
             c1, c2 = args
@@ -912,26 +879,26 @@ class Optimizer(ABC):
             rhs_1 = (r1 - r2) ** 2
             rhs_2 = (r1 + r2) ** 2
             return [tf.reduce_min([self.abs(lhs - rhs_1), self.abs(lhs - rhs_2)])]
-        elif pred == "tangentLC":
+        elif pred == "tangent-lc":
             l, c = args
-            inter_point = Point(FuncInfo("interLC", [l, c, Root("arbitrary", list())]))
-            return self.assertion_vals("tangentAtLC", [inter_point, l, c])
-        elif pred == "tangentAtCC":
+            inter_point = Point(FuncInfo("inter-lc", [l, c, Root("arbitrary", list())]))
+            return self.assertion_vals("tangent-at-lc", [inter_point, l, c])
+        elif pred == "tangent-at-cc":
             p, c1, c2 = args
             c1_center = Point(FuncInfo("origin", [c1]))
             c2_center = Point(FuncInfo("origin", [c2]))
 
-            p_on_c1 = self.assertion_vals("onCirc", [p, c1])
-            p_on_c2 = self.assertion_vals("onCirc", [p, c2])
+            p_on_c1 = self.assertion_vals("on-circ", [p, c1])
+            p_on_c2 = self.assertion_vals("on-circ", [p, c2])
             tangency = self.assertion_vals("coll", [p, c1_center, c2_center])
             return p_on_c1 + p_on_c2 + tangency
-        elif pred == "tangentAtLC":
+        elif pred == "tangent-at-lc":
             p, l, c = args
             circ_center = Point(FuncInfo("origin", [c]))
             circ_center_to_p = Line(FuncInfo("connecting", [circ_center, p]))
 
-            p_on_line = self.assertion_vals("onLine", [p, l])
-            p_on_circ = self.assertion_vals("onCirc", [p, c])
+            p_on_line = self.assertion_vals("on-line", [p, l])
+            p_on_circ = self.assertion_vals("on-circ", [p, c])
             tangency = self.assertion_vals("perp", [l, circ_center_to_p])
             return p_on_line + p_on_circ + tangency
         else: raise NotImplementedError(f"[assertion_vals] NYI: {pred}")
@@ -1306,51 +1273,51 @@ class Optimizer(ABC):
             elif pred == "isotomic":
                 D, A, B, C = self.lookup_pts(args)
                 return A, self.isotomic_conj(D, A, B, C)
-            elif pred == "paraAt":
+            elif pred == "para-at":
                 x, l = args
                 X = self.lookup_pt(x)
                 L = self.line2nf(l)
                 A, B = self.lnf2pp(L)
                 return X, X + B - A
-            elif pred == "perpAt":
+            elif pred == "perp-at":
                 x, l = args
                 X = self.lookup_pt(x)
                 L = self.line2nf(l)
                 A, B = self.lnf2pp(L)
                 return X, X + self.rotate_counterclockwise_90(A - B)
-            elif pred == "perpBis":
+            elif pred == "perp-bis":
                 a, b = args
                 l_ab = Line(FuncInfo("connecting", [a, b]))
                 m_ab = Point(FuncInfo("midp", [a, b]))
-                return self.line2twoPts(Line(FuncInfo("perpAt", [m_ab, l_ab])))
+                return self.line2twoPts(Line(FuncInfo("perp-at", [m_ab, l_ab])))
             elif pred == "mediator":
                 A, B = self.lookup_pts(args)
                 M = self.midp(A, B)
                 return M, M + self.rotate_counterclockwise_90(A - B)
-            elif pred == "ibisector":
+            elif pred == "i-bisector":
                 A, B, C = self.lookup_pts(args)
                 X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
                 M = self.midp(X, C)
                 return B, M
-            elif pred == "ebisector":
+            elif pred == "e-bisector":
                 A, B, C = self.lookup_pts(args)
                 X = B + (A - B).smul(self.dist(B, C) / self.dist(B, A))
                 M = self.midp(X, C)
                 Y = B + self.rotate_counterclockwise_90(M - B)
                 return B, Y
-            elif pred == "eqoangle":
-                B, C, D, E, F = self.lookup_pts(args)
-                theta = self.angle(D, E, F)
-                X = B + self.rotate_counterclockwise(theta, C - B)
-                # self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
+            # elif pred == "eqoangle":
+                # B, C, D, E, F = self.lookup_pts(args)
+                # theta = self.angle(D, E, F)
+                # X = B + self.rotate_counterclockwise(theta, C - B)
+                # # self.segments.extend([(A, B), (B, C), (P, Q), (Q, R)])
                 return B, X
-            elif pred == "reflectLL":
+            elif pred == "reflect-ll":
                 l1, l2 = args
                 lnf1 = self.line2nf(l1)
                 p1, p2 = self.lnf2pp(lnf1)
-                refl_p1 = Point(FuncInfo("reflectPL", [Point(FuncInfo("__val__", [p1])), l2]))
+                refl_p1 = Point(FuncInfo("reflect-pl", [Point(FuncInfo("__val__", [p1])), l2]))
                 refl_p1 = self.lookup_pt(refl_p1)
-                refl_p2 = Point(FuncInfo("reflectPL", [Point(FuncInfo("__val__", [p2])), l2]))
+                refl_p2 = Point(FuncInfo("reflect-pl", [Point(FuncInfo("__val__", [p2])), l2]))
                 refl_p2 = self.lookup_pt(refl_p2)
                 return refl_p1, refl_p2
             else:
@@ -1450,7 +1417,7 @@ class Optimizer(ABC):
                 A, B, C = self.lookup_pts(args)
                 I = self.excenter(A, B, C)
                 return CircleNF(center=I, radius=self.exradius(A, B, C))
-            elif pred == "mixtilinearIncircle":
+            elif pred == "mixtilinear-incircle":
                 A, B, C = self.lookup_pts(args)
                 I = self.mixtilinear_incenter(A, B, C)
                 return CircleNF(center=I, radius=self.mixtilinear_inradius(A, B, C))
@@ -1477,11 +1444,11 @@ class Optimizer(ABC):
         if pred == "neq":
             [pt] = self.lookup_pts(rs_args)
             return self.cond(self.pt_neq(P1, pt), lambda: P1, lambda: P2)
-        elif pred == "closerToP":
+        elif pred == "closer-to-p":
             [pt] = self.lookup_pts(rs_args)
             test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
             return self.cond(test, lambda: P1, lambda: P2)
-        elif pred == "closerToL":
+        elif pred == "closer-to-l":
             [l] = rs_args
             P1_foot = Point(FuncInfo("foot", [Point(FuncInfo("__val__", [P1])), l]))
             P1_foot = self.lookup_pt(P1_foot)
@@ -1489,15 +1456,15 @@ class Optimizer(ABC):
             P2_foot = self.lookup_pt(P2_foot)
             test = self.lte(self.sqdist(P1, P1_foot), self.sqdist(P2, P2_foot))
             return self.cond(test, lambda: P1, lambda: P2)
-        elif pred == "furtherFrom":
-            [pt] = self.lookup_pts(rs_args)
-            test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
-            return self.cond(test, lambda: P1, lambda: P2)
-        elif pred == "oppSides":
+        # elif pred == "furtherFrom":
+            # [pt] = self.lookup_pts(rs_args)
+            # test = self.lt(self.sqdist(P2, pt), self.sqdist(P1, pt))
+            # return self.cond(test, lambda: P1, lambda: P2)
+        elif pred == "opp-sides":
             [pt] = self.lookup_pts([rs_args[0]])
             a, b = self.lnf2pp(self.line2nf(rs_args[1]))
             return self.cond(self.opp_sides(P1, pt, a, b), lambda: P1, lambda: P2)
-        elif pred == "sameSide":
+        elif pred == "same-side":
             [pt] = self.lookup_pts([rs_args[0]])
             a, b = self.lnf2pp(self.line2nf(rs_args[1]))
             return self.cond(self.same_side(P1, pt, a, b), lambda: P1, lambda: P2)
@@ -1513,7 +1480,8 @@ class Optimizer(ABC):
             A, B = name2pt[a], name2pt[b]
             d = self.dist(A, B)
             if d < min_dist:
-                print(f"DUP: {a} {b}")
+                if self.opts['verbosity'] >= 0:
+                    print(f"DUP: {a} {b}")
                 return False
         return True
 

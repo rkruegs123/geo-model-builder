@@ -79,6 +79,7 @@ def get_random_string(length):
     return result_str
 
 
+"""
 CASE_FIX = {
     "acuteisotri": "acuteIsoTri",
     "acutetri": "acuteTri",
@@ -172,3 +173,4 @@ CASE_FIX = {
     "triangle": "triangle",
     "uangle": "uangle"
 }
+"""
