@@ -792,7 +792,7 @@ class Optimizer(ABC):
             return [self.max(self.const(0.0), self.dist(A, B) - self.dist(X, Y))]
         elif pred == "eqN":
             n1, n2 = [self.eval_num(n) for n in args]
-            return [(n1 - n2) ** 2]
+            return [self.abs(n1 - n2)]
         elif pred == "eqP":
             A, B = self.lookup_pts(args)
             return [self.dist(A, B)]
