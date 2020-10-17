@@ -318,9 +318,9 @@ class InstructionReader:
         elif pred == "eq" or pred == "=":
             assert(len(args) == 2)
             if all([isinstance(t, Num) for t in args]):
-                pred = "eqN"
+                pred = "eqn"
             elif all([isinstance(t, Point) for t in args]):
-                pred = "eqP"
+                pred = "eqp"
             else:
                 raise RuntimeError("Invalid usage of eq")
         elif pred == "foot":
