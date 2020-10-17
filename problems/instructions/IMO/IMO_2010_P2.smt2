@@ -7,7 +7,7 @@
 (assert (sameSide D E (line B C)))
 
 (param F point (onSeg B C))
-(assert (eqN (uangle B A F) (uangle C A E)))
+(assert (= (uangle B A F) (uangle C A E)))
 (assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))
 
 (compute G point (midp I F))

@@ -315,14 +315,14 @@ class InstructionReader:
         elif pred == "cycl":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "eqn" or pred == "=":
-            pred = "eqn"
+        elif pred == "eq" or pred == "=":
             assert(len(args) == 2)
-            assert(all([isinstance(t, Num) for t in args]))
-        elif pred == "eqp" or pred == "=":
-            pred = "eqp"
-            assert(len(args) == 2)
-            assert(all([isinstance(t, Point) for t in args]))
+            if all([isinstance(t, Num) for t in args]):
+                pred = "eqN"
+            elif all([isinstance(t, Point) for t in args]):
+                pred = "eqP"
+            else:
+                raise RuntimeError("Invalid usage of eq")
         elif pred == "foot":
             assert(len(args) == 3)
             assert(isinstance(args[0], Point) and isinstance(args[1], Point))

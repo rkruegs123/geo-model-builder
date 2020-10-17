@@ -8,4 +8,4 @@
 (compute E point (interLL (ibisector A B C) (line C A)))
 
 (compute K point (incenter A D C))
-(assert (eqN (uangle B E K) (div pi 4)))
+(assert (= (uangle B E K) (div pi 4)))

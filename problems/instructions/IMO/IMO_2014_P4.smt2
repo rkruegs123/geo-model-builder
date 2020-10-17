@@ -2,8 +2,8 @@
 (param P point (onSeg B C))
 (param Q point (onSeg B C))
 
-(assert (eqN (uangle P A B) (uangle B C A)))
-(assert (eqN (uangle C A Q) (uangle A B C)))
+(assert (= (uangle P A B) (uangle B C A)))
+(assert (= (uangle C A Q) (uangle A B C)))
 
 ;; (assert (eqangle P A A B B C C A))
 ;; (assert (eqangle C A A Q A B B C))
