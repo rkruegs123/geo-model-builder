@@ -36,7 +36,7 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
 
         solver = TfOptimizer(instructions, opts,
                              reader.unnamed_points, reader.unnamed_lines, reader.unnamed_circles,
-                             reader.segments, g)
+                             reader.segments, reader.seg_colors, g)
         solver.preprocess()
         filtered_models = solver.solve()
         # print(filtered_models)

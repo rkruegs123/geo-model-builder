@@ -10,7 +10,7 @@ UNNAMED_ALPHA = 0.1
 MIN_AXIS_VAL = -20
 MAX_AXIS_VAL = 20
 
-class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
+class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "seg_colors", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
 
         # Plot named points
@@ -30,8 +30,8 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         ax.scatter(u_xs, u_ys, c="black", alpha=UNNAMED_ALPHA)
 
         # Plot segments (never named)
-        for p1, p2 in self.segments:
-            plt.plot([p1.x, p2.x],[p1.y, p2.y])
+        for (p1, p2), c in zip(self.segments, self.seg_colors):
+            plt.plot([p1.x, p2.x],[p1.y, p2.y], c=c)
 
         # Plot unnamed circles (always unnamed before named)
         for O, r in self.unnamed_circles:

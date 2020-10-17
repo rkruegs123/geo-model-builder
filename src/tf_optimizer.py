@@ -24,12 +24,12 @@ class TfPoint(collections.namedtuple("TfPoint", ["x", "y"])):
 
 class TfOptimizer(Optimizer):
 
-    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, graph):
+    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, seg_colors, graph):
         # tfcfg = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 3})
         tfcfg = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
         self.sess = tf.Session(graph=graph, config=tfcfg)
 
-        super().__init__(instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments)
+        super().__init__(instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, seg_colors)
 
     def get_point(self, x, y):
         return TfPoint(x, y)
@@ -291,7 +291,7 @@ class TfOptimizer(Optimizer):
 
         return Diagram(
             named_points=named_pt_assn, named_lines=named_line_assn, named_circles=named_circ_assn,
-            segments=segments, unnamed_points=unnamed_points, unnamed_lines=unnamed_lines,
+            segments=segments, seg_colors=self.seg_colors, unnamed_points=unnamed_points, unnamed_lines=unnamed_lines,
             unnamed_circles=unnamed_circles_assn, ndgs=ndgs, goals=goals)
 
     def run(self, x):

@@ -1,6 +1,7 @@
 import pdb
 import argparse
 import math
+import numpy as np
 
 from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
 from constraint import Constraint
@@ -24,6 +25,7 @@ class InstructionReader:
         self.unnamed_lines = list()
         self.unnamed_circles = list()
         self.segments = list()
+        self.seg_colors = list()
 
         cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
@@ -106,8 +108,10 @@ class InstructionReader:
         else:
             raise RuntimeError("Invalid joint param method")
 
+        n_gon_color = np.random.rand(3)
         for i in range(len(ps)):
             self.segments.append((ps[i], ps[(i+1) % (len(ps))]))
+            self.seg_colors.append(n_gon_color)
 
 
     def compute(self, cmd):

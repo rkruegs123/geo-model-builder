@@ -24,7 +24,7 @@ LineNF = collections.namedtuple("LineNF", ["n", "r"])
 
 
 class Optimizer(ABC):
-    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments):
+    def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, seg_colors):
 
         self.losses = dict()
         self.has_loss = False
@@ -41,6 +41,7 @@ class Optimizer(ABC):
         self.name2circ = dict()
 
         self.segments = segments
+        self.seg_colors = seg_colors
         self.unnamed_points = unnamed_points
         self.unnamed_lines = unnamed_lines
         self.unnamed_circles = unnamed_circles
