@@ -1503,8 +1503,7 @@ class Optimizer(ABC):
             A, B = name2pt[a], name2pt[b]
             d = self.dist(A, B)
             if d < min_dist:
-                if self.verbosity > 0:
-                    print(f"DUP: {a} {b}")
+                print(f"DUP: {a} {b}")
                 return False
         return True
 

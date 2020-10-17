@@ -28,8 +28,7 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
 
     verbosity = opts['verbosity']
 
-    if verbosity > 0:
-        print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
+    print("INPUT INSTRUCTIONS:\n{instrs_str}".format(instrs_str="\n".join([str(i) for i in instructions])))
 
 
     g = tf.Graph()
@@ -43,8 +42,7 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
         # print(filtered_models)
 
 
-    if verbosity > 0:
-        print(f"\n\nFound {len(filtered_models)} models")
+    print(f"\n\nFound {len(filtered_models)} models")
     figs = list()
     for i, m in enumerate(filtered_models):
         # FIXME: Inconsistent return type
