@@ -68,7 +68,10 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
 
         def plot_line(L, name=None):
             (nx, ny), r = L
-            l_angle = math.atan(ny / nx) % math.pi
+            if nx == 0:
+                l_angle = math.pi / 2
+            else:
+                l_angle = math.atan(ny / nx) % math.pi
             if l_angle == 0:
                 if name is not None:
                     plt.axvline(x=r, label=name) # FIXME: Check if this labrel works
