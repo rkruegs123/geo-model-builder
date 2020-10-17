@@ -154,6 +154,7 @@ CASE_FIX = {
     "rsneq": "rsNeq",
     "rsoppsides": "rsOppSides",
     "sameside": "sameSide",
+    "oppsides": "oppSides",
     "sqrt": "sqrt",
     "sub": "sub",
     "tangentcc": "tangentCC",
