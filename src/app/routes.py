@@ -4,8 +4,8 @@ from io import StringIO, BytesIO
 import pdb
 import base64
 
-from lib.builder import build
-from lib.util import DEFAULTS
+from builder import build
+from util import DEFAULTS
 
 @app.route('/')
 @app.route('/index')
