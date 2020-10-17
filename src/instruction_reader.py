@@ -27,7 +27,10 @@ class InstructionReader:
 
         cmds = parse_sexprs(self.problem_lines)
         for cmd in cmds:
-            self.process_command(cmd)
+            try:
+                self.process_command(cmd)
+            except:
+                raise RuntimeError(f"Invalid command: {cmd}")
 
     def register_pt(self, p):
         if p in self.points:
