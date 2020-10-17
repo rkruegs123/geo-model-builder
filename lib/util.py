@@ -6,7 +6,10 @@ import string
 
 class Root(collections.namedtuple("Root", ["pred", "vars"])):
     def __str__(self):
-        return f"(root-{self.pred} {' '.join([str(v) for v in self.vars])})"
+        if pred == "arbitrary":
+            return "root-arbitrary"
+        else:
+            return f"(root-{self.pred} {' '.join([str(v) for v in self.vars])})"
 
 
 Bucket = collections.namedtuple("Bucket", ["points", "assertions"])

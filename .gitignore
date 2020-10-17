@@ -7,3 +7,4 @@ checkpoint
 src/*.meta
 src/*.index
 src/*.data-0000*
+.checkpoints/
