@@ -1476,7 +1476,7 @@ class Optimizer(ABC):
         if pred == "neq":
             [pt] = self.lookup_pts(rs_args)
             return self.cond(self.pt_neq(P1, pt), lambda: P1, lambda: P2)
-        elif pred == "closerTo":
+        elif pred == "closerToP":
             [pt] = self.lookup_pts(rs_args)
             test = self.lte(self.sqdist(P1, pt), self.sqdist(P2, pt))
             return self.cond(test, lambda: P1, lambda: P2)

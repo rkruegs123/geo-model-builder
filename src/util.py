@@ -88,6 +88,7 @@ CASE_FIX = {
     "area": "area",
     "between": "between",
     "centroid": "centroid",
+    "closertop": "closerToP",
     "circ": "circ",
     "circle": "circle",
     "circumcenter": "circumcenter",
