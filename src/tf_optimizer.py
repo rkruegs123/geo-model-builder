@@ -230,9 +230,12 @@ class TfOptimizer(Optimizer):
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
 
-        # for _ in tqdm(range(n_inits), desc="Sampling initializations..."):
-        for _ in range(n_inits):
-            self.sess.run(tf.compat.v1.global_variables_initializer())
+        self.global_init = tf.compat.v1.global_variables_initializer()
+
+        for _ in tqdm(range(n_inits), desc="Sampling initializations..."):
+        # for _ in range(n_inits):
+            self.sess.run(self.global_init)
+            # self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)
             init_name = f".checkpoints/{get_random_string(8)}"
             saver.save(self.sess, init_name)

@@ -1,2 +1,3 @@
 (param (A B C) triangle)
-(param (P Q R) triangle)
+(param D point)
+(assert (on-seg D A B))
