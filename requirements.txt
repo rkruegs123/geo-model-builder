@@ -1,0 +1,5 @@
+numpy==1.18.3
+Flask==1.1.1
+tqdm==4.46.0
+matplotlib==3.2.1
+tensorflow==2.2.0
