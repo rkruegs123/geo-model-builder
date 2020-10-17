@@ -6,7 +6,7 @@ import string
 
 class Root(collections.namedtuple("Root", ["pred", "vars"])):
     def __str__(self):
-        if pred == "arbitrary":
+        if self.pred == "arbitrary":
             return "root-arbitrary"
         else:
             return f"(root-{self.pred} {' '.join([str(v) for v in self.vars])})"
