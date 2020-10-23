@@ -7,4 +7,4 @@
 (assert (= (div (uangle C B P) (uangle B A P)) 0.5))
 (assert (= (div (uangle C B P) (uangle B P C)) (div 1 3)))
 
-(confirm (concur (i-bisector A D P) (i-bisector P C B) (perp-bis A B)))
+(eval (concur (i-bisector A D P) (i-bisector P C B) (perp-bis A B)))

@@ -8,4 +8,4 @@
 ;; (assert (eqangle X A A B X C C D))
 ;; (assert (eqangle X B B C X D D A))
 
-(confirm (= (add (uangle B X A) (uangle D X C)) pi))
+(eval (= (add (uangle B X A) (uangle D X C)) pi))

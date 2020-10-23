@@ -3,7 +3,7 @@ import argparse
 import math
 import numpy as np
 
-from instruction import Assert, AssertNDG, Confirm, Sample, Parameterize, Compute
+from instruction import Assert, AssertNDG, Eval, Sample, Parameterize, Compute
 from constraint import Constraint
 from parse import parse_sexprs
 from primitives import Point, Line, Circle, Num
@@ -69,8 +69,8 @@ class InstructionReader:
             self.add(cmd)
         elif head == "compute":
             self.compute(cmd)
-        elif head == "confirm":
-            self.confirm(cmd)
+        elif head == "eval":
+            self.eval_cons(cmd)
         elif head == "param":
             if isinstance(cmd[1], str):
                 self.param(cmd)
@@ -170,11 +170,11 @@ class InstructionReader:
             self.instructions.append(Assert(instr_cons))
 
 
-    def confirm(self, cmd):
+    def eval_cons(self, cmd):
         assert(len(cmd) == 2)
         negate, pred, args = self.process_constraint(cmd[1])
         instr_cons = Constraint(pred, args, negate)
-        self.instructions.append(Confirm(instr_cons))
+        self.instructions.append(Eval(instr_cons))
 
     def param(self, cmd):
         assert(len(cmd) == 3 or len(cmd) == 4)
@@ -288,6 +288,11 @@ class InstructionReader:
         elif pred == "in-poly":
             assert(len(args) >= 3)
             assert(all([isinstance(t, Point) for t in args]))
+        elif pred == "on-minor-arc":
+            assert(len(args) == 3)
+            assert(isinstance(args[0], Circle))
+            assert(isinstance(args[1], Point))
+            assert(isinstance(args[2], Point))
         else:
             raise NotImplementedError(f"[process_param_point] unrecognized param {param}")
         return pred, args

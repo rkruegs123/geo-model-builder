@@ -51,6 +51,11 @@ class Optimizer(ABC):
             print("WARNING: n_tries should be at least as big as n_models")
             self.n_tries = opts['n_models']
 
+        self.n_inits = opts['n_inits']
+        if opts['n_inits'] < opts['n_tries']:
+            print("WARNING: n_inits should be at least as big as n_tries")
+            self.n_inits = opts['n_tries']
+
         super().__init__()
 
     def preprocess(self):
@@ -79,8 +84,8 @@ class Optimizer(ABC):
             self.add(i)
         elif isinstance(i, AssertNDG):
             self.addNDG(i)
-        elif isinstance(i, Confirm):
-            self.confirm(i)
+        elif isinstance(i, Eval):
+            self.eval_cons(i)
         else:
             raise NotImplementedError("FIXME: Finish process_instruction")
 
@@ -285,6 +290,12 @@ class Optimizer(ABC):
     @abstractmethod
     def tanh(self, x):
         pass
+
+
+    @abstractmethod
+    def atan2(self, x, y):
+        pass
+
 
     @abstractmethod
     def sigmoid(self, x):
@@ -504,6 +515,7 @@ class Optimizer(ABC):
         elif p_method == "on-ray": self.parameterize_on_ray(p_name, p_args[1])
         elif p_method == "on-ray-opp": self.parameterize_on_ray_opp(p_name, p_args[1])
         elif p_method == "on-seg": self.parameterize_on_seg(p_name, p_args[1])
+        elif p_method == "on-minor-arc": self.parameterize_on_minor_arc(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
         elif p_method == "through-l": self.parameterize_line_through(p_name, p_args[1])
         elif p_method == "tangent-lc": self.parameterize_line_tangentC(p_name, p_args[1])
@@ -654,6 +666,24 @@ class Optimizer(ABC):
         return self.register_pt(p, X, save_name=save_name)
         # self.unnamed_circles.append((O, r))
 
+    def parameterize_on_minor_arc(self, p, p_args):
+        [circ, a, b] = p_args
+        A, B = self.lookup_pts([a, b])
+        O, r = self.circ2nf(circ)
+        z = self.mkvar(f"{p}_minor_arc_{circ}", lo=0.1, hi=0.9)
+
+        aob = self.clockwise_angle(A, O, B)
+        boa = self.clockwise_angle(B, O, A)
+
+        anchor = self.cond(self.lt(aob, boa), lambda: B, lambda: A)
+
+        theta = self.min(aob, boa) * (-z)
+
+        Px = O.x + (anchor.x - O.x) * self.cos(theta) - (anchor.y - O.y) * self.sin(theta)
+        Py = O.y + (anchor.x - O.x) * self.sin(theta) + (anchor.y - O.y) * self.cos(theta)
+        P = self.get_point(Px, Py)
+        return self.register_pt(p, P)
+
     def parameterize_in_poly(self, p, ps):
         Ps = self.lookup_pts(ps)
         zs = [self.mkvar(name=f"{p}_in_poly_{poly_p}") for poly_p in ps]
@@ -704,7 +734,7 @@ class Optimizer(ABC):
             self.register_ndg(ndg_str, val, weight=weight)
         """
 
-    def confirm(self, goal):
+    def eval_cons(self, goal):
         goal_cons = goal.constraint
         pred, args, negate = goal_cons.pred, goal_cons.args, goal_cons.negate
 
@@ -959,6 +989,14 @@ class Optimizer(ABC):
 
     def side_lengths(self, A, B, C):
         return self.dist(B, C), self.dist(C, A), self.dist(A, B)
+
+    def clockwise_angle(self, A, B, C):
+        x1, y1 = A.x - B.x, A.y - B.y
+        x2, y2 = C.x - B.x, C.y - B.y
+
+        dot = x1 * x2 + y1 * y2
+        det = x1 * y2 - y1 * x2
+        return self.atan2(det, dot)
 
     def angle(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)

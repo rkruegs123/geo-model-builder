@@ -32,12 +32,12 @@ class Compute:
             computation_str=comp_str
         )
 
-class Confirm:
+class Eval:
     def __init__(self, constraint):
         self.constraint = constraint
 
     def __str__(self):
-        return f"confirm ({self.constraint})"
+        return f"eval ({self.constraint})"
 
 class Parameterize:
     def __init__(self, obj_name, parameterization):

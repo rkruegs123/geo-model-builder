@@ -12,4 +12,4 @@
 (compute P point (inter-lc (line A R) omega (rs-neq R)))
 (compute Q point (inter-cc (circ P C E) (circ P B F) (rs-neq P)))
 
-(confirm (concur (line D I) (line P Q) (perp-at A (line A I))))
+(eval (concur (line D I) (line P Q) (perp-at A (line A I))))

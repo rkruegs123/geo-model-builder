@@ -89,7 +89,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             all_trial_success_times = list()
             all_trial_fail_times = list()
 
-            n_trials = 1
+            n_trials = 3
             opts['verbosity'] = -1
             opts['plot_freq'] = -1
             opts['loss_freq'] = -1
@@ -101,6 +101,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                 trial_success_times = list()
                 trial_fail_times = list()
                 for f in tqdm(dir_files, desc="Problems"):
+
                     plt.close('all')
 
                     opts['lines'] = open(join(opts['dir'], f), 'r').readlines()

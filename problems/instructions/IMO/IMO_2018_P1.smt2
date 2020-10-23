@@ -9,4 +9,4 @@
 (compute F point (inter-lc (perp-bis B D) Gamma (rs-opp-sides C (line A B))))
 (compute G point (inter-lc (perp-bis C E) Gamma (rs-opp-sides B (line A C))))
 
-(confirm (para (line D E) (line F G)))
+(eval (para (line D E) (line F G)))

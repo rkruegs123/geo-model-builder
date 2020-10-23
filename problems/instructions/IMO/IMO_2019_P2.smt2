@@ -13,4 +13,4 @@
 (param Q1 point (on-ray-opp A1 Q))
 (assert (= (uangle C Q1 Q) (uangle C B A)))
 
-(confirm (on-circ P (circ Q P1 Q1)))
+(eval (on-circ P (circ Q P1 Q1)))

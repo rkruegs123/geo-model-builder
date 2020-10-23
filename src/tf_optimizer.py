@@ -69,6 +69,9 @@ class TfOptimizer(Optimizer):
     def tanh(self, x):
         return tf.nn.tanh(x)
 
+    def atan2(self, x, y):
+        return tf.math.atan2(x, y)
+
     def sigmoid(self, x):
         return tf.nn.sigmoid(x)
 
@@ -224,8 +227,7 @@ class TfOptimizer(Optimizer):
         for ckpt_file in ckpt_list:
             os.remove(ckpt_file)
 
-        # n_inits = n_tries + 3 # add a couple extra to get rid of the worst ones
-        n_inits = self.n_tries
+        n_inits = self.n_inits
 
         init_map = dict() # maps inits to losses
         saver = tf.train.Saver(max_to_keep=None)
