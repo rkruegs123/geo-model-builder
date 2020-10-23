@@ -54,8 +54,11 @@ class Optimizer(ABC):
         super().__init__()
 
     def preprocess(self):
-        for i in self.instructions:
+        process_instr_iter = self.instructions if self.verbosity < 0 else tqdm(self.instructions, desc="Processing instructions...")
+
+        # for i in self.instructions:
         # for i in tqdm(self.instructions, desc="Processing instructions..."):
+        for i in process_instr_iter:
             self.process_instruction(i)
 
         # After we've processed the instructions, process all the unnamed things

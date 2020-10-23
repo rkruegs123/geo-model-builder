@@ -227,9 +227,10 @@ class InstructionReader:
         elif pred == "radius":
             assert(len(args) == 1)
             assert(isinstance(args[0], Num))
-        elif pred == "through-c":
+        elif pred == "through":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
+            pred = "through-c"
         elif pred == "tangent-cc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))
@@ -248,9 +249,10 @@ class InstructionReader:
         args = param[1:]
         args = [self.process_term(t) for t in args]
 
-        if pred == "through-l":
+        if pred == "through":
             assert(len(args) == 1)
             assert(isinstance(args[0], Point))
+            pred = "through-l"
         elif pred == "tangent-lc":
             assert(len(args) == 1)
             assert(isinstance(args[0], Circle))

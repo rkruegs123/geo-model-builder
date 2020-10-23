@@ -232,8 +232,9 @@ class TfOptimizer(Optimizer):
 
         self.global_init = tf.compat.v1.global_variables_initializer()
 
-        for _ in tqdm(range(n_inits), desc="Sampling initializations..."):
-        # for _ in range(n_inits):
+        n_inits_iter = range(n_inits) if self.verbosity < 0 else tqdm(range(n_inits), desc="Sampling initializations...")
+
+        for _ in n_inits_iter:
             self.sess.run(self.global_init)
             # self.sess.run(tf.compat.v1.global_variables_initializer())
             init_loss = self.sess.run(self.loss)

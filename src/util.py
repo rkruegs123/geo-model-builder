@@ -60,7 +60,7 @@ DEFAULTS = {
     "plot_freq": 1000,
     "regularize_points": 1e-6,
     "n_models": 1,
-    "n_tries": 1,
+    "n_tries": 10,
     "verbosity": 0,
 }
 
