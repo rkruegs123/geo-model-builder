@@ -124,7 +124,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                     trial_data.append(n_models)
                     trial_times.append(time_elapsed)
 
-                    if models:
+                    if models and len(models.goals) > 0:
                         [model] = models
 
                         trial_goal_total.append(len(model.goals))
