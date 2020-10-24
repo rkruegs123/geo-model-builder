@@ -334,12 +334,15 @@ class InstructionReader:
         elif pred == "cycl":
             assert(len(args) >= 4)
             assert(all([isinstance(t, Point) for t in args]))
+            self.unnamed_circles.append(Circle(FuncInfo("c3", args[:3])))
         elif pred == "eq" or pred == "=":
             assert(len(args) == 2)
             if all([isinstance(t, Num) for t in args]):
                 pred = "eq-n"
             elif all([isinstance(t, Point) for t in args]):
                 pred = "eq-p"
+            elif all([isinstance(t, Line) for t in args]):
+                pred = "eq-l"
             else:
                 raise RuntimeError("Invalid usage of eq")
         elif pred == "foot":
@@ -396,7 +399,7 @@ class InstructionReader:
         elif pred == "para" or pred == "perp":
             assert(len(args) == 2)
             assert(all([isinstance(t, Line) for t in args]))
-        elif pred == "right":
+        elif pred in ["right", "right-tri"]:
             assert(len(args) == 3)
             assert(all([isinstance(t, Point) for t in args]))
         elif pred == "reflect-pl":

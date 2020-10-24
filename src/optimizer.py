@@ -22,7 +22,6 @@ LineNF = collections.namedtuple("LineNF", ["n", "r"])
 
 
 
-
 class Optimizer(ABC):
     def __init__(self, instructions, opts, unnamed_points, unnamed_lines, unnamed_circles, segments, seg_colors):
 
@@ -669,9 +668,18 @@ class Optimizer(ABC):
 
     def parameterize_on_minor_arc(self, p, p_args):
         [circ, a, b] = p_args
+        base_str = f"{p}_minor_arc_{circ}"
+
         A, B = self.lookup_pts([a, b])
         O, r = self.circ2nf(circ)
-        z = self.mkvar(f"{p}_minor_arc_{circ}", lo=0.1, hi=0.9)
+
+        # Enforce that A and B are on circ
+        loss_a = self.dist(O, A) - r
+        loss_b = self.dist(O, B) - r
+        self.register_loss(f"{base_str}_{a}_on_{circ}", loss_a)
+        self.register_loss(f"{base_str}_{b}_on_{circ}", loss_b)
+
+        z = self.mkvar(base_str, lo=0.1, hi=0.9)
 
         aob = self.clockwise_angle(A, O, B)
         boa = self.clockwise_angle(B, O, A)
@@ -687,9 +695,18 @@ class Optimizer(ABC):
 
     def parameterize_on_major_arc(self, p, p_args):
         [circ, a, b] = p_args
+        base_str = f"{p}_major_arc_{circ}"
+
         A, B = self.lookup_pts([a, b])
         O, r = self.circ2nf(circ)
-        z = self.mkvar(f"{p}_major_arc_{circ}", lo=0.1, hi=0.9)
+
+        # Enforce that A and B are on circ
+        loss_a = self.dist(O, A) - r
+        loss_b = self.dist(O, B) - r
+        self.register_loss(f"{base_str}_{a}_on_{circ}", loss_a)
+        self.register_loss(f"{base_str}_{b}_on_{circ}", loss_b)
+
+        z = self.mkvar(base_str, lo=0.1, hi=0.9)
 
         aob = self.clockwise_angle(A, O, B)
         boa = self.clockwise_angle(B, O, A)
@@ -822,6 +839,12 @@ class Optimizer(ABC):
         elif pred == "eq-p":
             A, B = self.lookup_pts(args)
             return [self.dist(A, B)]
+        elif pred == "eq-l":
+            l1, l2 = args
+            lnf1, lnf2 = self.line2nf(l1), self.line2nf(l2)
+            n1, r1 = lnf1
+            n2, r2 = lnf2
+            return [self.dist(n1, n2), self.abs(r1 - r2)]
         elif pred == "gte":
             n1, n2 = [self.eval_num(n) for n in args]
             return [self.max(self.const(0.0), n2 - n1)]
@@ -907,6 +930,11 @@ class Optimizer(ABC):
         elif pred == "right":
             A, B, C = self.lookup_pts(args)
             return [self.right_phi(A, B, C)]
+        elif pred == "right-tri":
+            A, B, C = self.lookup_pts(args)
+            return [tf.reduce_min([self.right_phi(A, B, C),
+                                   self.right_phi(B, A, C),
+                                   self.right_phi(B, C, A)])]
         elif pred == "same-side":
             a, b, l = args
             A, B = self.lookup_pts([a, b])
@@ -1022,7 +1050,7 @@ class Optimizer(ABC):
         return self.acos((a**2 + c**2 - b**2) / (2 * a * c))
 
     def right_phi(self, A, B, C):
-        return self.angle(A, B, C) - math.pi / 2
+        return self.abs(self.angle(A, B, C) - math.pi / 2)
 
     def conway_vals(self, A, B, C):
         a, b, c = self.side_lengths(A, B, C)

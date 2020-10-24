@@ -15,4 +15,4 @@
 (assert (on-ray E D B))
 (assert (on-ray E C A))
 
-(confirm (cong P E Q E))
+(eval (cong P E Q E))

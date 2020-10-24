@@ -10,4 +10,4 @@
 (compute C1 point (inter-lc (line A B) (coa (midp A B) H) rs-arbitrary))
 (compute C2 point (inter-lc (line A B) (coa (midp A B) H) (rs-neq C1)))
 
-(confirm (cycl A1 A2 B1 B2 C1 C2))
+(eval (cycl A1 A2 B1 B2 C1 C2))

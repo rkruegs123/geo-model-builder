@@ -11,4 +11,4 @@
 (compute M point (midp-from P A))
 (compute N point (midp-from Q A))
 
-(confirm (on-circ (inter-ll (line B M) (line C N)) (circumcircle A B C)))
+(eval (on-circ (inter-ll (line B M) (line C N)) (circumcircle A B C)))

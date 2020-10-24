@@ -4,4 +4,4 @@
 (compute Q point (inter-ll (i-bisector B C A) (perp-bis A C)))
 (compute K point (midp B C))
 (compute L point (midp A C))
-(confirm (= (area R P K) (area R Q L)))
+(eval (= (area R P K) (area R Q L)))

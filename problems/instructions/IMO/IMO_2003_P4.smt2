@@ -4,4 +4,4 @@
 (compute Q point (foot D (line B C)))
 (compute R point (foot D (line C A)))
 (assert (cong R P R Q))
-(confirm (concur (i-bisector A B C) (i-bisector C D A) (line A C)))
+(eval (concur (i-bisector A B C) (i-bisector C D A) (line A C)))

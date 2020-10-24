@@ -16,4 +16,4 @@
 ;; X is s.t. AMXE is a parallelogram
 (compute X point (inter-ll (para-at E (line M A)) (para-at M (line A E))))
 
-(confirm (concur (line B D) (line F X) (line M E)))
+(eval (concur (line B D) (line F X) (line M E)))

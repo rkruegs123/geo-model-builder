@@ -10,4 +10,4 @@
 (param K point (on-circ Gamma))
 (assert (right H K Q))
 
-(confirm (tangent-cc (circumcircle K Q H) (circumcircle F K M)))
+(eval (tangent-cc (circumcircle K Q H) (circumcircle F K M)))

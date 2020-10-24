@@ -15,4 +15,4 @@
 (assert (cong A1 A2 C1 C2))
 (assert (cong A1 A2 C2 A1))
 
-(confirm (concur (line A1 B2) (line B1 C2) (line C1 A2)))
+(eval (concur (line A1 B2) (line B1 C2) (line C1 A2)))

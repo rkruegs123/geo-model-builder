@@ -10,4 +10,4 @@
 (compute omega_2 circle (circumcircle C W M))
 (compute Y point (inter-lc (line W (origin omega_2)) omega_2 (rs-neq W)))
 
-(confirm (coll X Y H))
+(eval (coll X Y H))

@@ -20,4 +20,4 @@
 (assert (on-seg L C A))
 
 (compute X point (inter-ll (line F K) (line G L)))
-(confirm (coll X A O))
+(eval (coll X A O))

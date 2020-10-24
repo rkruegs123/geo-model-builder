@@ -7,4 +7,4 @@
 (compute O point (midp B C))
 (compute R point (inter-ll (i-bisector B A C) (i-bisector M O N)))
 
-(confirm (on-seg (inter-cc (circumcircle B M R) (circumcircle C N R) (rs-neq R)) B C))
+(eval (on-seg (inter-cc (circumcircle B M R) (circumcircle C N R) (rs-neq R)) B C))

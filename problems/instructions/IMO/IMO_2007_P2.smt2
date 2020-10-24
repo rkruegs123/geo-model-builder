@@ -10,3 +10,5 @@
 (compute G point (inter-ll l (line B C)))
 
 (assert (cong E F E G))
+
+(eval (eq l (i-bisector D A B)))

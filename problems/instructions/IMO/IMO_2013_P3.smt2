@@ -6,4 +6,4 @@
 
 (assert (on-circ (circumcenter A1 B1 C1) (circumcircle A B C)))
 
-;; (confirm (rightTri A B C))
+(eval (right-tri A B C))

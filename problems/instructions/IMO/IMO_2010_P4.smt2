@@ -8,4 +8,4 @@
 
 (compute S point (inter-ll (perp-at C (line C (origin Gamma))) (line A B)))
 (assert (cong S C S P))
-(confirm (cong M K M L))
+(eval (cong M K M L))

@@ -10,4 +10,4 @@
 (compute Gamma circle (circ K L M))
 
 (assert (tangent-lc (line P Q) Gamma))
-(confirm (cong O P O Q))
+(eval (cong O P O Q))

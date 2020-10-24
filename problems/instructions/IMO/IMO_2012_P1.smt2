@@ -11,4 +11,4 @@
 (compute S point (inter-ll (line A F) (line B C)))
 (compute T point (inter-ll (line A G) (line B C)))
 
-(confirm (midp M S T))
+(eval (midp M S T))

@@ -11,4 +11,4 @@
 (assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))
 
 (compute G point (midp I F))
-(confirm (on-circ (inter-ll (line D G) (line E I)) Gamma))
+(eval (on-circ (inter-ll (line D G) (line E I)) Gamma))

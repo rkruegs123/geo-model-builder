@@ -4,4 +4,4 @@
 
 (assert (gte (uangle B C A) (add (uangle A B C) (div pi 6))))
 
-(confirm (lt (add (uangle C A B) (uangle C O P)) (div pi 2)))
+(eval (lt (add (uangle C A B) (uangle C O P)) (div pi 2)))

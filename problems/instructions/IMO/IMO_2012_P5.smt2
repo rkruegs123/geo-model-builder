@@ -6,4 +6,4 @@
 (param L point (on-seg B X))
 (assert (cong A L A C))
 (compute M point (inter-ll (line A L) (line B K)))
-(confirm (cong M K M L))
+(eval (cong M K M L))

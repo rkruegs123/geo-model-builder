@@ -11,4 +11,4 @@
 (compute D point (amidp-opp A B C))
 (compute J point (inter-ll (para-at O (line A D)) (line A C)))
 
-(confirm (incenter J C E F))
+(eval (incenter J C E F))

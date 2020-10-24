@@ -13,6 +13,6 @@
 (compute refl2 line (reflect-ll (line K2 K3) (line L2 L3)))
 (compute refl3 line (reflect-ll (line K3 K1) (line L3 L1)))
 
-(confirm (on-circ (inter-ll refl1 refl2) (incircle A1 A2 A3)))
-(confirm (on-circ (inter-ll refl1 refl3) (incircle A1 A2 A3)))
-(confirm (on-circ (inter-ll refl2 refl3) (incircle A1 A2 A3)))
+(eval (on-circ (inter-ll refl1 refl2) (incircle A1 A2 A3)))
+(eval (on-circ (inter-ll refl1 refl3) (incircle A1 A2 A3)))
+(eval (on-circ (inter-ll refl2 refl3) (incircle A1 A2 A3)))

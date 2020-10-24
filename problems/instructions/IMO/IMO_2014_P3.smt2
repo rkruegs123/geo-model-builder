@@ -8,4 +8,4 @@
 (assert (= (div pi 2) (sub (uangle C H S) (uangle C S B))))
 (assert (= (div pi 2) (sub (uangle T H C) (uangle D T C))))
 
-(confirm (tangent-lc (line B D) (circumcircle T S H)))
+(eval (tangent-lc (line B D) (circumcircle T S H)))

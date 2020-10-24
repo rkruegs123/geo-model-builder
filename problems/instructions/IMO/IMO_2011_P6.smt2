@@ -8,4 +8,4 @@
 (compute lb line (reflect-ll l (line C A)))
 (compute lc line (reflect-ll l (line A B)))
 
-(confirm (tangent-cc Gamma (circumcircle (inter-ll la lb) (inter-ll la lc) (inter-ll lb lc))))
+(eval (tangent-cc Gamma (circumcircle (inter-ll la lb) (inter-ll la lc) (inter-ll lb lc))))

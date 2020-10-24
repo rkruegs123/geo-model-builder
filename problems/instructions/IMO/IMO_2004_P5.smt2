@@ -7,4 +7,4 @@
 (assert (= (uangle P D C) (uangle B D A)))
 
 (assert (cycl A B C D))
-(confirm (cong A P C P))
+(eval (cong A P C P))
