@@ -1,2 +1,3 @@
-(param (A B C) acuteTri))
-(param X point (onSeg (midp A B) B))
+(param (A B C) acute-tri))
+(param X point (on-seg (midp A B) B))
+(eval (on-seg (midp A B) A B))

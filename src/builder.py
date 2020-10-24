@@ -88,6 +88,9 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             all_trial_times = list()
             all_trial_success_times = list()
             all_trial_fail_times = list()
+            all_trial_goal_total = list()
+            all_trial_goal_success = list()
+
 
             n_trials = 3
             opts['verbosity'] = -1
@@ -100,6 +103,8 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                 trial_times = list()
                 trial_success_times = list()
                 trial_fail_times = list()
+                trial_goal_total = list()
+                trial_goal_success = list()
                 for f in tqdm(dir_files, desc="Problems"):
 
                     plt.close('all')
@@ -107,12 +112,26 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                     opts['lines'] = open(join(opts['dir'], f), 'r').readlines()
                     start = time.time()
                     models = build_aux(opts, show_plot=False, save_plot=False, outf_prefix=outf_prefix, encode_fig=False)
+
                     end = time.time()
+
+                    assert(len(models) <= 1)  # Could take away if necessary
+
+
                     time_elapsed = end - start
                     n_models = len(models)
                     solve_map[f].append(n_models)
                     trial_data.append(n_models)
                     trial_times.append(time_elapsed)
+
+                    if models:
+                        [model] = models
+
+                        trial_goal_total.append(len(model.goals))
+                        trial_goal_success.append(len([v for v in model.goals.values() if v <= opts['eps']]))
+                    else:
+                        trial_goal_total.append(None)
+                        trial_goal_success.append(None)
 
                     if n_models == opts['n_models']:
                         trial_success_times.append(time_elapsed)
@@ -123,6 +142,9 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                 all_trial_times.append(trial_times)
                 all_trial_success_times.append(trial_success_times)
                 all_trial_fail_times.append(trial_fail_times)
+
+                all_trial_goal_total.append(trial_goal_total)
+                all_trial_goal_success.append(trial_goal_success)
 
             print(f"\n\nAll Trial Data:\n{all_trial_data}")
             print(f"\n\nSolve Map:\n{solve_map}")
@@ -156,6 +178,26 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
             print(f"Avg Time per Problem (all): Avg {avg_time}, Sd {std_time}")
             print(f"Avg Time per Problem (success): Avg {avg_success_time}, Sd {std_success_time}")
             print(f"Avg Time per Problem (fail): Avg {avg_fail_time}, Sd {std_fail_time}")
+
+            # handle goals
+            perc_goals_satisfied = list()
+            for (trial_totals, trial_successes) in zip(all_trial_goal_total, all_trial_goal_success):
+                trial_totals = [n for n in trial_totals if n is not None]
+                trial_successes = [n for n in trial_successes if n is not None]
+
+                n_successful_problems = len(trial_totals)
+
+                n_successful_problems_goals_satisfied = len(
+                    [n_goals for (n_total, n_goals) in zip(trial_totals, trial_successes) if n_total == n_goals]
+                )
+
+                perc_goals_satisfied.append(n_successful_problems_goals_satisfied / n_successful_problems)
+
+
+            print(f"Goal total info: {all_trial_goal_total}")
+            print(f"Goal success info: {all_trial_goal_success}")
+            print(f"% Successful Problems with Goals Satisfied up to Tolerance: Avg {mean(perc_goals_satisfied)}, Sd {stdev(perc_goals_satisfied)}")
+            pdb.set_trace()
 
         else:
 

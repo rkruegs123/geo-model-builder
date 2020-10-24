@@ -1,2 +1,3 @@
 (param (A B C) triangle)
-(param D point (onRayOpp A B))
+(param D point (on-ray-opp A B))
+(eval (coll A B C))

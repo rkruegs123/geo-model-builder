@@ -1,3 +1,4 @@
-(PARAM (A B C) (isoTri A))
+(PARAM (A B C) (iso-tri A))
 (compute gamma CIRCLE (circumciRcle A B C))
-(param D point (onCirc gamma))
+(param D point (on-circ gamma))
+(eval (on-circ D gamma))
