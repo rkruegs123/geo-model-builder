@@ -288,7 +288,7 @@ class InstructionReader:
         elif pred == "in-poly":
             assert(len(args) >= 3)
             assert(all([isinstance(t, Point) for t in args]))
-        elif pred == "on-minor-arc":
+        elif pred in ["on-minor-arc", "on-major-arc"]:
             assert(len(args) == 3)
             assert(isinstance(args[0], Circle))
             assert(isinstance(args[1], Point))

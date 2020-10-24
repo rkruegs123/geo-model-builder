@@ -516,6 +516,7 @@ class Optimizer(ABC):
         elif p_method == "on-ray-opp": self.parameterize_on_ray_opp(p_name, p_args[1])
         elif p_method == "on-seg": self.parameterize_on_seg(p_name, p_args[1])
         elif p_method == "on-minor-arc": self.parameterize_on_minor_arc(p_name, p_args[1])
+        elif p_method == "on-major-arc": self.parameterize_on_major_arc(p_name, p_args[1])
         elif p_method == "line": self.parameterize_line(p_name)
         elif p_method == "through-l": self.parameterize_line_through(p_name, p_args[1])
         elif p_method == "tangent-lc": self.parameterize_line_tangentC(p_name, p_args[1])
@@ -678,6 +679,24 @@ class Optimizer(ABC):
         anchor = self.cond(self.lt(aob, boa), lambda: B, lambda: A)
 
         theta = self.min(aob, boa) * (-z)
+
+        Px = O.x + (anchor.x - O.x) * self.cos(theta) - (anchor.y - O.y) * self.sin(theta)
+        Py = O.y + (anchor.x - O.x) * self.sin(theta) + (anchor.y - O.y) * self.cos(theta)
+        P = self.get_point(Px, Py)
+        return self.register_pt(p, P)
+
+    def parameterize_on_major_arc(self, p, p_args):
+        [circ, a, b] = p_args
+        A, B = self.lookup_pts([a, b])
+        O, r = self.circ2nf(circ)
+        z = self.mkvar(f"{p}_major_arc_{circ}", lo=0.1, hi=0.9)
+
+        aob = self.clockwise_angle(A, O, B)
+        boa = self.clockwise_angle(B, O, A)
+
+        anchor = self.cond(self.lt(aob, boa), lambda: A, lambda: B)
+
+        theta = (math.pi * 2 - self.min(aob, boa)) * (-z)
 
         Px = O.x + (anchor.x - O.x) * self.cos(theta) - (anchor.y - O.y) * self.sin(theta)
         Py = O.y + (anchor.x - O.x) * self.sin(theta) + (anchor.y - O.y) * self.cos(theta)
