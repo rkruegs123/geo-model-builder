@@ -1,4 +1,4 @@
-(param (A B C) acute-tri))
+(param (A B C) acute-tri)
 (assert (not (cong A B A C)))
 
 (compute I point (incenter A B C))
