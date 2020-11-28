@@ -32,6 +32,7 @@ The command line version accepts the following parameteters...
 * `losses_freq`: The frequency (in number of steps) of printing a summary of loss values
 * `loss_freq`: The frequency (in number of steps) of printing the cumulative loss value
 * `verbosity`: A coarser-grained control of plotting and loss printing
+
 ...as well as the following parameters for Tensorflow optimization:
 * `learning_rate`: Initial learning rate
 * `decay_rate`: Decay rate
