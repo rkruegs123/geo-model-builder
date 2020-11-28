@@ -1,5 +1,5 @@
 (param lineA line)
 (param gamma circle)
-(compute D point (inter-lc lineA gamma rs-arbitrary))
-(compute E point (inter-lc lineA gamma (rs-neq D)))
+(let D point (inter-lc lineA gamma rs-arbitrary))
+(let E point (inter-lc lineA gamma (rs-neq D)))
 (eval (on-circ D gamma))

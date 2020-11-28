@@ -2,5 +2,5 @@
 ;; (param Gamma circle (tangent-cl myLine))
 (param myLine line)
 (param A point)
-(compute B point (reflect-pl A myLine))
+(let B point (reflect-pl A myLine))
 (eval (on-line A myLine))

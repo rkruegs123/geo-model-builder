@@ -1,9 +1,9 @@
 (param (A B C) acute-tri)
 (assert (gt (dist A B) (dist A C)))
-(compute Gamma circle (circumcircle A B C))
-(compute H point (orthocenter A B C))
-(compute F point (foot A (line B C)))
-(compute M point (midp B C))
+(let Gamma circle (circumcircle A B C))
+(let H point (orthocenter A B C))
+(let F point (foot A (line B C)))
+(let M point (midp B C))
 
 (param Q point (on-circ Gamma))
 (assert (right H Q A))

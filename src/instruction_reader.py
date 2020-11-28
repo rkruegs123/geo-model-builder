@@ -67,7 +67,7 @@ class InstructionReader:
         head = cmd[0].lower()
         if head == "assert":
             self.add(cmd)
-        elif head == "compute":
+        elif head == "let":
             self.compute(cmd)
         elif head == "eval":
             self.eval_cons(cmd)
@@ -155,7 +155,7 @@ class InstructionReader:
             self.instructions.append(c_instr)
 
         else:
-            raise RuntimeError("Invalid compute type")
+            raise RuntimeError("Invalid let type")
 
 
 

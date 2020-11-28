@@ -12,7 +12,7 @@
 "use strict";
 
 CodeMirror.defineMode("commonlisp", function (config) {
-  var specialForm = /^(block|let*|return-from|catch|load-time-value|setq|eval-when|locally|symbol-macrolet|flet|macrolet|tagbody|function|multiple-value-call|the|go|multiple-value-prog1|throw|if|progn|unwind-protect|labels|progv|let|quote)$/;
+  var specialForm = /^(block|letTURNEDOFF*|return-from|catch|load-time-value|setq|eval-when|locally|symbol-macrolet|flet|macrolet|tagbody|function|multiple-value-call|the|go|multiple-value-prog1|throw|if|progn|unwind-protect|labels|progv|letTURNEDOFF|quote)$/;
   var assumeBody = /^with|^def|^do|^prog|case$|^cond$|bind$|when$|unless$/;
   var numLiteral = /^(?:[+\-]?(?:\d+|\d*\.\d+)(?:[efd][+\-]?\d+)?|[+\-]?\d+(?:\/[+\-]?\d+)?|#b[+\-]?[01]+|#o[+\-]?[0-7]+|#x[+\-]?[\da-f]+)/;
   var symbol = /[^\s'`,@()\[\]";]/;
