@@ -1,7 +1,0 @@
-(declare-points A B C D X Y)
-(assert (triangle A B C))
-(assert (cycl D A B C))
-(assert (orthocenter X A B C))
-(assert (orthocenter Y B C D))
-(prove (para A X Y D))
-(prove (para A D Y X))
