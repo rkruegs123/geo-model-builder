@@ -553,7 +553,9 @@ class Optimizer(ABC):
 
         P1 = self.parameterize_on_circ(Point(f"p1"), [c], save_name=False)
         P1 = Point(FuncInfo('__val__', [P1]))
-        L = self.line2nf(Line(FuncInfo("perp-at", [P1, Point(FuncInfo("origin", [c])), P1])))
+        tmp_l = Line(FuncInfo("connecting", [Point(FuncInfo("origin", [c])), P1]))
+        L = Line(FuncInfo("perp-at", [P1, tmp_l]))
+        L = self.line2nf(L)
 
         return self.register_line(l, L)
 

@@ -1,3 +1,3 @@
 (param A point)
 (param B point)
-(compute M point (midp A B))
+(let M point (midp A B))

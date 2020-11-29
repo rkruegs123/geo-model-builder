@@ -128,7 +128,7 @@ def build(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fig=Fa
                         [model] = models
 
                         trial_goal_total.append(len(model.goals))
-                        trial_goal_success.append(len([v for v in model.goals.values() if v <= opts['eps']]))
+                        trial_goal_success.append(len([v for v in model.goals.values() if v <= opts['eps'] * 10]))
                     else:
                         trial_goal_total.append(None)
                         trial_goal_success.append(None)

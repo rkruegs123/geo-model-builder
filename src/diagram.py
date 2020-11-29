@@ -7,8 +7,8 @@ import math
 
 
 UNNAMED_ALPHA = 0.1
-MIN_AXIS_VAL = -20
-MAX_AXIS_VAL = 20
+MIN_AXIS_VAL = -10
+MAX_AXIS_VAL = 10
 
 class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "seg_colors", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
     def plot(self, show=True, save=False, fname=None, return_fig=False):
@@ -33,15 +33,6 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         for (p1, p2), c in zip(self.segments, self.seg_colors):
             plt.plot([p1.x, p2.x],[p1.y, p2.y], c=c)
 
-        # Plot unnamed circles (always unnamed before named)
-        for O, r in self.unnamed_circles:
-            circle = plt.Circle((O.x, O.y),
-                                radius=r,
-                                fill=False,
-                                color="black",
-                                alpha=UNNAMED_ALPHA
-            )
-            ax.add_patch(circle)
 
         # Plot named circles
         for (c_name, (O, r)) in self.named_circles.items():
@@ -62,9 +53,37 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
         have_circles = self.named_circles or self.unnamed_circles
 
         if not (have_points or have_circles):
-            plt.xlim(-2, 2)
-            plt.ylim(-2, 2)
+            lo_x_lim, lo_y_lim = -2, -2
+            hi_x_lim, hi_y_lim = 2, 2
+            # plt.xlim(-2, 2)
+            # plt.ylim(-2, 2)
+        else:
+            (lo_x_lim, hi_x_lim) = ax.get_xlim()
+            (lo_y_lim, hi_y_lim) = ax.get_ylim()
+            if self.named_lines:
+                lo_x_lim -= 1
+                hi_x_lim += 1
+                lo_y_lim -= 1
+                hi_y_lim += 1
+            lo_x_lim = max(MIN_AXIS_VAL, lo_x_lim)
+            hi_x_lim = min(MAX_AXIS_VAL, hi_x_lim)
+            lo_y_lim = max(MIN_AXIS_VAL, lo_y_lim)
+            hi_y_lim = min(MAX_AXIS_VAL, hi_y_lim)
+            # ax.set_xlim([max(MIN_AXIS_VAL, lo_x_lim), min(MAX_AXIS_VAL, hi_x_lim)])
+            # ax.set_ylim([max(MIN_AXIS_VAL, lo_y_lim), min(MAX_AXIS_VAL, hi_y_lim)])
 
+        # Plot unnamed circles (always unnamed before named)
+        for O, r in self.unnamed_circles:
+            circle = plt.Circle((O.x, O.y),
+                                radius=r,
+                                fill=False,
+                                color="black",
+                                alpha=UNNAMED_ALPHA
+            )
+            ax.add_patch(circle)
+
+        ax.set_xlim([lo_x_lim, hi_x_lim])
+        ax.set_ylim([lo_y_lim, hi_y_lim])
 
         def plot_line(L, name=None):
             (nx, ny), r = L
@@ -101,13 +120,6 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
             # ax + by = c
             l_name = l.val
             plot_line(L, l_name)
-
-
-        # Make our plot small -- max dims are (-5, 5)
-        (lo_x_lim, hi_x_lim) = ax.get_xlim()
-        (lo_y_lim, hi_y_lim) = ax.get_ylim()
-        ax.set_xlim([max(MIN_AXIS_VAL, lo_x_lim), min(MAX_AXIS_VAL, hi_x_lim)])
-        ax.set_ylim([max(MIN_AXIS_VAL, lo_y_lim), min(MAX_AXIS_VAL, hi_y_lim)])
 
         if self.named_lines or self.named_circles:
             plt.legend()

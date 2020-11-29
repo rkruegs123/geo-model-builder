@@ -12,5 +12,5 @@
 (let M4 point (inter-cc (circ Q3 P3 P4) (circ Q4 P4 P0) (rs-neq P4)))
 (let M0 point (inter-cc (circ Q4 P4 P0) (circ Q0 P0 P1) (rs-neq P0)))
 
-(confirm (on-circ M3 (circ M0 M1 M2)))
-(confirm (on-circ M4 (circ M0 M1 M2)))
+(eval (on-circ M3 (circ M0 M1 M2)))
+(eval (on-circ M4 (circ M0 M1 M2)))

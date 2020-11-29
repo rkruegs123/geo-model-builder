@@ -21,6 +21,9 @@ def solve():
         args = DEFAULTS
         args['lines'] = lines
         args['n_models'] = int(request.form['n_models'])
+        args['plot_freq'] = -1
+        args['losses_freq'] = -1
+        args['loss_freq'] = -1
 
         figs = build(args, show_plot=False, encode_fig=True)
         urls = list()
