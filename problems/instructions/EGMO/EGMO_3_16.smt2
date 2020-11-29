@@ -1,6 +1,0 @@
-(sample (A B C) triangle)
-(let I (incenter A B C))
-(let D (interLL (perpAt I B C) (line B C)))
-(let E (interLL (perpAt I C A) (line C A)))
-(let F (interLL (perpAt I A B) (line A B)))
-(confirm (concur (line A D) (line B E) (line C F)))
