@@ -32,12 +32,15 @@ def parse_sexprs(lines):
         else:
             return token
 
-    result = list()
-    for l in lines:
-        sexp = parse_sexpr(l)
-        if sexp:
-            result.append(sexp)
-    return result
+    try:
+        result = list()
+        for l in lines:
+            sexp = parse_sexpr(l)
+            if sexp:
+                result.append(sexp)
+        return result
+    except:
+        raise RuntimeError("Could not parse s-expressions")
 
     '''
     with open(filename, 'r') as f:

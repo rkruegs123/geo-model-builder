@@ -213,8 +213,10 @@
                   },
                   error: function(err) {
                       console.log(err.responseText)
-                      document.getElementById("alerts").innerHTML =
-                          "<div class=\"alert alert-danger\" role=\"alert\"><h4 class=\"alert-heading\">Failure!</h4><span>Some common sources of error</span><ul><li>Malformed input</li><li>Invalid command/function/predicate</li></ul></div>";
+                      // document.getElementById("alerts").innerHTML =
+                      // "<div class=\"alert alert-danger\" role=\"alert\"><h4 class=\"alert-heading\">Failure!</h4><span>Some common sources of error</span><ul><li>Malformed input</li><li>Invalid command/function/predicate</li></ul></div>";
+                      document.getElementById("alerts").innerHTML = "<div class=\"alert alert-danger\" role=\"alert\"><h4 class=\"alert-heading\">Failure!</h4><span>" + err.responseText + "</span></div>";
+
                       document.getElementById('myCarousel').innerHTML =
                               "<div class=\"carousel-item active\"><img src=\"{{ url_for('static',filename='img/empty-diag.jpg') }}\" class=\"d-block w-100\" alt=\"Image 1\" id=\"diagram-img\"></div>";
                       document.getElementById('carousel-targets').innerHTML =

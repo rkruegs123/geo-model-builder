@@ -42,6 +42,6 @@ def solve():
 
     except Exception as e:
         return Response(
-            "Invalid input",
+            str(e),
             status=400
         )
