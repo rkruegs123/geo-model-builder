@@ -46,21 +46,21 @@
               theme: "3024-day",
               cursorBlinkRate: -1
           });
-          var fc_string = "(PARAM (P0 P1 P2 P3 P4) polygon)\n"
-          fc_string += "\n(COMPUTE Q1 POINT (interLL (line P0 P1) (line P2 P3)))"
-          fc_string += "\n(COMPUTE Q2 POINT (interLL (line P1 P2) (line P3 P4)))"
-          fc_string += "\n(COMPUTE Q3 POINT (interLL (line P2 P3) (line P4 P0)))"
-          fc_string += "\n(COMPUTE Q4 POINT (interLL (line P3 P4) (line P0 P1)))"
-          fc_string += "\n(COMPUTE Q0 POINT (interLL (line P4 P0) (line P1 P2)))\n"
+          var fc_string = "(param (P0 P1 P2 P3 P4) polygon)\n"
+          fc_string += "\n(let Q1 point (inter-ll (line P0 P1) (line P2 P3)))"
+          fc_string += "\n(let Q2 point (inter-ll (line P1 P2) (line P3 P4)))"
+          fc_string += "\n(let Q3 point (inter-ll (line P2 P3) (line P4 P0)))"
+          fc_string += "\n(let Q4 point (inter-ll (line P3 P4) (line P0 P1)))"
+          fc_string += "\n(let Q0 point (inter-ll (line P4 P0) (line P1 P2)))\n"
 
-          fc_string += "\n(COMPUTE M1 POINT (interCC (circ Q0 P0 P1) (circ Q1 P1 P2) (rsNeq P1)))"
-          fc_string += "\n(COMPUTE M2 POINT (interCC (circ Q1 P1 P2) (circ Q2 P2 P3) (rsNeq P2)))"
-          fc_string += "\n(COMPUTE M3 POINT (interCC (circ Q2 P2 P3) (circ Q3 P3 P4) (rsNeq P3)))"
-          fc_string += "\n(COMPUTE M4 POINT (interCC (circ Q3 P3 P4) (circ Q4 P4 P0) (rsNeq P4)))"
-          fc_string += "\n(COMPUTE M0 POINT (interCC (circ Q4 P4 P0) (circ Q0 P0 P1) (rsNeq P0)))\n"
+          fc_string += "\n(let M1 point (inter-cc (circ Q0 P0 P1) (circ Q1 P1 P2) (rs-neq P1)))"
+          fc_string += "\n(let M2 point (inter-cc (circ Q1 P1 P2) (circ Q2 P2 P3) (rs-neq P2)))"
+          fc_string += "\n(let M3 point (inter-cc (circ Q2 P2 P3) (circ Q3 P3 P4) (rs-neq P3)))"
+          fc_string += "\n(let M4 point (inter-cc (circ Q3 P3 P4) (circ Q4 P4 P0) (rs-neq P4)))"
+          fc_string += "\n(let M0 point (inter-cc (circ Q4 P4 P0) (circ Q0 P0 P1) (rs-neq P0)))\n"
 
-          fc_string += "\n(CONFIRM (onCirc M3 (circ M0 M1 M2)))"
-          fc_string += "\n(CONFIRM (onCirc M4 (circ M0 M1 M2)))"
+          fc_string += "\n(eval (on-circ M3 (circ M0 M1 M2)))"
+          fc_string += "\n(eval (on-circ M4 (circ M0 M1 M2)))"
 
           five_circle_cm.setValue(fc_string);
           five_circle_cm.setSize("100%", "100%");
@@ -76,21 +76,21 @@
               theme: "3024-day",
               cursorBlinkRate: -1
           });
-          imo_2019_p2_string = "(PARAM (A B C) triangle)\n";
+          imo_2019_p2_string = "(param (A B C) triangle)\n";
 
-          imo_2019_p2_string += "\n(PARAM A1 POINT (onSeg B C))"
-          imo_2019_p2_string += "\n(PARAM B1 POINT (onSeg A C))\n"
+          imo_2019_p2_string += "\n(param A1 point (on-seg B C))"
+          imo_2019_p2_string += "\n(param B1 point (on-seg A C))\n"
 
-          imo_2019_p2_string += "\n(PARAM P POINT (onSeg A A1))"
-          imo_2019_p2_string += "\n(COMPUTE Q POINT (interLL (line B B1) (paraAt P A B)))\n"
+          imo_2019_p2_string += "\n(param P point (on-seg A A1))"
+          imo_2019_p2_string += "\n(let Q point (inter-ll (line B B1) (para-at P (line A B))))\n"
 
-          imo_2019_p2_string += "\n(PARAM P1 POINT (onRayOpp B1 P))"
-          imo_2019_p2_string += "\n(ASSERT (eq (uangle P P1 C) (uangle B A C)))\n"
+          imo_2019_p2_string += "\n(param P1 point (on-ray-opp B1 P))"
+          imo_2019_p2_string += "\n(assert (= (uangle P P1 C) (uangle B A C)))\n"
 
-          imo_2019_p2_string += "\n(PARAM Q1 POINT (onRayOpp A1 Q))"
-          imo_2019_p2_string += "\n(ASSERT (eq (uangle C Q1 Q) (uangle C B A)))\n"
+          imo_2019_p2_string += "\n(param Q1 point (on-ray-opp A1 Q))"
+          imo_2019_p2_string += "\n(assert (= (uangle C Q1 Q) (uangle C B A)))\n"
 
-          imo_2019_p2_string += "\n(CONFIRM (onCirc P (circ Q P1 Q1)))"
+          imo_2019_p2_string += "\n(eval (on-circ P (circ Q P1 Q1)))"
 
           imo_2019_p2_cm.setValue(imo_2019_p2_string);
           imo_2019_p2_cm.setSize("100%", "100%");
@@ -109,12 +109,12 @@
               cursorBlinkRate: -1
           });
 
-          imo_2010_p2_string = "(param (A B C) triangle)\n(compute I point (incenter A B C))\n(compute Gamma circle (circumcircle A B C))\n"
-          imo_2010_p2_string += "\n(compute D point (interLC (line A I) Gamma (rsNeq A)))\n(param E point (onCirc Gamma))\n(assert (sameSide D E B C))\n"
+          imo_2010_p2_string = "(param (A B C) triangle)\n(let I point (incenter A B C))\n(let Gamma circle (circumcircle A B C))\n"
+          imo_2010_p2_string += "\n(let D point (inter-lc (line A I) Gamma (rs-neq A)))\n(param E point (on-circ Gamma))\n(assert (same-side D E (line B C)))\n"
 
-          imo_2010_p2_string += "\n(param F point (onSeg B C))\n(assert (eq (uangle B A F) (uangle C A E)))\n(assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))\n"
+          imo_2010_p2_string += "\n(param F point (on-seg B C))\n(assert (= (uangle B A F) (uangle C A E)))\n(assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))\n"
 
-          imo_2010_p2_string += "\n(compute G point (midp I F))\n(confirm (onCirc (interLL D G E I) Gamma))"
+          imo_2010_p2_string += "\n(let G point (midp I F))\n(eval (on-circ (inter-ll (line D G) (line E I)) Gamma))"
           imo_2010_p2_cm.setValue(imo_2010_p2_string);
           imo_2010_p2_cm.setSize("100%", "100%");
           imo_2010_p2_cm.getWrapperElement().style["font-size"] = "15px";
@@ -395,29 +395,29 @@
       <span>This tutorial makes use of the following notation:</span>
       <ul class="mb-0">
         <!-- <li><code>VAL</code>: The value of a geometric object or numerical value. A value is denoted either by a <code>NAME</code> or a function (see <a href="">Functions and Predicates</a>). Like <code>NAME</code>, <code>VAL</code> is used in this tutorial to refer to a value of any type unless specified (e.g., <code>LINE-VAL</code>). Note that names cannot be given to numerical values</li> -->
-        <li>The <code>TYPE</code> of a geometric object can take one of three values: <code>POINT</code>, <code>LINE</code>, or <code>CIRCLE</code></li>
-        <li>We use <code>&lt;&gt;</code> to denote an instance of a type. For example, <code>POINT</code> is an instance of <code>TYPE</code> while <code>&lt;POINT&gt;</code> is an instance of <code>POINT</code></li>
+        <li>The <code>type</code> of a geometric object can take one of three values: <code>point</code>, <code>line</code>, or <code>circle</code></li>
+        <li>We use <code>&lt;&gt;</code> to denote an instance of a type. For example, <code>point</code> is an instance of <code>type</code> while <code>&lt;point&gt;</code> is an instance of <code>point</code></li>
         <li>
-          A <code>NAME</code> is a string value that refers to a geometric object
+          A <code>name</code> is a string value that refers to a geometric object
           <ul>
-            <li><code>NAME</code>s are assigned to geometric objects with the <code>COMPUTE</code> and <code>PARAM</code> commands (see <a href="#commands">Commands</a>)</li>
+            <li><code>name</code>s are assigned to geometric objects with the <code>let</code> and <code>param</code> commands (see <a href="#commands">Commands</a>)</li>
           </ul>
-          <span>Example: If the name <code>P</code> is assigned to the midpoint of two points <code>A</code> and <code>B</code> (e.g., with <code>(COMPUTE P POINT (MIDP A B))</code>), <code>P</code> is an instance of <code>POINT</code></span>
+          <span>Example: If the name <code>P</code> is assigned to the midpoint of two points <code>A</code> and <code>B</code> (e.g., with <code>(let P point (midp A B))</code>), <code>P</code> is an instance of <code>point</code></span>
         </li>
-        <li><code>PRED</code> and <code>FUNC</code> are used as shorthand for <code>PREDICATE</code> and <code>FUNCTION</code>, respectively</li>.
+        <li><code>pred</code> and <code>func</code> are used as shorthand for <code>predicate</code> and <code>function</code>, respectively</li>.
       </ul>
       <span>Throughout the tutorial, we also refer to the following geometric objects:</span>
       <ul class="mt-0">
-        <li><code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> are instances of <code>POINT</code></li>
-        <li><code>L1</code>, <code>L2</code>, and <code>L3</code> are instances of <code>LINE</code></li>
-        <li><code>C1</code> and <code>C2</code> are instances of <code>CIRCLE</code></li>
+        <li><code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> are instances of <code>point</code></li>
+        <li><code>L1</code>, <code>L2</code>, and <code>L3</code> are instances of <code>line</code></li>
+        <li><code>C1</code> and <code>C2</code> are instances of <code>circle</code></li>
       </ul>
       <span>
         Names of geometric objects are <em>case sensitive</em>. All other identifiers in our DSL (e.g., commands, types, functions, predicates) are <em>case insensitive</em>:
       </span>
         <ul>
-          <li>Example: <code>(COMPUTE P (MIDP A B))</code> and <code>(compute P (MiDp A B))</code> are equivalent</li>
-          <li>Example: <code>(COMPUTE P (MIDP A B))</code> and <code>(COMPUTE p (MIDP A B))</code> are <em>not</em> equivalent</li>
+          <li>Example: <code>(let P (midp A B))</code> and <code>(LET P (MiDp A B))</code> are equivalent</li>
+          <li>Example: <code>(let P (midp A B))</code> and <code>(let p (midp A B))</code> are <em>not</em> equivalent</li>
         </ul>
 
       <h2 id="commands">Commands</h2>
@@ -426,71 +426,71 @@
 
         <!-- PARAM -->
         <li>
-          <code>PARAM</code>: Assigns a <code>NAME</code> to a geometric object parameterized either by the default parameterization for <code>&lt;TYPE&gt;</code> or by a supplied parameterization
+          <code>param</code>: Assigns a <code>name</code> to a geometric object parameterized either by the default parameterization for <code>&lt;type&gt;</code> or by a supplied parameterization
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(PARAM &lt;STRING&gt; &lt;TYPE&gt; &lt;OPTIONAL-PARAMETERIZATION&gt;)</code></p>
+                <p class="mb-0"><code>(param &lt;string&gt; &lt;type&gt; &lt;optional-parameterization&gt;)</code></p>
               </blockquote>
               <span>Each type has the following default parameterization:</span>
               <ul>
-                <li><code>POINT</code>: Parameterized by its x- and y-coordinates</li>
-                <li><code>LINE</code>: Parameterized by two points that define the line</li>
-                <li><code>CIRCLE</code>: Parameterized by its origin and radius (where the origin is parameterized as a point)</li>
+                <li><code>point</code>: Parameterized by its x- and y-coordinates</li>
+                <li><code>line</code>: Parameterized by two points that define the line</li>
+                <li><code>circle</code>: Parameterized by its origin and radius (where the origin is parameterized as a point)</li>
               </ul>
               <br>
               <span>The following optional parameterizations can be supplied to...</span>
               <ul>
-                <li>... parameterize a <code>POINT</code>:
+                <li>... parameterize a <code>point</code>:
                   <ul>
                     <li>
-                      <code>(ONLINE L1)</code>: Parameterizes a point on line <code>L1</code>
+                      <code>(on-line L1)</code>: Parameterizes a point on line <code>L1</code>
                     </li>
                     <li>
-                      <code>(ONSEG A B)</code>: Parameterizes a point on the segment <code><span style="text-decoration:overline">AB</span></code>
+                      <code>(on-seg A B)</code>: Parameterizes a point on the segment <code><span style="text-decoration:overline">AB</span></code>
                     </li>
                     <li>
-                      <code>(ONRAY A B)</code>: Parameterizes a point on the ray starting at <code>A</code> and extending through <code>B</code>
+                      <code>(on-ray A B)</code>: Parameterizes a point on the ray starting at <code>A</code> and extending through <code>B</code>
                     </li>
                     <li>
-                      <code>(ONRAYOPP A B)</code>: Parameterizes a point beyond <code>A</code> on the ray starting at <code>B</code> extending beyond <code>A</code>
+                      <code>(on-ray-opp A B)</code>: Parameterizes a point beyond <code>A</code> on the ray starting at <code>B</code> extending beyond <code>A</code>
                     </li>
                     <li>
-                      <code>(ONCIRC C1)</code>: Parameterizes a point on the circle <code>C1</code>
+                      <code>(on-circ C1)</code>: Parameterizes a point on the circle <code>C1</code>
                     </li>
                     <li>
-                      <code>(INPOLY P1 ... PN)</code>: Parameterizes a point inside the polygon with vertices <code>P1</code> ... <code>PN</code>, where <var>N >= 3</var> and <code>P1</code> ... <code>PN</code> are declared points
+                      <code>(in-poly P1 ... PN)</code>: Parameterizes a point inside the polygon with vertices <code>P1</code> ... <code>PN</code>, where <var>N >= 3</var> and <code>P1</code> ... <code>PN</code> are declared points
                     </li>
                   </ul>
                 </li>
                 <li>... parameterize a <code>LINE</code>:
                   <ul>
                     <li>
-                      <code>(TANGENTLC C1)</code>: Parameterizes a line that is tangent to <code>C1</code>
+                      <code>(tangent-lc C1)</code>: Parameterizes a line that is tangent to <code>C1</code>
                     </li>
                     <li>
-                      <code>(THROUGHL A)</code>: Parameterizes a line that passes through <code>A</code>
+                      <code>(through A)</code>: Parameterizes a line that passes through <code>A</code>
                     </li>
                   </ul>
                 </li>
                 <li>... parameterize a <code>CIRCLE</code>:
                   <ul>
                     <li>
-                      <code>(TANGENTCC C1)</code>: Parameterizes a circle that is tangent to <code>C1</code>
+                      <code>(tangent-cc C1)</code>: Parameterizes a circle that is tangent to <code>C1</code>
                     </li>
                     <li>
-                      <code>(TANGENTCL L1)</code>: Parameterizes a circle that is tangent to <code>L1</code>
+                      <code>(tangent-cl L1)</code>: Parameterizes a circle that is tangent to <code>L1</code>
                     </li>
                     <li>
-                      <code>(THROUGHC A)</code>: Parameterizes a circle passing through <code>A</code>
+                      <code>(through A)</code>: Parameterizes a circle passing through <code>A</code>
                     </li>
                     <li>
-                      <code>(ORIGIN A)</code>: Parameterized a circle centered at <code>A</code>
+                      <code>(origin A)</code>: Parameterized a circle centered at <code>A</code>
                     </li>
                     <li>
-                      <code>(RADIUS N1)</code>: Parameterized a circle with radius <code>N1</code>, where <code>N1</code> is an instance of <code>NUMBER</code>
+                      <code>(radius N1)</code>: Parameterized a circle with radius <code>N1</code>, where <code>N1</code> is an instance of <code>number</code>
                     </li>
                   </ul>
                 </li>
@@ -506,31 +506,31 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(PARAM P POINT)</code>
+                          <code>(param P point)</code>
                           <ul>
                             <li>Introduces a point <code>P</code> parameterized by its coordinates</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM GAMMA CIRCLE (ORIGIN A))</code>
+                          <code>(param Gamma circle (origin A))</code>
                           <ul>
-                            <li>Introduces a circle <code>GAMMA</code> that is centered at <code>A</code> and is parameterized by it&#39;s radius</li>
+                            <li>Introduces a circle <code>Gamma</code> that is centered at <code>A</code> and is parameterized by it&#39;s radius</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (ONCIRC C1))</code>
+                          <code>(param P point (on-circ C1))</code>
                           <ul>
                             <li>Introduces a point <code>P</code> parameterized on <code>C1</code>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM GAMMA CIRCLE)</code>
+                          <code>(param Gamma circle)</code>
                           <ul>
-                            <li>Introduces a circle <code>GAMMA</code> parameterized by its origin and radius</li>
+                            <li>Introduces a circle <code>Gamma</code> parameterized by its origin and radius</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM L LINE (THROUGHL A))</code>
+                          <code>(param L line (through A))</code>
                           <ul>
                             <li>Introduces a line <code>L</code> that passes through the point <code>A</code></li>
                           </ul>
@@ -545,19 +545,19 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(PARAM X NUMBER)</code>
+                          <code>(param X number)</code>
                           <ul>
                             <li>Numerical values cannot be named</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (INCIRCLE A B C))</code>
+                          <code>(param P point (incircle A B C))</code>
                           <ul>
-                            <li><code>(INCIRCLE A B C)</code> is not a valid parameterization of a point</li>
+                            <li><code>(incircle A B C)</code> is not a valid parameterization of a point</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(PARAM P POINT (ONCIRC C1))</code><br><code>(PARAM P POINT)</code>
+                          <code>(param P point (on-circ C1))</code><br><code>(param P point)</code>
                           <ul>
                             <li>Cannot introduce the same object twice</li>
                           </ul>
@@ -571,30 +571,30 @@
           </div>
           <br>
           <br>
-          <p>In addition to the standard grammar for parameterizations outlined above, there is an important variation of <code>PARAM</code> to introduce sets of points that form triangles and polygons. These variations take the following form:</p>
+          <p>In addition to the standard grammar for parameterizations outlined above, there is an important variation of <code>param</code> to introduce sets of points that form triangles and polygons. These variations take the following form:</p>
           <blockquote class="blockquote text-center">
-            <p class="mb-0"><code>(PARAM (&lt;STRING&gt;, &lt;STRING&gt;, ..., &lt;STRING&gt;) &lt;PARAMETERIZATION&gt;)</code></p>
+            <p class="mb-0"><code>(param (&lt;string&gt;, &lt;string&gt;, ..., &lt;string&gt;) &lt;parameterization&gt;)</code></p>
           </blockquote>
-          <p>Note the omission of type information -- the type of <code>(POINT, POINT, ..., POINT)</code> is implied. While it could be standard to infer <code>TYPE</code> in a <code>PARAM</code> (or <code>COMPUTE</code>) command when possible, it is generally enforced to improve readability.</p>
-          <span>The following values of <code>&lt;PARAMETERIZATION&gt;</code> are available:</span>
+          <p>Note the omission of type information -- the type of <code>(point, point, ..., point)</code> is implied. While it could be standard to infer <code>type</code> in a <code>param</code> (or <code>let</code>) command when possible, it is generally enforced to improve readability.</p>
+          <span>The following values of <code>&lt;parameterization&gt;</code> are available:</span>
           <ul>
             <li>
-              <code>TRIANGLE</code>: Parameterize a list of three points as a triangle
+              <code>triangle</code>: Parameterize a list of three points as a triangle
             </li>
             <li>
-              <code>ACUTETRI</code>: Parameterize a list of three points as an acute triangle
+              <code>acute-tri</code>: Parameterize a list of three points as an acute triangle
             </li>
             <li>
-              <code>(ISOTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as an isosceles triangle. <code>&lt;STRING&gt;</code> must be in the list of point names being parameterized. For example, <code>(PARAM (P Q R) (ISOTRI P))</code> introduces an isosceles triangle with <var>PQ = PR</var>
+              <code>(iso-tri &lt;string&gt;)</code>: Parameterize a list of three points as an isosceles triangle. <code>&lt;string&gt;</code> must be in the list of point names being parameterized. For example, <code>(param (P Q R) (iso-tri P))</code> introduces an isosceles triangle with <var>PQ = PR</var>
             </li>
             <li>
-              <code>(ACUTEISOTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
+              <code>(acute-iso-tri &lt;string&gt;)</code>: Parameterize a list of three points as an acute isosceles triangle per the above description of an isosceles parameterization
             </li>
             <li>
-              <code>(RIGHTTRI &lt;STRING&gt;)</code>: Parameterize a list of three points as a right triangle. <code>&lt;STRING&gt;</code> must be in the list of point names being parameterized. For example, <code>(PARAM (P Q R) (RIGHTTRI P))</code> introduces a triangle with a right angle at <var>&lt;QPR</var>
+              <code>(right-tri &lt;string&gt;)</code>: Parameterize a list of three points as a right triangle. <code>&lt;string&gt;</code> must be in the list of point names being parameterized. For example, <code>(param (P Q R) (right-tri P))</code> introduces a triangle with a right angle at <var>&lt;QPR</var>
             </li>
             <li>
-              <code>POLYGON</code>: Parameterize a list of <var>n</var> points as a convex polygon
+              <code>polygon</code>: Parameterize a list of <var>n</var> points as a convex polygon
             </li>
           </ul>
           <br>
@@ -607,7 +607,7 @@
                   <div class="card-body">
                     <ul class="list-unstyled">
                       <li>
-                        <code>(PARAM (P Q R) TRIANGLE)</code>
+                        <code>(param (P Q R) triangle)</code>
                         <ul>
                           <li>Introduces three points, <code>P</code>, <code>Q</code>, and <code>R</code> that form a triangle</li>
                         </ul>
@@ -619,13 +619,13 @@
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R) (ISOTRI Q))</code>
+                        <code>(param (P Q R) (iso-tri Q))</code>
                         <ul>
                           <li>Introduce three points that form an isosceles triangle with <var>QP = QR</var></li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R S T) POLYGON)</code>
+                        <code>(param (P Q R S T) polygon)</code>
                         <ul>
                           <li>Introduces five points, <code>P</code>, <code>Q</code>, <code>R</code>, <code>S</code>, and <code>T</code>, that form a convex pentagon</li>
                         </ul>
@@ -640,39 +640,39 @@
                   <div class="card-body">
                     <ul class="list-unstyled">
                       <li>
-                        <code>(PARAM (P Q R S) TRIANGLE)</code>
+                        <code>(param (P Q R S) triangle)</code>
                         <ul>
                           <li>Only lists of points of length three can be parameterized as a triangle</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R) (ISOTRI A))</code>
+                        <code>(param (P Q R) (iso-tri A))</code>
                         <ul>
-                          <li>The argument to <code>ISOTRI</code> must be a point in the isosceles triangle (i.e., a point being introduced)</li>
+                          <li>The argument to <code>iso-tri</code> must be a point in the isosceles triangle (i.e., a point being introduced)</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R) (ISOTRI p))</code>
+                        <code>(param (P Q R) (iso-tri p))</code>
                         <ul>
                           <li>Names of geometric objects are case sensitive</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q) POLYGON)</code>
+                        <code>(param (P Q) polygon)</code>
                         <ul>
                           <li>A polygon has at least three vertices</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R) (POINT POINT POINT) TRIANGLE)</code>
+                        <code>(param (P Q R) (point point point) triangle)</code>
                         <ul>
                           <li>Type information should not be included for commands introducing lists of points that form triangles/polygons</li>
                         </ul>
                       </li>
                       <li>
-                        <code>(PARAM (P Q R))</code>
+                        <code>(param (P Q R))</code>
                         <ul>
-                          <li>When parameterizing a list of points, <code>&lt;PARAMETERIZATION&gt;</code> is required</li>
+                          <li>When parameterizing a list of points, <code>&lt;parameterization&gt;</code> is required</li>
                         </ul>
                       </li>
                     </ul>
@@ -687,13 +687,13 @@
 
         <!-- COMPUTE -->
         <li>
-          <code>COMPUTE</code>: Assigns a <code>NAME</code> to a geometric object computed from existing objects. <code>&lt;VALUE&gt;</code> is one of <code>&lt;POINT&gt;</code>, <code>&lt;LINE&gt;</code>, or <code>&lt;CIRCLE&gt;</code>.
+          <code>let</code>: Assigns a <code>name</code> to a geometric object computed from existing objects. <code>&lt;value&gt;</code> is one of <code>&lt;point&gt;</code>, <code>&lt;line&gt;</code>, or <code>&lt;circle&gt;</code>.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(COMPUTE &lt;STRING&gt; &lt;TYPE&gt; &lt;VALUE&gt;)</code></p>
+                <p class="mb-0"><code>(let &lt;string&gt; &lt;type&gt; &lt;value&gt;)</code></p>
               </blockquote>
             </div>
             <br>
@@ -705,19 +705,19 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(COMPUTE P POINT (INCENTER A B C))</code>
+                          <code>(let P point (incenter A B C))</code>
                           <ul>
                             <li><code>P</code> is assigned to the incenter of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(COMPUTE GAMMA CIRCLE (INCIRCLE A B C))</code>
+                          <code>(let Gamma circle (incircle A B C))</code>
                           <ul>
-                            <li><code>GAMMA</code> is assigned to the incircle of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
+                            <li><code>Gamma</code> is assigned to the incircle of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(COMPUTE L LINE (PERPBIS B C))</code>
+                          <code>(let L line (perp-bis B C))</code>
                           <ul>
                             <li><code>L</code> is assigned to the perpendicular bisector of the segment connecting <code>B</code> and <code>C</code></li>
                           </ul>
@@ -733,21 +733,21 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(COMPUTE X NUMBER (DIST A B))</code>
+                          <code>(let X number (dist A B))</code>
                           <ul>
                             <li>Numerical values cannot be named</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(COMPUTE P POINT (INCIRCLE A B C))</code>
+                          <code>(let P point (incircle A B C))</code>
                           <ul>
-                            <li>The type of <code>&lt;VALUE&gt;</code> must be consistent with <code>&lt;TYPE&gt;</code></li>
+                            <li>The type of <code>&lt;value&gt;</code> must be consistent with <code>&lt;type&gt;</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(COMPUTE P POINT A)</code>
+                          <code>(let P point A)</code>
                           <ul>
-                            <li><code>&lt;VALUE&gt;</code> cannot be a <code>NAME</code> as duplicate objects are not permitted</li>
+                            <li><code>&lt;value&gt;</code> cannot be a <code>name</code> as duplicate objects are not permitted</li>
                           </ul>
                         </li>
                       </ul>
@@ -758,19 +758,19 @@
             </div>
           </div>
           <br>
-          <p>Note that detail on functions used in the above examples (e.g., <code>INCENTER</code>, <code>DIST</code>) is provided in the next section</p>
+          <p>Note that detail on functions used in the above examples (e.g., <code>incenter</code>, <code>dist</code>) is provided in the next section</p>
         </li>
 
 
         <!-- ASSERT -->
         <li>
-          <code>ASSERT</code>: Imposes an additional constraint <code>&lt;PRED&gt;</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>COMPUTE</code> or <code>PARAM</code>.
+          <code>assert</code>: Imposes an additional constraint <code>&lt;pred&gt;</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>let</code> or <code>param</code>.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(ASSERT &lt;PRED&gt;)</code></p>
+                <p class="mb-0"><code>(assert &lt;pred&gt;)</code></p>
               </blockquote>
             </div>
             <br>
@@ -782,21 +782,21 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(ASSERT (PARA L1 L2))</code>
+                          <code>(assert (para L1 L2))</code>
                           <ul>
                             <li>Assert that line <code>L1</code> is parallel to line <code>L2</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(ASSERT (NOT (COLL A B C)))</code>
+                          <code>(assert (not (coll A B C)))</code>
                           <ul>
                             <li>Assert that points <code>A</code>, <code>B</code>, and <code>C</code> are <em>not</em> collinear</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(ASSERT (EQ 4.0 (DIST A B)))</code>
+                          <code>(assert (= 4.0 (dist A B)))</code>
                           <ul>
-                            <li>Numerical values find their place in <code>ASSERT</code>. The above asserts that the distance between points <code>A</code> and <code>B</code> is 4.0</li>
+                            <li>Numerical values find their place in <code>assert</code>. The above asserts that the distance between points <code>A</code> and <code>B</code> is 4.0</li>
                           </ul>
                         </li>
                       </ul>
@@ -810,13 +810,13 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(ASSERT (PARA L1 L2) (NOT (COLL A B C)))</code>
+                          <code>(assert (para L1 L2) (not (coll A B C)))</code>
                           <ul>
                             <li>Assertions are made one at a time</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(ASSERT (COLL P Q R))</code>
+                          <code>(assert (coll P Q R))</code>
                           <ul>
                             <li>Assertions cannot introduce geometric objects, and <code>P</code>, <code>Q</code>, and <code>R</code> have not been assigned (see <a href="#preliminaries">Preliminaries</a>)</li>
                           </ul>
@@ -829,21 +829,21 @@
             </div>
           </div>
           <br>
-          <p>Detail on supported predicates (e.g., <code>PARA</code>, <code>COLL</code>) is provided in the following section</p>.
+          <p>Detail on supported predicates (e.g., <code>para</code>, <code>coll</code>) is provided in the following section</p>.
         </li>
-        <!-- CONFIRM -->
+        <!-- EVAL -->
         <li>
-          <code>CONFIRM</code>: Filter final solutions by those in which <code>&lt;PRED&gt;</code> is satisfied. Like <code>ASSERT</code>, this command does not introduce any new geometric objects.
+          <code>eval</code>: Evaluates a given constraint in the final model(s). Like <code>assert</code>, this command does not introduce any new geometric objects.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(CONFIRM &lt;PRED&gt;)</code></p>
+                <p class="mb-0"><code>(eval &lt;pred&gt;)</code></p>
               </blockquote>
             </div>
           </div>
-          <p>Usage for <code>CONFIRM</code> is the same as that for <code>ASSERT</code>. The key distinction between <code>ASSERT</code> and <code>CONFIRM</code> is that <strong><code>CONFIRM</code> does not enforce <code>&lt;PRED&gt;</code> via numerical optimization</strong>. This command is most useful for those interested in integrating GeoBuilder with automated theorem provers. As many problem statements are of the form "If X, prove Y," one may wish to optimize directly for X while only checking that Y holds in the final model.</p>
+          <p>Usage for <code>eval</code> is the same as that for <code>assert</code>. The key distinction between <code>assert</code> and <code>eval</code> is that <strong><code>eval</code> does not enforce <code>&lt;pred&gt;</code> via numerical optimization</strong>. This command is most useful for those interested in integrating GeoBuilder with automated theorem provers. As many problem statements are of the form "If X, prove Y," one may wish to optimize directly for X while only checking that Y holds in the final model.</p>
         </li>
       </ul>
 
@@ -853,39 +853,39 @@
 
       <h3>Functions</h3>
       <p>Functions construct new geometric objects, as well as numerical values for dimensional constraints, from ones already declared. Functions in our DSL include a unique feature -- <strong>root selectors</strong>. Root selectors are included to address the issue that when geometric constraints are translated to numerical ones, many solutions often exist which are degenerate in their geometric interpretation. In plane geometry, this problem typically manifests with multiple candidate <code>POINT</code> solutions, such as the intersection between a line and a circle.</p>
-      <p>To control for this, we introduce a set of root selectors for plane geometry to be used in several functions of type <code>POINT</code>:
+      <p>To control for this, we introduce a set of root selectors for plane geometry to be used in several functions of type <code>point</code>:
         <ul>
-          <li><code>rsArbitrary</code>: An arbitrary root</li>
-          <li><code>(rsNeq A)</code>: The root that does not equal <code>A</code></li>
-          <li><code>(rsOppSides A L1)</code>: The root on the opposite side of <code>L1</code> as <code>A</code></li>
-          <li><code>(rsSameSide A L1)</code>: The root on the same side of <code>L1</code> as <code>A</code></li>
+          <li><code>rs-arbitrary</code>: An arbitrary root</li>
+          <li><code>(rs-neq A)</code>: The root that does not equal <code>A</code></li>
+          <li><code>(rs-opp-sides A L1)</code>: The root on the opposite side of <code>L1</code> as <code>A</code></li>
+          <li><code>(rs-same-side A L1)</code>: The root on the same side of <code>L1</code> as <code>A</code></li>
         </ul>
-        The functions <code>interLC</code> and <code>interCC</code> require a root selector.
+        The functions <code>inter-lc</code> and <code>inter-cc</code> require a root selector.
       </p>
 
       <p>
         Keeping this concept in mind, we now introduce a set of commonly used functions to...
         <ul>
           <li>
-            <span>... construct a <code>POINT</code></span>
+            <span>... construct a <code>point</code></span>
             <ul>
               <li><code>(midp A B)</code>: The midpoint of <code>A</code> and <code>B</code></li>
-              <li><code>(interLL L1 L2)</code>: The intersection of <code>L1</code> and <code>L2</code></li>
+              <li><code>(inter-ll L1 L2)</code>: The intersection of <code>L1</code> and <code>L2</code></li>
               <li><code>(circumcenter A B C)</code>: The circumcenter of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
               <li><code>(orthocenter A B C)</code>: The orthocenter of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
-              <li><code>(interLC L1 C1 &lt;ROOT-SELECTOR&gt;)</code>: The intersection of <code>L1</code> and <code>C1</code> as specified by a root selector</li>
+              <li><code>(inter-lc L1 C1 &lt;root-selector&gt;)</code>: The intersection of <code>L1</code> and <code>C1</code> as specified by a root selector</li>
             </ul>
           </li>
           <li>
-            <span>... construct a <code>LINE</code></span>
+            <span>... construct a <code>line</code></span>
             <ul>
               <li><code>(line A B)</code>: The line connecting <code>A</code> and <code>B</code></li>
-              <li><code>(perpBis A B)</code>: The perpendicular bisector of line <code><span style="text-decoration:overline">AB</span></code></li>
-              <li><code>(perpAt A L1)</code>: The line through <code>A</code> that is perpendicular to <code>L1</code></li>
+              <li><code>(perp-bis A B)</code>: The perpendicular bisector of line <code><span style="text-decoration:overline">AB</span></code></li>
+              <li><code>(perp-at A L1)</code>: The line through <code>A</code> that is perpendicular to <code>L1</code></li>
             </ul>
           </li>
           <li>
-            <span>... construct a <code>CIRCLE</code></span>
+            <span>... construct a <code>circle</code></span>
             <ul>
               <li><code>(circ A B C)</code>: The circle passing through <code>A</code>, <code>B</code>, and <code>C</code></li>
               <li><code>(incircle A B C)</code>: The incircle of the triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
@@ -893,12 +893,12 @@
             </ul>
           </li>
           <li>
-            <span>... construct a <code>NUMBER</code></span>
+            <span>... construct a <code>number</code></span>
             <ul>
               <li><code>(dist A B)</code>: The length of the segment <code><span style="text-decoration:overline">AB</span></code></li>
               <li><code>(uangle A B C)</code>: The undirected angle measure &angle;<code>ABC</code></li>
-              <li><code>(add</code>/<code>sub</code>/<code>mul</code>/<code>div</code>/<code>pow N1 N2)</code>: The standard binary operations, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
-              <li><code>(neg</code>/<code>sqrt N1)</code>: The standard unary operations, where <code>N1</code> is an instance of <code>NUMBER</code></li>
+              <li><code>(add</code>/<code>sub</code>/<code>mul</code>/<code>div</code>/<code>pow N1 N2)</code>: The standard binary operations, where <code>N1</code> and <code>N2</code> are instances of <code>number</code></li>
+              <li><code>(neg</code>/<code>sqrt N1)</code>: The standard unary operations, where <code>N1</code> is an instance of <code>number</code></li>
             </ul>
           </li>
         </ul>
@@ -911,12 +911,10 @@
         <ul>
           <li><code>(cong A B C D)</code>: True i.f.f. the segments <code><span style="text-decoration:overline">AB</span></code> and <code><span style="text-decoration:overline">CD</span></code> are congruent</li>
           <li><code>(coll A B C)</code>: True i.f.f. <code>A</code>, <code>B</code>, and <code>C</code> are collinear</li>
-          <li><code>(eqP A B)</code>: True i.f.f. <code>A</code> = <code>B</code></li>
-          <li><code>(eqN N1 N2)</code>: True i.f.f. <code>N1</code> = <code>N2</code>, where <code>N1</code> and <code>N2</code> are instances of <code>NUMBER</code></li>
-          <li><code>(onLine A L1)</code>: True i.f.f. <code>A</code> is on line <code>L1</code></li>
-          <li><code>(onCirc A C1)</code>: True i.f.f. <code>A</code> is on circle <code>C1</code></li>
-          <li><code>(onSeg C A B)</code>: True i.f.f. <code>C</code> is on the segment <code><span style="text-decoration:overline">AB</span></code></li>
-          <li><code>(onRay C A B)</code>: True i.f.f. <code>C</code> is on the ray starting at <code>A</code> that extends through <code>B</code></li>
+          <li><code>(on-line A L1)</code>: True i.f.f. <code>A</code> is on line <code>L1</code></li>
+          <li><code>(on-circ A C1)</code>: True i.f.f. <code>A</code> is on circle <code>C1</code></li>
+          <li><code>(on-seg C A B)</code>: True i.f.f. <code>C</code> is on the segment <code><span style="text-decoration:overline">AB</span></code></li>
+          <li><code>(on-ray C A B)</code>: True i.f.f. <code>C</code> is on the ray starting at <code>A</code> that extends through <code>B</code></li>
           <li><code>(concur L1 L2 L3)</code>: True i.f.f. lines <code>L1</code>, <code>L2</code>, and <code>L3</code> intersect at a common point</li>
         </ul>
       </p>
@@ -931,31 +929,31 @@
               <div class="card-body">
                 <ul class="list-unstyled">
                   <li>
-                    <code>(PARAM P POINT (onSeg A (MIDP A B)))</code>
+                    <code>(param P point (on-seg A (midp A B)))</code>
                     <ul>
-                      <li>Parameterize a point <code>P</code> on the segment connecting <code>A</code> and <code>(MIDP A B)</code></li>
+                      <li>Parameterize a point <code>P</code> on the segment connecting <code>A</code> and <code>(midp A B)</code></li>
                     </ul>
                   </li>
                   <li>
-                    <code>(COMPUTE P POINT (interLC L1 C1 rsArbitrary))</code>
+                    <code>(let P point (inter-lc L1 C1 rs-arbitrary))</code>
                     <ul>
                       <li>Compute a point <code>P</code> as <em>any</em> intersection of the line <code>L1</code> with the circle <code>C1</code></li>
                     </ul>
                   </li>
                   <li>
-                    <code>(COMPUTE Q POINT (interLC L1 C1 (rsNeq P)))</code>
+                    <code>(let Q point (inter-lc L1 C1 (rs-neq P)))</code>
                     <ul>
                       <li>Compute a point <code>Q</code> as the intersection of the line <code>L1</code> with the circle <code>C1</code> that is <em>not</em> <code>P</code></li>
                     </ul>
                   </li>
                   <li>
-                    <code>(PARAM GAMMA CIRCLE (origin (interLL L1 (perpBis A B))))</code>
+                    <code>(param Gamma circle (origin (inter-ll L1 (perp-bis A B))))</code>
                     <ul>
-                      <li>Parameterize a circle <code>GAMMA</code> whose origin is the intersection of <code>L1</code> and the perpendicular bisector of the segment <code><span style="text-decoration:overline">AB</span></code></li>
+                      <li>Parameterize a circle <code>Gamma</code> whose origin is the intersection of <code>L1</code> and the perpendicular bisector of the segment <code><span style="text-decoration:overline">AB</span></code></li>
                     </ul>
                   </li>
                   <li>
-                    <code>(ASSERT (eqP C (midp A B)))</code>
+                    <code>(assert (= C (midp A B)))</code>
                     <ul>
                       <li>Assert that <code>C</code> is the midpoint of the segment <code><span style="text-decoration:overline">AB</span></code></li>
                     </ul>
@@ -971,19 +969,19 @@
               <div class="card-body">
                 <ul class="list-unstyled">
                   <li>
-                    <code>(ASSERT (interLL L1 L2))</code>
+                    <code>(assert (inter-ll L1 L2))</code>
                     <ul>
                       <li>Assertions take predicates as arguments, not functions</li>
                     </ul>
                   </li>
                   <li>
-                    <code>(COMPUTE P POINT (interLC L1 C1))</code>
+                    <code>(let P point (inter-lc L1 C1))</code>
                     <ul>
                       <li>Root selectors are required, even if you do not care which root is selected</li>
                     </ul>
                   </li>
                   <li>
-                    <code>(ASSERT (eqP A B))</code>
+                    <code>(assert (eq A B))</code>
                     <ul>
                       <li>While technically a valid command, duplicate points are not allowed so this assertion will prevent a model from being found</li>
                     </ul>
