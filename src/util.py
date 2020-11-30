@@ -58,6 +58,7 @@ DEFAULTS = {
     "n_iterations": 5000,
     "ndg_loss": 1e-3,
     "plot_freq": 1000,
+    "unnamed_objects": True,
     "regularize_points": 1e-6,
     "n_models": 1,
     "n_tries": 3,

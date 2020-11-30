@@ -24,6 +24,7 @@ def solve():
         args['plot_freq'] = -1
         args['losses_freq'] = -1
         args['loss_freq'] = -1
+        args['unnamed_objects'] = (request.form['plot_unnamed'] == 'true')
 
         figs = build(args, show_plot=False, encode_fig=True)
         urls = list()

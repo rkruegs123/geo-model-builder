@@ -37,7 +37,7 @@
           });
           cm.setSize("100%", "100%");
 
-          var five_circle_cm = CodeMirror.fromTextArea(document.getElementById('five-circle'), {
+          var imo_2011_p6_cm = CodeMirror.fromTextArea(document.getElementById('imo-2011-p6'), {
               mode: "text/x-common-lisp",
               // mode: "text/plain",
               lineNumbers: true,
@@ -46,26 +46,19 @@
               theme: "3024-day",
               cursorBlinkRate: -1
           });
-          var fc_string = "(param (P0 P1 P2 P3 P4) polygon)\n"
-          fc_string += "\n(let Q1 point (inter-ll (line P0 P1) (line P2 P3)))"
-          fc_string += "\n(let Q2 point (inter-ll (line P1 P2) (line P3 P4)))"
-          fc_string += "\n(let Q3 point (inter-ll (line P2 P3) (line P4 P0)))"
-          fc_string += "\n(let Q4 point (inter-ll (line P3 P4) (line P0 P1)))"
-          fc_string += "\n(let Q0 point (inter-ll (line P4 P0) (line P1 P2)))\n"
+          var imo_2011_p6_string = "(param (A B C) acute-tri)\n(let Gamma circle (circumcircle A B C))\n"
+          imo_2011_p6_string += "\n(param l line (tangent-lc Gamma))\n"
 
-          fc_string += "\n(let M1 point (inter-cc (circ Q0 P0 P1) (circ Q1 P1 P2) (rs-neq P1)))"
-          fc_string += "\n(let M2 point (inter-cc (circ Q1 P1 P2) (circ Q2 P2 P3) (rs-neq P2)))"
-          fc_string += "\n(let M3 point (inter-cc (circ Q2 P2 P3) (circ Q3 P3 P4) (rs-neq P3)))"
-          fc_string += "\n(let M4 point (inter-cc (circ Q3 P3 P4) (circ Q4 P4 P0) (rs-neq P4)))"
-          fc_string += "\n(let M0 point (inter-cc (circ Q4 P4 P0) (circ Q0 P0 P1) (rs-neq P0)))\n"
+          imo_2011_p6_string += "\n(let la line (reflect-ll l (line B C)))"
+          imo_2011_p6_string += "\n(let lb line (reflect-ll l (line C A)))"
+          imo_2011_p6_string += "\n(let lc line (reflect-ll l (line A B)))\n"
 
-          fc_string += "\n(eval (on-circ M3 (circ M0 M1 M2)))"
-          fc_string += "\n(eval (on-circ M4 (circ M0 M1 M2)))"
+          imo_2011_p6_string += "\n(eval (tangent-cc Gamma (circumcircle (inter-ll la lb) (inter-ll la lc) (inter-ll lb lc))))"
 
-          five_circle_cm.setValue(fc_string);
-          five_circle_cm.setSize("100%", "100%");
-          five_circle_cm.getWrapperElement().style["font-size"] = "15px";
-          five_circle_cm.refresh();
+          imo_2011_p6_cm.setValue(imo_2011_p6_string);
+          imo_2011_p6_cm.setSize("100%", "100%");
+          imo_2011_p6_cm.getWrapperElement().style["font-size"] = "15px";
+          imo_2011_p6_cm.refresh();
 
           var imo_2019_p2_cm = CodeMirror.fromTextArea(document.getElementById('imo-2019-p2'), {
               mode: "text/x-common-lisp",
@@ -99,7 +92,7 @@
 
 
 
-          var imo_2010_p2_cm = CodeMirror.fromTextArea(document.getElementById('imo-2010-p2'), {
+          var imo_2008_p1_cm = CodeMirror.fromTextArea(document.getElementById('imo-2008-p1'), {
               mode: "text/x-common-lisp",
               // mode: "text/plain",
               lineNumbers: true,
@@ -109,16 +102,17 @@
               cursorBlinkRate: -1
           });
 
-          imo_2010_p2_string = "(param (A B C) triangle)\n(let I point (incenter A B C))\n(let Gamma circle (circumcircle A B C))\n"
-          imo_2010_p2_string += "\n(let D point (inter-lc (line A I) Gamma (rs-neq A)))\n(param E point (on-circ Gamma))\n(assert (same-side D E (line B C)))\n"
+          imo_2008_p1_string = "(param (A B C) acute-tri)\n(let H point (orthocenter A B C))\n"
+          imo_2008_p1_string += "\n(let A1 point (inter-lc (line B C) (coa (midp B C) H) rs-arbitrary))\n(let A2 point (inter-lc (line B C) (coa (midp B C) H) (rs-neq A1)))\n"
+          imo_2008_p1_string += "\n(let B1 point (inter-lc (line C A) (coa (midp C A) H) rs-arbitrary))\n(let B2 point (inter-lc (line C A) (coa (midp C A) H) (rs-neq B1)))\n"
+          imo_2008_p1_string += "\n(let C1 point (inter-lc (line A B) (coa (midp A B) H) rs-arbitrary))\n(let C2 point (inter-lc (line A B) (coa (midp A B) H) (rs-neq C1)))\n"
 
-          imo_2010_p2_string += "\n(param F point (on-seg B C))\n(assert (= (uangle B A F) (uangle C A E)))\n(assert (< (uangle C A E) (mul 0.5 (uangle B A C))))\n"
+          imo_2008_p1_string += "\n(eval (cycl A1 A2 B1 B2 C1 C2))"
 
-          imo_2010_p2_string += "\n(let G point (midp I F))\n(eval (on-circ (inter-ll (line D G) (line E I)) Gamma))"
-          imo_2010_p2_cm.setValue(imo_2010_p2_string);
-          imo_2010_p2_cm.setSize("100%", "100%");
-          imo_2010_p2_cm.getWrapperElement().style["font-size"] = "15px";
-          imo_2010_p2_cm.refresh();
+          imo_2008_p1_cm.setValue(imo_2008_p1_string);
+          imo_2008_p1_cm.setSize("100%", "100%");
+          imo_2008_p1_cm.getWrapperElement().style["font-size"] = "15px";
+          imo_2008_p1_cm.refresh();
 
           function handleFileSelect(evt) {
               var files = evt.target.files; // FileList object
@@ -163,7 +157,8 @@
                   // global: false,
                   data: {
                       problem_input: cm.getValue(),
-                      n_models: document.getElementById('num-models').value
+                      n_models: document.getElementById('num-models').value,
+                      plot_unnamed: document.getElementById('plot-unnamed').checked
                   },
 
                   success: function(response) {
@@ -368,6 +363,10 @@
             <div class="form-group">
               <label for="upload-problem">Upload File</label>
               <input type="file" class="form-control-file" id="upload-problem">
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="plot-unnamed" checked>
+              <label class="form-check-label" for="plot-unnamed">Plot unnamed objects</label>
             </div>
           </form>
         </div>
@@ -1053,67 +1052,15 @@
 
 
 
-
       <div class="container-fluid p-3">
-        <h3 class="text-center">IMO 2010, Problem 2</h3>
+        <h3 class="text-center">IMO 2011, Problem 6</h3>
         <div class="container-fluid">
           <div class="container justify-content-center">
             <blockquote class="blockquote text-center">
               <p class="mb-0">
-                Let <var>I</var> be the incenter of triangle <var>ABC</var> and let <var>&Gamma;</var> be its circumcircle. Let the line <var>AI</var> intersect <var>&Gamma;</var> again at <var>D</var>. Let <var>E</var> be a point on the arc <var>BDC</var> and <var>F</var> be a point on the side <var>BC</var> such that <var>&angle;BAF = &angle;CAE &lt; 0.5 * &angle;BAC</var>. Finally, let <var>G</var> be the midpoint of the segment <var>IF</var>. Prove that the lines <var>DG</var> and <var>EI</var> intersect on <var>&Gamma;</var>.
-              </p>
-            </blockquote>
-          </div>
-
-          <div class="container-fluid p-3">
-            <div class="row justify-content-center">
-              <div class="block col-sm-4">
-                <textarea id="imo-2010-p2"></textarea>
-              </div>
-              <div class="block col-sm-4">
-
-                <div id="carouselExampleControls4" class="carousel slide" data-ride="carousel">
-
-                  <ol class="carousel-indicators">
-                    <li data-target="#carouselExampleControls4" data-slide-to="0" class="active"></li>
-                    <li data-target="#carouselExampleControls4" data-slide-to="1"></li>
-                  </ol>
-                  <div class="carousel-inner">
-                    <div class="carousel-item active">
-
-                      <img src="{{ url_for('static',filename='img/imo-2010-p2-1.png') }}" class="d-block w-100">
-                    </div>
-
-                    <div class="carousel-item">
-                      <img src="{{ url_for('static',filename='img/imo-2010-p2-2.png') }}" class="d-block w-100">
-                    </div>
-
-                  </div>
-                  <a class="carousel-control-prev" href="#carouselExampleControls4" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                  </a>
-                  <a class="carousel-control-next" href="#carouselExampleControls4" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                  </a>
-                </div>
-              </div> <!-- close col -->
-            </div> <!-- close row -->
-          </div> <!-- close container -->
-        </div>
-      </div>
-
-
-
-
-      <div class="container-fluid p-3">
-        <h3 class="text-center">The Five-Circle Theorem</h3>
-        <div class="container-fluid">
-          <div class="container justify-content-center">
-            <blockquote class="blockquote text-center">
-              <p class="mb-0">
-                Given a pentagon with vertices <var>P<sub>0</sub></var>, <var>P<sub>1</sub></var>, <var>P<sub>2</sub></var>, <var>P<sub>3</sub></var>, and <var>P<sub>4</sub></var>, let <var>Q<sub>i</sub></var> be the intersection of lines <var>P<sub>i-1</sub>P<sub>i</sub></var> and <var>P<sub>i+1</sub>P<sub>i+2</sub></var> and <var>M<sub>i</sub></var> be the intersection of <var>circle(Q<sub>i-1</sub> , P<sub>i-1</sub> , P<sub>i</sub>)</var> and <var>circle(Q<sub>i</sub> , P<sub>i</sub> , P<sub>i+1</sub>)</var> (where subscripts are understood to be <var>mod 5</var>). Show that points <var>M<sub>0</sub></var>, <var>M<sub>1</sub></var>, <var>M<sub>2</sub></var>, <var>M<sub>3</sub></var>, and <var>M<sub>4</sub></var> are cyclic.
+                Let <var>ABC</var> be an acute triangle with circumcircle <var>&Gamma;</var>.
+                Let <var>&#8467;</var> be a tangent line to <var>&Gamma;</var>, and let <var>&#8467;<sub>a</sub></var>, <var>&#8467;<sub>b</sub></var>, and <var>&#8467;<sub>c</sub></var> be the lines obtained by reflecting <var>&#8467;</var> in the lines <var>BC</var>, <var>CA</var>, and <var>AB</var>, respectively.
+                Show that the circumcircle of the triangle determined by the lines <var>&#8467;<sub>a</sub></var>, <var>&#8467;<sub>b</sub></var>, and <var>&#8467;<sub>c</sub></var> is tangent to the circle <var>&Gamma;</var>.
               </p>
             </blockquote>
           </div>
@@ -1122,7 +1069,7 @@
           <div class="container-fluid p-3">
             <div class="row justify-content-center">
               <div class="block col-sm-4">
-                <textarea id="five-circle"></textarea>
+                <textarea id="imo-2011-p6"></textarea>
               </div>
               <div class="block col-sm-4">
 
@@ -1135,11 +1082,11 @@
                   <div class="carousel-inner">
                     <div class="carousel-item active">
 
-                      <img src="{{ url_for('static',filename='img/fc-1.png') }}" class="d-block w-100">
+                      <img src="{{ url_for('static',filename='img/imo-2011-p6-1.png') }}" class="d-block w-100">
                     </div>
 
                     <div class="carousel-item">
-                      <img src="{{ url_for('static',filename='img/fc-2.png') }}" class="d-block w-100">
+                      <img src="{{ url_for('static',filename='img/imo-2011-p6-2.png') }}" class="d-block w-100">
                     </div>
 
                   </div>
@@ -1160,7 +1107,66 @@
           </div>
         </div>
       </div>
+
+
+
+
+
+      <div class="container-fluid p-3">
+        <h3 class="text-center">IMO 2008, Problem 1</h3>
+        <div class="container-fluid">
+          <div class="container justify-content-center">
+            <blockquote class="blockquote text-center">
+              <p class="mb-0">
+                An acute-angled triangle <var>ABC</var> has orthocenter <var>H</var>.
+                The circle passing through <var>H</var> with centre the midpoint of <var>BC</var> intersects the line <var>BC</var> at <var>A<sub>1</sub></var> and <var>A<sub>2</sub></var>.
+                Similarly, the circle passing through <var>H</var> with centre the midpoint of <var>CA</var> intersects the line <var>CA</var> at <var>B<sub>1</sub></var> and <var>B<sub>2</sub></var>, and the circle passing through <var>H</var> with centre the midpoint of <var>AB</var> intersects the line <var>AB</var> at <var>C<sub>1</sub></var> and <var>C<sub>2</sub></var>.
+                Show that <var>A<sub>1</sub></var>, <var>A<sub>2</sub></var>, <var>B<sub>1</sub></var>, <var>B<sub>2</sub></var>, <var>C<sub>1</sub></var>, <var>C<sub>2</sub></var> lie on a circle.
+              </p>
+            </blockquote>
+          </div>
+
+          <div class="container-fluid p-3">
+            <div class="row justify-content-center">
+              <div class="block col-sm-4">
+                <textarea id="imo-2008-p1"></textarea>
+              </div>
+              <div class="block col-sm-4">
+
+                <div id="carouselExampleControls4" class="carousel slide" data-ride="carousel">
+
+                  <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleControls4" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleControls4" data-slide-to="1"></li>
+                  </ol>
+                  <div class="carousel-inner">
+                    <div class="carousel-item active">
+
+                      <img src="{{ url_for('static',filename='img/imo-2008-p1-1.png') }}" class="d-block w-100">
+                    </div>
+
+                    <div class="carousel-item">
+                      <img src="{{ url_for('static',filename='img/imo-2008-p1-2.png') }}" class="d-block w-100">
+                    </div>
+
+                  </div>
+                  <a class="carousel-control-prev" href="#carouselExampleControls4" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                  </a>
+                  <a class="carousel-control-next" href="#carouselExampleControls4" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                  </a>
+                </div>
+              </div> <!-- close col -->
+            </div> <!-- close row -->
+          </div> <!-- close container -->
+        </div>
+      </div>
     </div>
+
+
 
     <div class="container-fluid" id="contact">
       <h1>Contact</h1>
