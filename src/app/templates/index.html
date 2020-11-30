@@ -151,6 +151,14 @@
           });
 
           $('#solve-btn').click(function() {
+
+              // disable button
+              $(this).prop("disabled", true);
+              // add spinner to button
+              $(this).html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`
+              );
+
               $.ajax({
                   url: "{{ url_for ('solve') }}",
                   type: "POST",
@@ -163,6 +171,10 @@
 
                   success: function(response) {
                       console.log(response);
+
+                      // re-enable button
+                      document.getElementById("solve-btn").disabled = false;
+                      document.getElementById("solve-btn").innerHTML = "Build!";
 
                       if (response['srcs'].length == 0) {
 
@@ -212,6 +224,11 @@
                       // $("#diagram-img").attr('src', response['srcs'][0]);
                   },
                   error: function(err) {
+
+                      // re-enable button
+                      document.getElementById("solve-btn").disabled = false;
+                      document.getElementById("solve-btn").innerHTML = "Build!";
+
                       console.log(err.responseText)
                       // document.getElementById("alerts").innerHTML =
                       // "<div class=\"alert alert-danger\" role=\"alert\"><h4 class=\"alert-heading\">Failure!</h4><span>Some common sources of error</span><ul><li>Malformed input</li><li>Invalid command/function/predicate</li></ul></div>";
