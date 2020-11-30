@@ -28,6 +28,10 @@ if __name__ == "__main__":
     parser.add_argument('--loss_freq', action='store', dest='loss_freq', type=int, default=DEFAULTS['loss_freq'])
     parser.add_argument('--losses_freq', action='store', dest='losses_freq', type=int, default=DEFAULTS['losses_freq'])
 
+    parser.add_argument('--unnamed_objects', dest='unnamed_objects', action='store_true')
+    parser.add_argument('--no_unnamed_objects', dest='unnamed_objects', action='store_false')
+    parser.set_defaults(unnamed_objects=True)
+
     # Tensorflow arguments
     parser.add_argument('--learning_rate', action='store', dest='learning_rate', type=float, default=DEFAULTS["learning_rate"])
     parser.add_argument('--decay_steps', action='store', dest='decay_steps', type=float, default=DEFAULTS["decay_steps"])

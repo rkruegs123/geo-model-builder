@@ -11,7 +11,16 @@ MIN_AXIS_VAL = -10
 MAX_AXIS_VAL = 10
 
 class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", "named_circles", "segments", "seg_colors", "unnamed_points", "unnamed_lines", "unnamed_circles", "ndgs", "goals"])):
-    def plot(self, show=True, save=False, fname=None, return_fig=False):
+    def plot(self, show=True, save=False, fname=None, return_fig=False, show_unnamed=True):
+
+        unnamed_points = self.unnamed_points
+        unnamed_lines = self.unnamed_lines
+        unnamed_circles = self.unnamed_circles
+
+        if not show_unnamed:
+            unnamed_points = list()
+            unnamed_lines = list()
+            unnamed_circles = list()
 
         # Plot named points
         xs = [p.x for p in self.named_points.values()]
@@ -25,8 +34,8 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
             ax.annotate(str(n), (xs[i], ys[i]))
 
         # Plot unnamed points
-        u_xs = [p.x for p in self.unnamed_points]
-        u_ys = [p.y for p in self.unnamed_points]
+        u_xs = [p.x for p in unnamed_points]
+        u_ys = [p.y for p in unnamed_points]
         ax.scatter(u_xs, u_ys, c="black", alpha=UNNAMED_ALPHA)
 
         # Plot segments (never named)
@@ -49,8 +58,8 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
 
         # Plot lines AFTER all bounds are set
 
-        have_points = self.named_points or self.unnamed_points
-        have_circles = self.named_circles or self.unnamed_circles
+        have_points = self.named_points or unnamed_points
+        have_circles = self.named_circles or unnamed_circles
 
         if not (have_points or have_circles):
             lo_x_lim, lo_y_lim = -2, -2
@@ -73,7 +82,7 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
             # ax.set_ylim([max(MIN_AXIS_VAL, lo_y_lim), min(MAX_AXIS_VAL, hi_y_lim)])
 
         # Plot unnamed circles (always unnamed before named)
-        for O, r in self.unnamed_circles:
+        for O, r in unnamed_circles:
             circle = plt.Circle((O.x, O.y),
                                 radius=r,
                                 fill=False,
@@ -112,7 +121,7 @@ class Diagram(collections.namedtuple("Diagram", ["named_points", "named_lines", 
                     plt.plot(x_vals, y_vals, c="black", alpha=UNNAMED_ALPHA)
 
         # Plot unnamed lines
-        for L in self.unnamed_lines:
+        for L in unnamed_lines:
             plot_line(L)
 
         # Plot named lines

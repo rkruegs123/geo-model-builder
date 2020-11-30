@@ -273,7 +273,7 @@ class TfOptimizer(Optimizer):
             if self.verbosity > 1 or (i % self.opts['losses_freq'] == 0 and self.opts['losses_freq'] > 0 and self.opts['verbosity'] > -1):
                 self.print_losses()
             if i % self.opts['plot_freq'] == 0 and self.opts['plot_freq'] > 0 and self.opts['verbosity'] > -1:
-                self.get_model().plot()
+                self.get_model().plot(show_unnamed=self.opts['unnamed_objects'])
 
             if loss_v < opts['eps']:
                 if opts['verbosity'] >= 0:

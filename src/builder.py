@@ -52,7 +52,7 @@ def build_aux(opts, show_plot=True, save_plot=False, outf_prefix=None, encode_fi
         if not (encode_fig or show_plot or save_plot):
             figs.append(m)
         else:
-            figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig))
+            figs.append(m.plot(show=show_plot, save=save_plot, fname=f"{outf_prefix}_{i}.png", return_fig=encode_fig, show_unnamed=opts['unnamed_objects']))
     return figs
 
 
