@@ -1,8 +1,8 @@
 (param (A B C D) polygon)
 (assert (not (cong B A B C)))
 
-(let omega_1 circle (incircle A B C))
-(let omega_2 circle (incircle A D C))
+(define omega_1 circle (incircle A B C))
+(define omega_2 circle (incircle A D C))
 
 (param omega circle (tangent-cl (line B A)))
 (assert (on-ray (inter-lc (line B A) omega rs-arbitrary) B A))

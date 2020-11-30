@@ -46,12 +46,12 @@
               theme: "3024-day",
               cursorBlinkRate: -1
           });
-          var imo_2011_p6_string = "(param (A B C) acute-tri)\n(let Gamma circle (circumcircle A B C))\n"
+          var imo_2011_p6_string = "(param (A B C) acute-tri)\n(define Gamma circle (circumcircle A B C))\n"
           imo_2011_p6_string += "\n(param l line (tangent-lc Gamma))\n"
 
-          imo_2011_p6_string += "\n(let la line (reflect-ll l (line B C)))"
-          imo_2011_p6_string += "\n(let lb line (reflect-ll l (line C A)))"
-          imo_2011_p6_string += "\n(let lc line (reflect-ll l (line A B)))\n"
+          imo_2011_p6_string += "\n(define la line (reflect-ll l (line B C)))"
+          imo_2011_p6_string += "\n(define lb line (reflect-ll l (line C A)))"
+          imo_2011_p6_string += "\n(define lc line (reflect-ll l (line A B)))\n"
 
           imo_2011_p6_string += "\n(eval (tangent-cc Gamma (circumcircle (inter-ll la lb) (inter-ll la lc) (inter-ll lb lc))))"
 
@@ -75,7 +75,7 @@
           imo_2019_p2_string += "\n(param B1 point (on-seg A C))\n"
 
           imo_2019_p2_string += "\n(param P point (on-seg A A1))"
-          imo_2019_p2_string += "\n(let Q point (inter-ll (line B B1) (para-at P (line A B))))\n"
+          imo_2019_p2_string += "\n(define Q point (inter-ll (line B B1) (para-at P (line A B))))\n"
 
           imo_2019_p2_string += "\n(param P1 point (on-ray-opp B1 P))"
           imo_2019_p2_string += "\n(assert (= (uangle P P1 C) (uangle B A C)))\n"
@@ -102,10 +102,10 @@
               cursorBlinkRate: -1
           });
 
-          imo_2008_p1_string = "(param (A B C) acute-tri)\n(let H point (orthocenter A B C))\n"
-          imo_2008_p1_string += "\n(let A1 point (inter-lc (line B C) (coa (midp B C) H) rs-arbitrary))\n(let A2 point (inter-lc (line B C) (coa (midp B C) H) (rs-neq A1)))\n"
-          imo_2008_p1_string += "\n(let B1 point (inter-lc (line C A) (coa (midp C A) H) rs-arbitrary))\n(let B2 point (inter-lc (line C A) (coa (midp C A) H) (rs-neq B1)))\n"
-          imo_2008_p1_string += "\n(let C1 point (inter-lc (line A B) (coa (midp A B) H) rs-arbitrary))\n(let C2 point (inter-lc (line A B) (coa (midp A B) H) (rs-neq C1)))\n"
+          imo_2008_p1_string = "(param (A B C) acute-tri)\n(define H point (orthocenter A B C))\n"
+          imo_2008_p1_string += "\n(define A1 point (inter-lc (line B C) (coa (midp B C) H) rs-arbitrary))\n(define A2 point (inter-lc (line B C) (coa (midp B C) H) (rs-neq A1)))\n"
+          imo_2008_p1_string += "\n(define B1 point (inter-lc (line C A) (coa (midp C A) H) rs-arbitrary))\n(define B2 point (inter-lc (line C A) (coa (midp C A) H) (rs-neq B1)))\n"
+          imo_2008_p1_string += "\n(define C1 point (inter-lc (line A B) (coa (midp A B) H) rs-arbitrary))\n(define C2 point (inter-lc (line A B) (coa (midp A B) H) (rs-neq C1)))\n"
 
           imo_2008_p1_string += "\n(eval (cycl A1 A2 B1 B2 C1 C2))"
 
@@ -421,9 +421,9 @@
         <li>
           A <code>name</code> is a string value that refers to a geometric object
           <ul>
-            <li><code>name</code>s are assigned to geometric objects with the <code>let</code> and <code>param</code> commands (see <a href="#commands">Commands</a>)</li>
+            <li><code>name</code>s are assigned to geometric objects with the <code>define</code> and <code>param</code> commands (see <a href="#commands">Commands</a>)</li>
           </ul>
-          <span>Example: If the name <code>P</code> is assigned to the midpoint of two points <code>A</code> and <code>B</code> (e.g., with <code>(let P point (midp A B))</code>), <code>P</code> is an instance of <code>point</code></span>
+          <span>Example: If the name <code>P</code> is assigned to the midpoint of two points <code>A</code> and <code>B</code> (e.g., with <code>(define P point (midp A B))</code>), <code>P</code> is an instance of <code>point</code></span>
         </li>
         <li><code>pred</code> and <code>func</code> are used as shorthand for <code>predicate</code> and <code>function</code>, respectively</li>.
       </ul>
@@ -437,8 +437,8 @@
         Names of geometric objects are <em>case sensitive</em>. All other identifiers in the GMBL (e.g., commands, types, functions, predicates) are <em>case insensitive</em>:
       </span>
         <ul>
-          <li>Example: <code>(let P (midp A B))</code> and <code>(LET P (MiDp A B))</code> are equivalent</li>
-          <li>Example: <code>(let P (midp A B))</code> and <code>(let p (midp A B))</code> are <em>not</em> equivalent</li>
+          <li>Example: <code>(define P (midp A B))</code> and <code>(DEFINE P (MiDp A B))</code> are equivalent</li>
+          <li>Example: <code>(define P (midp A B))</code> and <code>(define p (midp A B))</code> are <em>not</em> equivalent</li>
         </ul>
 
       <h2 id="commands">Commands</h2>
@@ -596,7 +596,7 @@
           <blockquote class="blockquote text-center">
             <p class="mb-0"><code>(param (&lt;string&gt;, &lt;string&gt;, ..., &lt;string&gt;) &lt;parameterization&gt;)</code></p>
           </blockquote>
-          <p>Note the omission of type information -- the type of <code>(point, point, ..., point)</code> is implied. While it could be standard to infer <code>type</code> in a <code>param</code> (or <code>let</code>) command when possible, it is generally enforced to improve readability.</p>
+          <p>Note the omission of type information -- the type of <code>(point, point, ..., point)</code> is implied. While it could be standard to infer <code>type</code> in a <code>param</code> (or <code>define</code>) command when possible, it is generally enforced to improve readability.</p>
           <span>The following values of <code>&lt;parameterization&gt;</code> are available:</span>
           <ul>
             <li>
@@ -708,13 +708,13 @@
 
         <!-- COMPUTE -->
         <li>
-          <code>let</code>: Assigns a <code>name</code> to a geometric object computed from existing objects. <code>&lt;value&gt;</code> is one of <code>&lt;point&gt;</code>, <code>&lt;line&gt;</code>, or <code>&lt;circle&gt;</code>.
+          <code>define</code>: Assigns a <code>name</code> to a geometric object computed from existing objects. <code>&lt;value&gt;</code> is one of <code>&lt;point&gt;</code>, <code>&lt;line&gt;</code>, or <code>&lt;circle&gt;</code>.
           <br>
           <br>
           <div class="container-fluid">
             <div class="container-fluid">
               <blockquote class="blockquote text-center">
-                <p class="mb-0"><code>(let &lt;string&gt; &lt;type&gt; &lt;value&gt;)</code></p>
+                <p class="mb-0"><code>(define &lt;string&gt; &lt;type&gt; &lt;value&gt;)</code></p>
               </blockquote>
             </div>
             <br>
@@ -726,19 +726,19 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(let P point (incenter A B C))</code>
+                          <code>(define P point (incenter A B C))</code>
                           <ul>
                             <li><code>P</code> is assigned to the incenter of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(let Gamma circle (incircle A B C))</code>
+                          <code>(define Gamma circle (incircle A B C))</code>
                           <ul>
                             <li><code>Gamma</code> is assigned to the incircle of a triangle with vertices <code>A</code>, <code>B</code>, and <code>C</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(let L line (perp-bis B C))</code>
+                          <code>(define L line (perp-bis B C))</code>
                           <ul>
                             <li><code>L</code> is assigned to the perpendicular bisector of the segment connecting <code>B</code> and <code>C</code></li>
                           </ul>
@@ -754,19 +754,19 @@
                     <div class="card-body">
                       <ul class="list-unstyled">
                         <li>
-                          <code>(let X number (dist A B))</code>
+                          <code>(define X number (dist A B))</code>
                           <ul>
                             <li>Numerical values cannot be named</li>
                           </ul>
                         </li>
                         <li>
-                          <code>(let P point (incircle A B C))</code>
+                          <code>(define P point (incircle A B C))</code>
                           <ul>
                             <li>The type of <code>&lt;value&gt;</code> must be consistent with <code>&lt;type&gt;</code></li>
                           </ul>
                         </li>
                         <li>
-                          <code>(let P point A)</code>
+                          <code>(define P point A)</code>
                           <ul>
                             <li><code>&lt;value&gt;</code> cannot be a <code>name</code> as duplicate objects are not permitted</li>
                           </ul>
@@ -785,7 +785,7 @@
 
         <!-- ASSERT -->
         <li>
-          <code>assert</code>: Imposes an additional constraint <code>&lt;pred&gt;</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>let</code> or <code>param</code>.
+          <code>assert</code>: Imposes an additional constraint <code>&lt;pred&gt;</code> on the system. This command does not introduce any <em>new</em> geometric objects and can only refer to those that have already been introduced by either <code>define</code> or <code>param</code>.
           <br>
           <br>
           <div class="container-fluid">
@@ -956,13 +956,13 @@
                     </ul>
                   </li>
                   <li>
-                    <code>(let P point (inter-lc L1 C1 rs-arbitrary))</code>
+                    <code>(define P point (inter-lc L1 C1 rs-arbitrary))</code>
                     <ul>
                       <li>Compute a point <code>P</code> as <em>any</em> intersection of the line <code>L1</code> with the circle <code>C1</code></li>
                     </ul>
                   </li>
                   <li>
-                    <code>(let Q point (inter-lc L1 C1 (rs-neq P)))</code>
+                    <code>(define Q point (inter-lc L1 C1 (rs-neq P)))</code>
                     <ul>
                       <li>Compute a point <code>Q</code> as the intersection of the line <code>L1</code> with the circle <code>C1</code> that is <em>not</em> <code>P</code></li>
                     </ul>
@@ -996,7 +996,7 @@
                     </ul>
                   </li>
                   <li>
-                    <code>(let P point (inter-lc L1 C1))</code>
+                    <code>(define P point (inter-lc L1 C1))</code>
                     <ul>
                       <li>Root selectors are required, even if you do not care which root is selected</li>
                     </ul>

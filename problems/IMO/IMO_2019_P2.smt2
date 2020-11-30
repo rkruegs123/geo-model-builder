@@ -4,7 +4,7 @@
 (param B1 point (on-seg A C))
 
 (param P point (on-seg A A1))
-(let Q point (inter-ll (line B B1) (para-at P (line A B))))
+(define Q point (inter-ll (line B B1) (para-at P (line A B))))
 
 ;; P1 is a point on line PB1 s.t. B1 lies strictly between P and P1
 (param P1 point (on-ray-opp B1 P))

@@ -27,7 +27,7 @@ class Compute:
             # comp_str = ' '.join(str(x) for x in self.computation)
         else:
             comp_str = str(self.computation)
-        return "let {obj} ({computation_str})".format(
+        return "define {obj} ({computation_str})".format(
             obj=self.obj_name,
             computation_str=comp_str
         )

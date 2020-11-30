@@ -1,6 +1,6 @@
 (param (A B C) acute-tri)
-(let O point (circumcenter A B C))
-(let P point (foot A (line B C)))
+(define O point (circumcenter A B C))
+(define P point (foot A (line B C)))
 
 (assert (gte (uangle B C A) (add (uangle A B C) (div pi 6))))
 

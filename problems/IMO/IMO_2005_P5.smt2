@@ -6,6 +6,6 @@
 (param F point (on-seg D A))
 (assert (cong B E D F))
 
-(let P point (inter-ll (line A C) (line B D)))
-(let Q point (inter-ll (line B D) (line E F)))
-(let R point (inter-ll (line E F) (line A C)))
+(define P point (inter-ll (line A C) (line B D)))
+(define Q point (inter-ll (line B D) (line E F)))
+(define R point (inter-ll (line E F) (line A C)))

@@ -1,7 +1,7 @@
 (param (A B C D) polygon)
 (assert (right A B C))
 (assert (right C D A))
-(let H point (foot A (line B D)))
+(define H point (foot A (line B D)))
 (param S point (on-seg A B))
 (param T point (on-seg A D))
 (assert (in-poly H S C T))
