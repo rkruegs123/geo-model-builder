@@ -10,7 +10,7 @@ The GMB can be run either as a locally-hosted web server or a command line tool.
 
 ### Web Server
 
-Requred once: `cd GeoModelBuilder && pip3 install -r requirements.txt`
+Requred once: `cd geo-model-builder && pip3 install -r requirements.txt`
 
 Required for each terminal session: `cd src/ && FLASK_APP=server.py`
 
@@ -18,7 +18,7 @@ To run server: `flask run`
 
 ### Command Line Tool
 
-`cd GeoModelBuilder/src && python3 builder_cli.py --problem INPUT_FILE`
+`cd geo-model-builder/src && python3 builder_cli.py --problem INPUT_FILE`
 
 ## Parameters
 
