@@ -112,7 +112,7 @@
           imo_2010_p2_string = "(param (A B C) triangle)\n(let I point (incenter A B C))\n(let Gamma circle (circumcircle A B C))\n"
           imo_2010_p2_string += "\n(let D point (inter-lc (line A I) Gamma (rs-neq A)))\n(param E point (on-circ Gamma))\n(assert (same-side D E (line B C)))\n"
 
-          imo_2010_p2_string += "\n(param F point (on-seg B C))\n(assert (= (uangle B A F) (uangle C A E)))\n(assert (lt (uangle C A E) (mul 0.5 (uangle B A C))))\n"
+          imo_2010_p2_string += "\n(param F point (on-seg B C))\n(assert (= (uangle B A F) (uangle C A E)))\n(assert (< (uangle C A E) (mul 0.5 (uangle B A C))))\n"
 
           imo_2010_p2_string += "\n(let G point (midp I F))\n(eval (on-circ (inter-ll (line D G) (line E I)) Gamma))"
           imo_2010_p2_cm.setValue(imo_2010_p2_string);
@@ -981,7 +981,7 @@
                     </ul>
                   </li>
                   <li>
-                    <code>(assert (eq A B))</code>
+                    <code>(assert (= A B))</code>
                     <ul>
                       <li>While technically a valid command, duplicate points are not allowed so this assertion will prevent a model from being found</li>
                     </ul>
