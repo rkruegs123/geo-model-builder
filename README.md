@@ -1,4 +1,4 @@
-# GeoModelBuilder
+# GeoModelBuilders
 
 The Geometry Model Builder (GMB) is a tool for generating olympiad-level geometry diagrams.
 The GMB takes Geometry Model-Building Language programs as input.
