@@ -4,7 +4,7 @@ The Geometry Model Builder (GMB) is a tool for generating olympiad-level geometr
 The GMB takes Geometry Model-Building Language programs as input.
 For an overview of the GMBL, please refer to our [arXiv paper](https://arxiv.org/abs/2012.02590) or run this program as a local web server and read the tutorial.
 
-![Example](example.png)
+![Example](img/example.png)
 
 ## Quick Start
 
